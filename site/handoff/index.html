@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handoff benchmark · openevaluations</title>
+<meta name="description" content="What does a coding agent save when it takes over another agent's task? Repo only, the raw trace, a NOTES.md, or structured records, compared on the same frozen predecessor.">
+<link rel="canonical" href="https://openevaluations.si/handoff/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<div class="nav"><div class="wrap">
+  <a class="brand" href="/"><b>o</b> openevaluations</a>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+</div></div>
+<main class="wrap">
+<header class="page">
+  <h1>The <em>handoff</em> benchmark</h1>
+  <p class="lede">Agent A worked on a task and stopped. Agent B takes over. What should B be given, and what does it save? Every channel starts from the same frozen predecessor, so only the channel differs.</p>
+</header>
+
+<section>
+  <h2>Channels</h2>
+  <div class="cards">
+    <div class="card"><h3>repo-only</h3><p>A's working tree and nothing else. This is the control.</p></div>
+    <div class="card"><h3>trace</h3><p>The tree plus A's conversation, loaded into B's session as an ATIF trajectory.</p></div>
+    <div class="card"><h3>notes</h3><p>The tree plus the <code>NOTES.md</code> A was asked to keep, and a project file telling B to read it.</p></div>
+    <div class="card"><h3>records</h3><p>The tree plus A's decisions and dead ends as structured records anchored to code, delivered by <a href="/scholion/">Scholion</a> hooks.</p></div>
+  </div>
+  <p class="muted">Two families. In <b>interrupt</b> tasks, a real A is cut off halfway at a pre-registered turn count. In <b>relay</b> tasks, A is curated: ten lessons, of which one is what B's task needs and nine are noise. Following the <a href="https://arxiv.org/abs/2606.02875">Handoff Debt</a> protocol, we report acceptance, cost per accepted task, LLM calls, prompt tokens and repeated dead ends.</p>
+</section>
+
+<section>
+  <h2>Results so far</h2>
+  <div class="honest small">These are relay-family runs recorded by Scholion's own harness, with Claude Code on DeepSeek Flash. The Harbor version of the benchmark, which adds the interrupt family, the trace channel and a second successor agent, has not run yet. Deltas are per session, paired by task against <b>repo-only</b>, with task-stratified 95% bootstrap intervals. Cost per accepted task differs more than cost per session because repo-only sessions fail more often. At 30 sessions per cell, no significance is claimed.</div>
+  <div id="runs" aria-live="polite"></div>
+</section>
+</main>
+<footer><div class="wrap">Data: <a href="/data/handoff.json">handoff.json</a> · Code Apache-2.0, data CC BY 4.0</div></footer>
+<script src="/js/oe.js"></script>
+<script>
+OE.nav("/handoff/");
+OE.load("handoff").then(function (data) {
+  var box = document.getElementById("runs");
+  data.runs.forEach(function (r) {
+    box.appendChild(OE.el("h3", null, OE.date(r.date) + " · " + r.family + " · " + r.successor.name + " " + (r.successor.version || "") + " · " + r.model.name));
+    var meta = OE.el("p", { class: "small muted" });
+    meta.appendChild(document.createTextNode("Run " + r.run_id + " (" + r.runner + "). "));
+    meta.appendChild(OE.el("a", { href: "/data/runs/" + r.run_id + ".jsonl" }, "raw rows"));
+    if (r.source) { meta.appendChild(document.createTextNode(" · ")); meta.appendChild(OE.el("a", { href: r.source }, "source")); }
+    if (r.prereg) meta.appendChild(document.createTextNode(" · pre-registered"));
+    box.appendChild(meta);
+    function d(c, k) { var v = c.vs_repo_only && c.vs_repo_only[k]; return v ? OE.delta(v[0]) + " " + OE.ci(v[1], v[2], OE.delta) : "–"; }
+    box.appendChild(OE.table([
+      { label: "channel", value: function (c) { return c.channel; } },
+      { label: "accepted", num: true, value: function (c) { return c.accepted + "/" + c.n; } },
+      { label: "Wilson 95%", num: true, value: function (c) { return OE.ci(c.wilson[0], c.wilson[1], OE.pct); } },
+      { label: "cost/accepted", num: true, value: function (c) { return OE.usd(c.cost_per_accepted); } },
+      { label: "median turns", num: true, value: function (c) { return OE.num(c.median_turns); } },
+      { label: "dead ends", num: true, value: function (c) { return c.dead_ends; } },
+      { label: "Δ cost per session", num: true, value: function (c) { return d(c, "cost"); } },
+      { label: "Δ turns per session", num: true, value: function (c) { return d(c, "turns"); } }
+    ], r.cells.slice().sort(function (a, b) { return (b.channel === "repo-only") - (a.channel === "repo-only"); })));
+  });
+});
+</script>
+</body>
+</html>

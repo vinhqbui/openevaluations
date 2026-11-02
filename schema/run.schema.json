@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openevaluations.si/data/schema/run.schema.json",
+  "title": "openevaluations run (oe/1)",
+  "description": "First line of a runs/<id>.jsonl file: one evaluation run of one agent on one dataset.",
+  "type": "object",
+  "required": ["type", "schema_version", "id", "date", "dataset", "agent", "model", "config", "harness", "machine", "flags"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {"const": "run"},
+    "schema_version": {"const": "oe/1"},
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,120}$"},
+    "date": {"type": "string", "format": "date-time"},
+    "dataset": {
+      "type": "object",
+      "required": ["name", "visibility"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": ["string", "null"]},
+        "rev": {"type": ["string", "null"], "description": "git revision of the task set"},
+        "visibility": {"enum": ["public", "private"]}
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "description": "agent CLI, e.g. claude-code, codex, grok-build"},
+        "version": {"type": ["string", "null"], "description": "the CLI's own --version, e.g. 2.1.316"}
+      }
+    },
+    "model": {
+      "type": "object",
+      "required": ["provider", "name"],
+      "additionalProperties": false,
+      "properties": {"provider": {"type": "string"}, "name": {"type": "string"}}
+    },
+    "config": {
+      "type": "object",
+      "required": ["arm"],
+      "additionalProperties": false,
+      "properties": {
+        "arm": {"type": "string", "description": "the arm, or 'multi' when sessions carry several"},
+        "arms": {"type": "array", "items": {"type": "string"}},
+        "agent_kwargs": {"type": "object"},
+        "attempts_per_task": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "harness": {
+      "type": "object",
+      "required": ["runner"],
+      "additionalProperties": false,
+      "properties": {
+        "runner": {"enum": ["harbor", "scholion-bench"]},
+        "harbor_version": {"type": ["string", "null"]},
+        "openevaluations_rev": {"type": ["string", "null"]},
+        "agent_impl_rev": {"type": ["string", "null"]},
+        "scholion_rev": {"type": ["string", "null"]},
+        "extra": {"type": "object"}
+      }
+    },
+    "machine": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["github-actions", "local", "unknown"]},
+        "os": {"type": ["string", "null"]},
+        "sandbox": {"type": ["string", "null"]}
+      }
+    },
+    "budget": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {"cap_usd": {"type": ["number", "null"]}, "spent_usd": {"type": ["number", "null"]}}
+    },
+    "prereg": {"type": ["string", "null"]},
+    "seed": {"type": ["integer", "null"]},
+    "flags": {
+      "type": "array",
+      "items": {"enum": ["degraded", "recovered", "tool_calls_up", "low_n", "budget_stopped"]}
+    },
+    "aggregate": {
+      "type": "object",
+      "description": "required when dataset.visibility is private: the only data published for such runs",
+      "required": ["n", "accepted"],
+      "properties": {
+        "n": {"type": "integer"},
+        "accepted": {"type": "integer"},
+        "cost_per_accepted": {"type": ["number", "null"]},
+        "median_tokens_billed": {"type": ["number", "null"]},
+        "median_llm_calls": {"type": ["number", "null"]}
+      }
+    },
+    "source": {"type": ["string", "null"], "description": "where the raw data came from"},
+    "notes": {"type": ["string", "null"]}
+  }
+}

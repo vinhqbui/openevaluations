@@ -1,0 +1,1974 @@
+{
+ "repo": "shop",
+ "recorded": "2026-10-28",
+ "steps": [
+  {
+   "actor": "human",
+   "say": "Import a repository. Scholion indexes it with tree-sitter: symbols, references, skeletons.",
+   "cli": "av repo add shop ./shop",
+   "note": null,
+   "task": null,
+   "out": "repo: shop\nindexed files: 4\nmain: 4876af87",
+   "board": []
+  },
+  {
+   "actor": "claude",
+   "say": "Claude starts a task. It gets its own jj workspace and a first context pack.",
+   "cli": "av task start --title \"Bulk discount on cart totals\"",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "task: bulk-discount-on-cart-totals\nworkspace: ~/ws/shop/bulk-discount-on-cart-totals\n\n## Task\n# Bulk discount on cart totals · bulk-discount-on-cart-totals · open\nGoal: Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.\nWorkspace: ~/ws/shop/bulk-discount-on-cart-totals\nChanged (0): nothing yet\n\n## Map\n- repo map (4 files):\n  shop/ (4 files)\n    cart.py\n    pricing.py\n    receipt.py\n    tests/ (1 files)\n\n## Code\n- sym:16 total (shop/pricing.py:11-14)\n```python\ndef total(lines: list[tuple[Decimal, int]]) -> Decimal:\n    \"\"\"Sum of all lines, rounded once to the cent.\"\"\"\n    subtotal = sum((line_total(p, q) for p, q in lines), Decimal(0))\n    return subtotal.quantize(CENT, rounding=ROUND_HALF_UP)\n```\n- sym:14 CENT (shop/pricing.py:4-4)\n```python\nCENT = Decimal(\"0.01\")\n```\n- sym:15 line_total (shop/pricing.py:7-8)\n```python\ndef line_total(price: Decimal, qty: int) -> Decimal:\n    return price * qty\n```\n- sym:13 Cart.checkout_total (shop/cart.py:13-14)\n  def checkout_total(self) -> Decimal:\n- sym:18 test_total_rounds_once (shop/tests/test_pricing.py:6-7)\n  def test_total_rounds_once():\n\n---\ntokens: 369/2000\n",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "claude",
+   "say": "A decision, anchored to the function it is about.",
+   "cli": "av record --kind decision --anchor shop/pricing.py:line_total --summary \"Apply the bulk discount in pricing.line_total…\"",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "rec:7620c742 decision → shop/pricing.py:line_total\nApply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly\n\nbilling/invoice.py imports pricing.total and never builds a Cart, so a Cart-level discount would make invoices and checkout disagree.",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "claude",
+   "say": "Claude edits with its usual tools. A checkpoint snapshots the workspace and re-indexes.",
+   "cli": "av checkpoint",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "head 2d73a2dd\nchanged: shop/pricing.py",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "claude",
+   "say": "A dead end goes on the record too, so no agent tries it again.",
+   "cli": "av record --kind attempt --anchor shop/pricing.py:total --summary \"Tried rounding every line to the cent before …\"",
+   "note": "Git would keep the code and lose this. Scholion keeps both, anchored to pricing.py:total.",
+   "task": "c499a5a8",
+   "out": "rec:3e5e25f5 attempt → shop/pricing.py:total\nTried rounding every line to the cent before summing: totals drift 1-2 cents from invoices\n\ntest_total_rounds_once fails: 3 x 0.333 gives 0.99 instead of 1.00. Round only the discount amount, and the total once.",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "claude",
+   "say": "Claude's context window is nearly full. It hands off: what is done, what remains, what is open.",
+   "cli": "av handoff --done \"…\" --remaining \"…\"",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "status: handed_off\n\n## Goal\n# Bulk discount on cart totals · bulk-discount-on-cart-totals · handed_off\nGoal: Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.\nOwner: claude\nWorkspace: ~/ws/shop/bulk-discount-on-cart-totals\n\n## State\nRemaining: Tests for the 10-unit threshold; show the discount on receipts (separate task).\nDone: Discount in line_total, rounded on the discount amount only.\n\n## Records\n- rec:3e5e25f5 attempt: Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices\n  anchors: shop/pricing.py:total\n  test_total_rounds_once fails: 3 x 0.333 gives 0.99 instead of 1.00. Round only the discount amount, and the total once.\n- rec:7620c742 decision: Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly\n  anchors: shop/pricing.py:line_total\n  billing/invoice.py imports pricing.total and never builds a Cart, so a Cart-level discount would make invoices and checkout disagree.\n\n## Changes\n- sym:20 BULK_QTY (shop/pricing.py:5-5)\n```diff\n@@ -4,2 +4,4 @@\n CENT = Decimal(\"0.01\")\n+BULK_QTY = 10\n+BULK_RATE = Decimal(\"0.05\")\n```\n- sym:21 BULK_RATE (shop/pricing.py:6-6)\n```diff\n@@ -4,2 +4,4 @@\n CENT = Decimal(\"0.01\")\n+BULK_QTY = 10\n+BULK_RATE = Decimal(\"0.05\")\n```\n- sym:22 line_total (shop/pricing.py:9-13)\n```diff\n@@ -7,3 +9,6 @@\n def line_total(price: Decimal, qty: int) -> Decimal:\n-    return price * qty\n+    gross = price * qty\n+    if qty >= BULK_QTY:\n+        gross -= (gross * BULK_RATE).quantize(CENT, rounding=ROUND_HALF_UP)\n+    return gross\n```\n\n## Open questions\nQuestion: Should the threshold be per line or per order? Spec says per line.\n\n---\ntokens: 544/4000\n",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "handed_off",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Codex claims the task. The claim bumps the generation, so a late write from Claude is refused.",
+   "cli": "AV_AGENT=codex av claim bulk-discount-on-cart-totals",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "owner: codex · generation 2 (claude's writes are now fenced off)\n\n## Goal\n# Bulk discount on cart totals · bulk-discount-on-cart-totals · open\nGoal: Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.\nOwner: codex\nWorkspace: ~/ws/shop/bulk-discount-on-cart-totals\n\n## State\nRemaining: Tests for the 10-unit threshold; show the discount on receipts (separate task).\nDone: Discount in line_total, rounded on the discount amount only.\n\n## Records\n- rec:3e5e25f5 attempt: Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices\n  anchors: shop/pricing.py:total\n  test_total_rounds_once fails: 3 x 0.333 gives 0.99 instead of 1.00. Round only the discount amount, and the total once.\n- rec:7620c742 decision: Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly\n  anchors: shop/pricing.py:line_total\n  billing/invoice.py imports pricing.total and never builds a Cart, so a Cart-level discount would make invoices and checkout disagree.\n\n## Changes\n- sym:20 BULK_QTY (shop/pricing.py:5-5)\n```diff\n@@ -4,2 +4,4 @@\n CENT = Decimal(\"0.01\")\n+BULK_QTY = 10\n+BULK_RATE = Decimal(\"0.05\")\n```\n- sym:21 BULK_RATE (shop/pricing.py:6-6)\n```diff\n@@ -4,2 +4,4 @@\n CENT = Decimal(\"0.01\")\n+BULK_QTY = 10\n+BULK_RATE = Decimal(\"0.05\")\n```\n- sym:22 line_total (shop/pricing.py:9-13)\n```diff\n@@ -7,3 +9,6 @@\n def line_total(price: Decimal, qty: int) -> Decimal:\n-    return price * qty\n+    gross = price * qty\n+    if qty >= BULK_QTY:\n+        gross -= (gross * BULK_RATE).quantize(CENT, rounding=ROUND_HALF_UP)\n+    return gross\n```\n\n## Open questions\nQuestion: Should the threshold be per line or per order? Spec says per line.\n\n---\ntokens: 543/2000\n",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Codex asks for context. No LLM picks it: seeds, scoring and a token budget do.",
+   "cli": "av context --budget 2000",
+   "note": "Codex never re-read the repo. Claude's decision and dead end come first, then only the code they touch, well inside the 2,000-token budget. The decision is flagged \"changed since recorded\" because Claude edited line_total after writing it.",
+   "task": "c499a5a8",
+   "out": "## Task\n# Bulk discount on cart totals · bulk-discount-on-cart-totals · open\nGoal: Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.\nWorkspace: ~/ws/shop/bulk-discount-on-cart-totals\nChanged (1): shop/pricing.py\n\n## Map\n- shop/pricing.py\n  L4: CENT = Decimal(\"0.01\")\n  L5: BULK_QTY = 10\n  L6: BULK_RATE = Decimal(\"0.05\")\n  L9: def line_total(price: Decimal, qty: int) -> Decimal:\n  L16: def total(lines: list[tuple[Decimal, int]]) -> Decimal:\n- shop/cart.py\n  L6: class Cart:\n  L7: def __init__(self):\n  L10: def add(self, price: Decimal, qty: int = 1):\n  L13: def checkout_total(self) -> Decimal:\n- shop/tests/test_pricing.py\n  L6: def test_total_rounds_once():\n- repo map (4 files):\n  shop/ (4 files)\n    receipt.py\n    tests/ (1 files)\n\n## Decisions & dead ends\n- rec:7620c742 decision: Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly (changed since recorded)\n  anchors: shop/pricing.py:line_total\n  billing/invoice.py imports pricing.total and never builds a Cart, so a Cart-level discount would make invoices and checkout disagree.\n- rec:3e5e25f5 attempt: Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices\n  anchors: shop/pricing.py:total\n  test_total_rounds_once fails: 3 x 0.333 gives 0.99 instead of 1.00. Round only the discount amount, and the total once.\n- rec:decc8fbe handoff: Tests for the 10-unit threshold; show the discount on receipts (separate task).\n  {\"done\":\"Discount in line_total, rounded on the discount amount only.\",\"remaining\":\"Tests for the 10-unit threshold; show the discount on receipts (separate task).\",\"broken\":\"\",\"questions\":\"Should the threshold be per line or per order? Spec says per line.\"}\n\n## Code\n- sym:22 line_total (shop/pricing.py:9-13)\n```python\ndef line_total(price: Decimal, qty: int) -> Decimal:\n    gross = price * qty\n    if qty >= BULK_QTY:\n        gross -= (gross * BULK_RATE).quantize(CENT, rounding=ROUND_HALF_UP)\n    return gross\n```\n- sym:23 total (shop/pricing.py:16-19)\n```python\ndef total(lines: list[tuple[Decimal, int]]) -> Decimal:\n    \"\"\"Sum of all lines, rounded once to the cent.\"\"\"\n    subtotal = sum((line_total(p, q) for p, q in lines), Decimal(0))\n    return subtotal.quantize(CENT, rounding=ROUND_HALF_UP)\n```\n- sym:20 BULK_QTY (shop/pricing.py:5-5)\n```python\nBULK_QTY = 10\n```\n- sym:21 BULK_RATE (shop/pricing.py:6-6)\n```python\nBULK_RATE = Decimal(\"0.05\")\n```\n- sym:19 CENT (shop/pricing.py:4-4)\n```python\nCENT = Decimal(\"0.01\")\n```\n- sym:13 Cart.checkout_total (shop/cart.py:13-14)\n```python\n    def checkout_total(self) -> Decimal:\n        return total(self.lines)\n```\n- sym:18 test_total_rounds_once (shop/tests/test_pricing.py:6-7)\n```python\ndef test_total_rounds_once():\n    assert total([(Decimal(\"0.333\"), 3)]) == Decimal(\"1.00\")\n```\n\n---\ntokens: 890/2000\n",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Codex adds the missing tests.",
+   "cli": "av checkpoint",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "head df4c7277\nchanged: shop/pricing.py, shop/tests/test_pricing.py",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Codex answers Claude's open question on the record.",
+   "cli": "av record --kind note --anchor shop/pricing.py:line_total --summary \"Threshold is per line (10 of one item), as th…\"",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "rec:42a41d78 note → shop/pricing.py:line_total\nThreshold is per line (10 of one item), as the goal says; per-order would need Cart",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "The test run is recorded against this exact head. An approval needs a passing one.",
+   "cli": "av validate -- pytest -q",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "pytest -q → exit 0 (passed)\nbound to head df4c7277",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "open",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Submit for review. Scholion refuses a task that has no recorded why.",
+   "cli": "av submit",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "status: in_review\nhead: df4c7277\nchanged: shop/pricing.py, shop/tests/test_pricing.py",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "in_review",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "gemini",
+   "say": "A different agent reviews. An owner cannot approve its own task.",
+   "cli": "AV_AGENT=gemini av review --verdict approve",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "verdict: approve at head df4c7277\nstatus: in_review",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "in_review",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Merge. Main only ever advances this way, and the records stay attached to the code.",
+   "cli": "av merge",
+   "note": null,
+   "task": "c499a5a8",
+   "out": "status: merged\nmain → 1871b5d2\nchanged: shop/pricing.py, shop/tests/test_pricing.py",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "gemini",
+   "say": "Meanwhile Gemini starts a follow-up in its own workspace.",
+   "cli": "av task start --title \"Show the bulk discount on receipts\"",
+   "note": null,
+   "task": "c8a79dfc",
+   "out": "task: show-the-bulk-discount-on-receipts\nworkspace: ~/ws/shop/show-the-bulk-discount-on-receipts\n\n## Task\n# Show the bulk discount on receipts · show-the-bulk-discount-on-receipts · open\nGoal: Receipts list a 'bulk -5%' line under each discounted item.\nWorkspace: ~/ws/shop/show-the-bulk-discount-on-receipts\nChanged (0): nothing yet\n\n## Map\n- repo map (4 files):\n  shop/ (4 files)\n    cart.py\n    pricing.py\n    receipt.py\n    tests/ (1 files)\n\n## Code\n- sym:40 line_total (shop/pricing.py:9-13)\n```python\ndef line_total(price: Decimal, qty: int) -> Decimal:\n    gross = price * qty\n    if qty >= BULK_QTY:\n        gross -= (gross * BULK_RATE).quantize(CENT, rounding=ROUND_HALF_UP)\n    return gross\n```\n- sym:41 total (shop/pricing.py:16-19)\n```python\ndef total(lines: list[tuple[Decimal, int]]) -> Decimal:\n    \"\"\"Sum of all lines, rounded once to the cent.\"\"\"\n    subtotal = sum((line_total(p, q) for p, q in lines), Decimal(0))\n    return subtotal.quantize(CENT, rounding=ROUND_HALF_UP)\n```\n- sym:38 BULK_QTY (shop/pricing.py:5-5)\n```python\nBULK_QTY = 10\n```\n- sym:34 Cart.__init__ (shop/cart.py:7-8)\n```python\n    def __init__(self):\n        self.lines: list[tuple[Decimal, int]] = []\n```\n- sym:39 BULK_RATE (shop/pricing.py:6-6)\n```python\nBULK_RATE = Decimal(\"0.05\")\n```\n- sym:33 Cart (shop/cart.py:6-14)\n  class Cart:\n- sym:36 Cart.checkout_total (shop/cart.py:13-14)\n  def checkout_total(self) -> Decimal:\n- sym:37 CENT (shop/pricing.py:4-4)\n  CENT = Decimal(\"0.01\")\n- sym:44 test_bulk_discount_starts_at_ten (shop/tests/test_pricing.py:10-12)\n```python\ndef test_bulk_discount_starts_at_ten():\n    assert line_total(Decimal(\"2.00\"), 9) == Decimal(\"18.00\")\n    assert line_total(Decimal(\"2.00\"), 10) == Decimal(\"19.00\")\n```\n- sym:43 test_total_rounds_once (shop/tests/test_pricing.py:6-7)\n  def test_total_rounds_once():\n\n---\ntokens: 593/2000\n",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "gemini",
+   "say": "Work in progress; nothing it does touches Codex's workspace.",
+   "cli": "av checkpoint",
+   "note": null,
+   "task": "c8a79dfc",
+   "out": "head df7dfd2c\nchanged: shop/receipt.py",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "gemini",
+   "say": "Gemini records why it reads the constant instead of hard-coding 10.",
+   "cli": "av record --kind decision --anchor shop/receipt.py:render --summary \"Receipt reads pricing.BULK_QTY so the thresho…\"",
+   "note": null,
+   "task": "c8a79dfc",
+   "out": "rec:7ada9342 decision → shop/receipt.py:render\nReceipt reads pricing.BULK_QTY so the threshold has one source of truth",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "gemini",
+   "say": "Gemini asks for context. It only touched receipt.py, but it now uses pricing's constant.",
+   "cli": "av context --budget 2000",
+   "note": "render uses BULK_QTY, and BULK_QTY is used by line_total: two hops through the reference graph, so the decision and dead end recorded on pricing.py reach a task in another file.",
+   "task": "c8a79dfc",
+   "out": "## Task\n- ↩ task:show-the-bulk-discount-on-receipts (sent earlier)\n\n## Map\n- shop/receipt.py\n  L5: def render(cart: Cart) -> str:\n- shop/cart.py\n  L6: class Cart:\n  L7: def __init__(self):\n  L10: def add(self, price: Decimal, qty: int = 1):\n  L13: def checkout_total(self) -> Decimal:\n- shop/pricing.py\n  L4: CENT = Decimal(\"0.01\")\n  L5: BULK_QTY = 10\n  L6: BULK_RATE = Decimal(\"0.05\")\n  L9: def line_total(price: Decimal, qty: int) -> Decimal:\n  L16: def total(lines: list[tuple[Decimal, int]]) -> Decimal:\n- ↩ map:tree (sent earlier)\n\n## Decisions & dead ends\n- rec:7ada9342 decision: Receipt reads pricing.BULK_QTY so the threshold has one source of truth\n  anchors: shop/receipt.py:render\n- rec:3e5e25f5 attempt: Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices\n  anchors: shop/pricing.py:total\n  test_total_rounds_once fails: 3 x 0.333 gives 0.99 instead of 1.00. Round only the discount amount, and the total once.\n- rec:42a41d78 note: Threshold is per line (10 of one item), as the goal says; per-order would need Cart\n  anchors: shop/pricing.py:line_total\n- rec:7620c742 decision: Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly (changed since recorded)\n  anchors: shop/pricing.py:line_total\n  billing/invoice.py imports pricing.total and never builds a Cart, so a Cart-level discount would make invoices and checkout disagree.\n\n## Code\n- sym:45 render (shop/receipt.py:5-12)\n```python\ndef render(cart: Cart) -> str:\n    rows = []\n    for p, q in cart.lines:\n        rows.append(f\"{q} x {p}\")\n        if q >= BULK_QTY:\n            rows.append(\"  bulk -5%\")\n    rows.append(f\"TOTAL {cart.checkout_total()}\")\n    return \"\\n\".join(rows)\n```\n- ↩ sym:41 (sent earlier)\n- ↩ sym:40 (sent earlier)\n- ↩ sym:38 (sent earlier)\n- ↩ sym:33 (sent earlier)\n- ↩ sym:34 (sent earlier)\n- ↩ sym:39 (sent earlier)\n- sym:36 Cart.checkout_total (shop/cart.py:13-14)\n```python\n    def checkout_total(self) -> Decimal:\n        return total(self.lines)\n```\n- ↩ sym:44 (sent earlier)\n\n---\ntokens: 633/2000\n",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "claude",
+   "say": "Claude, in a new session, has another idea about line_total.",
+   "cli": "av task start --title \"Cache price lookups\"",
+   "note": "Its very first pack already lists what earlier agents decided and ruled out about line_total, including the dead end from a task that is now merged.",
+   "task": "86ef9cb0",
+   "out": "task: cache-price-lookups\nworkspace: ~/ws/shop/cache-price-lookups\n\n## Task\n# Cache price lookups · cache-price-lookups · open\nGoal: Memoize pricing.line_total for repeated carts.\nWorkspace: ~/ws/shop/cache-price-lookups\nChanged (0): nothing yet\n\n## Map\n- shop/pricing.py\n  L4: CENT = Decimal(\"0.01\")\n  L5: BULK_QTY = 10\n  L6: BULK_RATE = Decimal(\"0.05\")\n  L9: def line_total(price: Decimal, qty: int) -> Decimal:\n  L16: def total(lines: list[tuple[Decimal, int]]) -> Decimal:\n- shop/tests/test_pricing.py\n  L6: def test_total_rounds_once():\n  L10: def test_bulk_discount_starts_at_ten():\n- shop/cart.py\n- repo map: shop/ (4 files)\n\n## Decisions & dead ends\n- rec:42a41d78 note: Threshold is per line (10 of one item), as the goal says; per-order would need Cart\n  anchors: shop/pricing.py:line_total\n- rec:7620c742 decision: Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly (changed since recorded)\n  anchors: shop/pricing.py:line_total\n  billing/invoice.py imports pricing.total and never builds a Cart, so a Cart-level discount would make invoices and checkout disagree.\n- rec:3e5e25f5 attempt: Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices\n  anchors: shop/pricing.py:total\n\n## Code\n- sym:53 line_total (shop/pricing.py:9-13)\n```python\ndef line_total(price: Decimal, qty: int) -> Decimal:\n    gross = price * qty\n    if qty >= BULK_QTY:\n        gross -= (gross * BULK_RATE).quantize(CENT, rounding=ROUND_HALF_UP)\n    return gross\n```\n- sym:54 total (shop/pricing.py:16-19)\n```python\ndef total(lines: list[tuple[Decimal, int]]) -> Decimal:\n    \"\"\"Sum of all lines, rounded once to the cent.\"\"\"\n    subtotal = sum((line_total(p, q) for p, q in lines), Decimal(0))\n    return subtotal.quantize(CENT, rounding=ROUND_HALF_UP)\n```\n- sym:51 BULK_QTY (shop/pricing.py:5-5)\n```python\nBULK_QTY = 10\n```\n- sym:50 CENT (shop/pricing.py:4-4)\n```python\nCENT = Decimal(\"0.01\")\n```\n- sym:52 BULK_RATE (shop/pricing.py:6-6)\n```python\nBULK_RATE = Decimal(\"0.05\")\n```\n- sym:49 Cart.checkout_total (shop/cart.py:13-14)\n```python\n    def checkout_total(self) -> Decimal:\n        return total(self.lines)\n```\n- sym:57 test_bulk_discount_starts_at_ten (shop/tests/test_pricing.py:10-12)\n```python\ndef test_bulk_discount_starts_at_ten():\n    assert line_total(Decimal(\"2.00\"), 9) == Decimal(\"18.00\")\n    assert line_total(Decimal(\"2.00\"), 10) == Decimal(\"19.00\")\n```\n- sym:56 test_total_rounds_once (shop/tests/test_pricing.py:6-7)\n  def test_total_rounds_once():\n\n---\ntokens: 783/1000\n",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "86ef9cb0",
+     "title": "Cache price lookups",
+     "status": "open",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Memoize pricing.line_total for repeated carts.",
+       "agent": "claude",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "claude",
+   "say": "It profiles first and finds nothing to gain. That result becomes a dead end too.",
+   "cli": "av record --kind attempt --anchor shop/pricing.py:line_total --summary \"Memoizing line_total saves nothing: carts are…\"",
+   "note": null,
+   "task": "86ef9cb0",
+   "out": "rec:205b884f attempt → shop/pricing.py:line_total\nMemoizing line_total saves nothing: carts are tiny and Decimal math is ~1us",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "86ef9cb0",
+     "title": "Cache price lookups",
+     "status": "open",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Memoize pricing.line_total for repeated carts.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "205b884f",
+       "kind": "attempt",
+       "summary": "Memoizing line_total saves nothing: carts are tiny and Decimal math is ~1us",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "claude",
+   "say": "Abandoned. The task is gone; the reason stays on line_total for the next agent.",
+   "cli": "av abandon",
+   "note": null,
+   "task": "86ef9cb0",
+   "out": "status: abandoned",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "86ef9cb0",
+     "title": "Cache price lookups",
+     "status": "abandoned",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Memoize pricing.line_total for repeated carts.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "205b884f",
+       "kind": "attempt",
+       "summary": "Memoizing line_total saves nothing: carts are tiny and Decimal math is ~1us",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Codex picks up a small fix.",
+   "cli": "av task start --title \"Reject negative quantities\"",
+   "note": null,
+   "task": "224eb55d",
+   "out": "task: reject-negative-quantities\nworkspace: ~/ws/shop/reject-negative-quantities\n\n## Task\n# Reject negative quantities · reject-negative-quantities · open\nGoal: Cart.add raises ValueError for qty < 1.\nWorkspace: ~/ws/shop/reject-negative-quantities\nChanged (0): nothing yet\n\n## Map\n- shop/cart.py\n  L6: class Cart:\n  L7: def __init__(self):\n  L10: def add(self, price: Decimal, qty: int = 1):\n  L13: def checkout_total(self) -> Decimal:\n- repo map (4 files):\n  shop/ (4 files)\n    pricing.py\n    receipt.py\n    tests/ (1 files)\n\n## Code\n- sym:60 Cart.add (shop/cart.py:10-11)\n```python\n    def add(self, price: Decimal, qty: int = 1):\n        self.lines.append((price, qty))\n```\n- sym:58 Cart (shop/cart.py:6-14)\n  class Cart:\n- sym:63 BULK_QTY (shop/pricing.py:5-5)\n```python\nBULK_QTY = 10\n```\n- sym:65 line_total (shop/pricing.py:9-13)\n```python\ndef line_total(price: Decimal, qty: int) -> Decimal:\n    gross = price * qty\n    if qty >= BULK_QTY:\n        gross -= (gross * BULK_RATE).quantize(CENT, rounding=ROUND_HALF_UP)\n    return gross\n```\n- sym:59 Cart.__init__ (shop/cart.py:7-8)\n```python\n    def __init__(self):\n        self.lines: list[tuple[Decimal, int]] = []\n```\n- sym:61 Cart.checkout_total (shop/cart.py:13-14)\n```python\n    def checkout_total(self) -> Decimal:\n        return total(self.lines)\n```\n- sym:67 render (shop/receipt.py:4-7)\n```python\ndef render(cart: Cart) -> str:\n    rows = [f\"{q} x {p}\" for p, q in cart.lines]\n    rows.append(f\"TOTAL {cart.checkout_total()}\")\n    return \"\\n\".join(rows)\n```\n\n---\ntokens: 505/1000\n",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "86ef9cb0",
+     "title": "Cache price lookups",
+     "status": "abandoned",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Memoize pricing.line_total for repeated carts.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "205b884f",
+       "kind": "attempt",
+       "summary": "Memoizing line_total saves nothing: carts are tiny and Decimal math is ~1us",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "224eb55d",
+     "title": "Reject negative quantities",
+     "status": "open",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Cart.add raises ValueError for qty < 1.",
+       "agent": "codex",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Edit and checkpoint.",
+   "cli": "av checkpoint",
+   "note": null,
+   "task": "224eb55d",
+   "out": "head be2f29dd\nchanged: shop/cart.py",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "86ef9cb0",
+     "title": "Cache price lookups",
+     "status": "abandoned",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Memoize pricing.line_total for repeated carts.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "205b884f",
+       "kind": "attempt",
+       "summary": "Memoizing line_total saves nothing: carts are tiny and Decimal math is ~1us",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "224eb55d",
+     "title": "Reject negative quantities",
+     "status": "open",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Cart.add raises ValueError for qty < 1.",
+       "agent": "codex",
+       "anchors": []
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Why it raises instead of clamping.",
+   "cli": "av record --kind decision --anchor shop/cart.py:Cart.add --summary \"Raise on qty < 1 instead of clamping: a silen…\"",
+   "note": null,
+   "task": "224eb55d",
+   "out": "rec:7e5c4cdf decision → shop/cart.py:Cart.add\nRaise on qty < 1 instead of clamping: a silent clamp hid a bad import in billing",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "86ef9cb0",
+     "title": "Cache price lookups",
+     "status": "abandoned",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Memoize pricing.line_total for repeated carts.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "205b884f",
+       "kind": "attempt",
+       "summary": "Memoizing line_total saves nothing: carts are tiny and Decimal math is ~1us",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "224eb55d",
+     "title": "Reject negative quantities",
+     "status": "open",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Cart.add raises ValueError for qty < 1.",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "7e5c4cdf",
+       "kind": "decision",
+       "summary": "Raise on qty < 1 instead of clamping: a silent clamp hid a bad import in billing",
+       "agent": "codex",
+       "anchors": [
+        "shop/cart.py:Cart.add"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "actor": "codex",
+   "say": "Submitted, waiting for a reviewer. Four tasks, three agents, one repository, no shared checkout.",
+   "cli": "av submit",
+   "note": null,
+   "task": "224eb55d",
+   "out": "status: in_review\nhead: be2f29dd\nchanged: shop/cart.py",
+   "board": [
+    {
+     "id": "c499a5a8",
+     "title": "Bulk discount on cart totals",
+     "status": "merged",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Orders of 10+ units of one item get 5% off that line. Totals must still match invoices to the cent.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "7620c742",
+       "kind": "decision",
+       "summary": "Apply the bulk discount in pricing.line_total, not in Cart: invoices call pricing directly",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "3e5e25f5",
+       "kind": "attempt",
+       "summary": "Tried rounding every line to the cent before summing: totals drift 1-2 cents from invoices",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:total"
+       ]
+      },
+      {
+       "id": "decc8fbe",
+       "kind": "handoff",
+       "summary": "Tests for the 10-unit threshold; show the discount on receipts (separate task).",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "42a41d78",
+       "kind": "note",
+       "summary": "Threshold is per line (10 of one item), as the goal says; per-order would need Cart",
+       "agent": "codex",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      },
+      {
+       "id": "e4489dbc",
+       "kind": "validation",
+       "summary": "`pytest -q` exit 0",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "",
+       "kind": "review",
+       "summary": "approve",
+       "agent": "gemini",
+       "anchors": []
+      }
+     ]
+    },
+    {
+     "id": "c8a79dfc",
+     "title": "Show the bulk discount on receipts",
+     "status": "open",
+     "owner": "gemini",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Receipts list a 'bulk -5%' line under each discounted item.",
+       "agent": "gemini",
+       "anchors": []
+      },
+      {
+       "id": "7ada9342",
+       "kind": "decision",
+       "summary": "Receipt reads pricing.BULK_QTY so the threshold has one source of truth",
+       "agent": "gemini",
+       "anchors": [
+        "shop/receipt.py:render"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "86ef9cb0",
+     "title": "Cache price lookups",
+     "status": "abandoned",
+     "owner": "claude",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Memoize pricing.line_total for repeated carts.",
+       "agent": "claude",
+       "anchors": []
+      },
+      {
+       "id": "205b884f",
+       "kind": "attempt",
+       "summary": "Memoizing line_total saves nothing: carts are tiny and Decimal math is ~1us",
+       "agent": "claude",
+       "anchors": [
+        "shop/pricing.py:line_total"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "224eb55d",
+     "title": "Reject negative quantities",
+     "status": "in_review",
+     "owner": "codex",
+     "records": [
+      {
+       "id": "",
+       "kind": "intent",
+       "summary": "Cart.add raises ValueError for qty < 1.",
+       "agent": "codex",
+       "anchors": []
+      },
+      {
+       "id": "7e5c4cdf",
+       "kind": "decision",
+       "summary": "Raise on qty < 1 instead of clamping: a silent clamp hid a bad import in billing",
+       "agent": "codex",
+       "anchors": [
+        "shop/cart.py:Cart.add"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

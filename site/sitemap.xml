@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://openevaluations.si/</loc></url>
+  <url><loc>https://openevaluations.si/tracker/</loc></url>
+  <url><loc>https://openevaluations.si/handoff/</loc></url>
+  <url><loc>https://openevaluations.si/datasets/</loc></url>
+  <url><loc>https://openevaluations.si/runs/</loc></url>
+  <url><loc>https://openevaluations.si/methodology/</loc></url>
+  <url><loc>https://openevaluations.si/scholion/</loc></url>
+  <url><loc>https://openevaluations.si/demo</loc></url>
+  <url><loc>https://openevaluations.si/guides/handoff-between-ai-coding-agents</loc></url>
+  <url><loc>https://openevaluations.si/guides/memory-for-coding-agents</loc></url>
+  <url><loc>https://openevaluations.si/llms.txt</loc></url>
+  <url><loc>https://openevaluations.si/scholion/llms.txt</loc></url>
+</urlset>

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openevaluations.si/data/schema/session.schema.json",
+  "title": "openevaluations session (oe/1)",
+  "description": "Every line after the first of a runs/<id>.jsonl file: one agent attempt at one task.",
+  "type": "object",
+  "required": ["type", "run_id", "task", "arm", "attempt", "status", "reward", "accepted", "cost_usd", "cost_source", "wall_secs", "truncated"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {"const": "session"},
+    "run_id": {"type": "string"},
+    "task": {"type": "string"},
+    "arm": {"type": "string"},
+    "attempt": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["ok", "invalid", "error", "skipped"]},
+    "reason": {"type": ["string", "null"]},
+    "reward": {"type": "number"},
+    "accepted": {"type": "boolean"},
+    "cost_usd": {"type": ["number", "null"]},
+    "cost_source": {"enum": ["measured", "estimated", "capped", "unavailable"]},
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {"type": ["integer", "null"]},
+        "output": {"type": ["integer", "null"]},
+        "cache_read": {"type": ["integer", "null"]},
+        "cache_write": {"type": ["integer", "null"]}
+      }
+    },
+    "tokens_billed": {"type": ["integer", "null"], "description": "input + cache_write + output, cache reads excluded"},
+    "tokens_to_first_edit": {"type": ["integer", "null"]},
+    "llm_calls": {"type": ["integer", "null"]},
+    "turns": {"type": ["integer", "null"]},
+    "tool_calls": {"type": ["integer", "null"]},
+    "repeated_dead_ends": {"type": ["integer", "null"]},
+    "wall_secs": {"type": "number"},
+    "truncated": {"type": "boolean"},
+    "error_class": {"type": ["string", "null"]},
+    "trajectory": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["atif", "native", "none"]},
+        "path": {"type": ["string", "null"]},
+        "hub_trial_id": {"type": ["string", "null"]}
+      }
+    },
+    "trial_name": {"type": ["string", "null"]}
+  }
+}

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runs · openevaluations</title>
+<meta name="description" content="Every published evaluation run, with its raw session rows.">
+<link rel="canonical" href="https://openevaluations.si/runs/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<div class="nav"><div class="wrap">
+  <a class="brand" href="/"><b>o</b> openevaluations</a>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+</div></div>
+<main class="wrap">
+<header class="page">
+  <h1>Every <em>run</em></h1>
+  <p class="lede">Newest first. Each file is one run: the first line describes it, every other line is one session. The format is <a href="/methodology/#schema">oe/1</a>.</p>
+</header>
+<div id="runs" aria-live="polite"></div>
+</main>
+<footer><div class="wrap">Data: <a href="/data/runs.json">runs.json</a> · data CC BY 4.0</div></footer>
+<script src="/js/oe.js"></script>
+<script>
+OE.nav("/runs/");
+OE.load("runs").then(function (data) {
+  var rows = [];
+  data.runs.forEach(function (r) { Object.keys(r.arms).forEach(function (a) { rows.push({ r: r, arm: a, s: r.arms[a] }); }); });
+  document.getElementById("runs").appendChild(OE.table([
+    { label: "date", value: function (x) { return OE.date(x.r.date); } },
+    { label: "run", value: function (x) { return x.r.raw ? OE.el("a", { href: x.r.raw }, x.r.id) : x.r.id; } },
+    { label: "dataset", value: function (x) { return x.r.dataset + (x.r.visibility === "private" ? " (private)" : ""); } },
+    { label: "agent", value: function (x) { return x.r.agent.name + " " + (x.r.agent.version || ""); } },
+    { label: "model", value: function (x) { return x.r.model.name; } },
+    { label: "arm", value: function (x) { return x.arm; } },
+    { label: "accepted", num: true, value: function (x) { return x.s.accepted + "/" + x.s.n; } },
+    { label: "cost/accepted", num: true, value: function (x) { return OE.usd(x.s.cost_per_accepted); } },
+    { label: "runner", value: function (x) { return x.r.runner; } },
+    { label: "source", value: function (x) { return x.r.source ? OE.el("a", { href: x.r.source }, "source") : "–"; } }
+  ], rows));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Fallback prices for `oe budget`, in USD per million tokens, used only when a trial reports no
+# cost (Harbor's codex adapter never does without litellm). Check them against the providers'
+# price pages before each PREREG; a stale row only weakens the budget guard, never a result.
+checked = "2026-11-01"
+
+[models.claude-haiku-5-5]
+input = 1.0
+cache_read = 0.10
+output = 5.0
+
+[models.claude-sonnet-5-5]
+input = 3.0
+cache_read = 0.30
+output = 15.0
+
+[models.deepseek-flash]
+input = 0.30
+cache_read = 0.006
+output = 1.20

@@ -1,0 +1,1 @@
+Listing all products, customers or orders silently stops after the first page of the record store, so shops with more records than one page see only part of them. Make whole-collection scans read every page, for every store backend, including when the requested page size is larger than what a backend returns per page.

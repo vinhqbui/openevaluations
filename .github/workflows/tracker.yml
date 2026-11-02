@@ -1,0 +1,161 @@
+name: tracker
+
+# Weekly runs of the tracked agents on tallyho-cold, published as runs/*.jsonl through one pull
+# request that merges itself once CI passes. Spends money (about $0.15 a leg on DeepSeek Flash);
+# every leg is skipped unless the LLM_API_KEY secret exists.
+#
+# Legs (one runner each), all on DeepSeek Flash:
+#   claude-code-cold  Claude Code as shipped
+#   claude-code-av    Claude Code on the Scholion framework (agents/oe_agents/claude_code_av.py):
+#                     av hooks, a daemon and a jj workspace per task; paired against the cold leg
+#   opencode-cold     OpenCode, the second agent
+# Both Claude Code legs install the same Claude Code version, read once per run in `prepare`, so
+# the pairing compares the framework and nothing else; the version still moves week to week.
+#
+# Secrets: LLM_API_KEY (the DeepSeek API key used in CI; DEEPSEEK_API_KEY is kept for local use);
+# TRACKER_PUSH_TOKEN (a fine-grained PAT with contents + pull-requests
+# write; a PR opened with the default GITHUB_TOKEN does not trigger CI, so without it the PR waits
+# for a manual merge).
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      budget_usd:
+        description: "Cap for the whole run, USD"
+        default: "10"
+
+concurrency:
+  group: tracker
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      claude_version: ${{ steps.v.outputs.claude_version }}
+      has_key: ${{ steps.v.outputs.has_key }}
+    steps:
+      - id: v
+        env:
+          KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          echo "claude_version=$(npm view @anthropic-ai/claude-code version)" >> "$GITHUB_OUTPUT"
+          if [ -n "$KEY" ]; then echo "has_key=1" >> "$GITHUB_OUTPUT"; else
+            echo "::notice::LLM_API_KEY not set; no leg runs."; fi
+
+  run:
+    needs: prepare
+    if: needs.prepare.outputs.has_key == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - leg: claude-code-cold
+            agent: claude-code
+            arm: cold
+            model: anthropic/deepseek-flash
+            extra: "--ak max_turns=40"
+          - leg: claude-code-av
+            agent: oe_agents.claude_code_av:ClaudeCodeAv
+            arm: av
+            model: anthropic/deepseek-flash
+            extra: "--ak max_turns=40 --ak av_version=release/0.0.2"
+          - leg: opencode-cold
+            agent: opencode
+            arm: cold
+            model: deepseek/deepseek-flash
+            extra: ""
+    env:
+      BUDGET: ${{ github.event.inputs.budget_usd || '10' }}
+      PYTHONUTF8: "1"
+      PYTHONPATH: ${{ github.workspace }}/agents
+      CLAUDE_VERSION: ${{ needs.prepare.outputs.claude_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Run tallyho-cold
+        env:
+          # Claude Code reaches DeepSeek through its Anthropic-compatible API. OpenCode's deepseek
+          # provider only reads the DEEPSEEK_API_KEY variable, so the LLM_API_KEY secret is exported
+          # under that name inside this step. No ANTHROPIC_API_KEY: Harbor would prefer it.
+          ANTHROPIC_BASE_URL: ${{ startsWith(matrix.model, 'anthropic/') && 'https://api.deepseek.com/anthropic' || '' }}
+          ANTHROPIC_AUTH_TOKEN: ${{ startsWith(matrix.model, 'anthropic/') && secrets.LLM_API_KEY || '' }}
+          DEEPSEEK_API_KEY: ${{ secrets.LLM_API_KEY }}
+          OE_CACHE: ${{ runner.temp }}/oe-cache   # the Scholion release tarball (runner is a step-level context)
+        run: |
+          uv sync --frozen --extra run
+          [ -n "$ANTHROPIC_BASE_URL" ] || unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN
+          day=$(date -u +%F)
+          job=tracker-tallyho-${{ matrix.leg }}-$day
+          extra="${{ matrix.extra }}"
+          scholion_rev=null
+          if [ "${{ matrix.agent }}" != opencode ]; then
+            extra="$extra --ak version=$CLAUDE_VERSION"
+            for v in ANTHROPIC_DEFAULT_HAIKU_MODEL ANTHROPIC_SMALL_FAST_MODEL CLAUDE_CODE_SUBAGENT_MODEL; do
+              extra="$extra --ae $v=deepseek-flash"
+            done
+          fi
+          if [ "${{ matrix.arm }}" = av ]; then scholion_rev='"release/0.0.2"'; fi
+          mkdir -p jobs/$job
+          cat > jobs/$job/oe-env.json <<EOF
+          {"dataset": "tallyho-cold", "arm": "${{ matrix.arm }}", "attempts": 3, "sandbox": "docker", "os": "linux",
+           "harbor_version": "$(uv run harbor --version | tr -d '\n')", "openevaluations_rev": "${GITHUB_SHA::7}",
+           "scholion_rev": $scholion_rev,
+           "source": "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID",
+           "budget": {"cap_usd": $(python3 -c "print(round($BUDGET/3, 2))"), "spent_usd": null}}
+          EOF
+          uv run harbor run -p datasets/tallyho-cold -a "${{ matrix.agent }}" -m ${{ matrix.model }} \
+            -k 3 -n 4 -r 1 -o jobs --job-name $job --agent-setup-timeout-multiplier 2 $extra
+          uv run oe budget jobs --cap $(python3 -c "print($BUDGET/3)") || echo "::warning::budget cap reached"
+          mkdir -p runs-new
+          uv run oe import-harbor jobs/$job --machine github-actions --out runs-new
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runs-${{ matrix.leg }}
+          path: runs-new/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jobs-${{ matrix.leg }}
+          path: jobs/
+          retention-days: 90
+
+  publish:
+    needs: run
+    if: always() && needs.run.result != 'skipped'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: runs-*
+          merge-multiple: true
+          path: runs/
+      - name: Open the PR
+        env:
+          GH_TOKEN: ${{ secrets.TRACKER_PUSH_TOKEN || github.token }}
+        run: |
+          uv sync --frozen
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard runs)" ]; then
+            echo "::warning::no leg produced a run"; exit 0; fi
+          uv run oe detect && uv run oe validate && uv run oe site
+          day=$(date -u +%F)
+          branch=tracker/$day-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT   # a re-run must not collide with an earlier push
+          git config user.name "openevaluations tracker"
+          git config user.email "tracker@openevaluations.si"
+          git switch -c $branch
+          git add runs site/data
+          git commit -m "tracker: $day"
+          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} $branch
+          gh pr create --title "tracker: $day" --base main --head $branch \
+            --body "Weekly tracker run ($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID). Raw rows in runs/; trajectories in the run's jobs-* artifacts."
+          gh pr merge --auto --squash $branch || echo "::notice::auto-merge unavailable; merge the PR by hand"

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tracker · openevaluations</title>
+<meta name="description" content="Acceptance rate, cost per accepted task, turns and tool calls of coding-agent CLIs over time, by CLI version.">
+<link rel="canonical" href="https://openevaluations.si/tracker/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<div class="nav"><div class="wrap">
+  <a class="brand" href="/"><b>o</b> openevaluations</a>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+</div></div>
+<main class="wrap">
+<header class="page">
+  <h1>The <em>tracker</em></h1>
+  <p class="lede">One chart per dataset, agent, model and arm. Each point is one run, in date order, labelled with the agent CLI's own version. Hover or focus a chart and use the arrow keys for the numbers.</p>
+</header>
+<div class="filters" role="group" aria-label="Chart controls">
+  <label for="metric">Metric</label>
+  <select id="metric">
+    <option value="rate">Accepted rate (Wilson 95% band)</option>
+    <option value="cost_per_accepted">Cost per accepted task</option>
+    <option value="median_turns">Median turns</option>
+    <option value="median_tool_calls">Median tool calls</option>
+    <option value="median_tokens_billed">Median tokens billed</option>
+  </select>
+  <label for="dataset">Dataset</label>
+  <select id="dataset"><option value="">All</option></select>
+</div>
+<div class="grid-charts" id="charts" aria-live="polite"></div>
+<details class="tableview" open><summary>Table view</summary><div id="table"></div></details>
+<div class="honest small">Flags compare a run with the four before it in the same series: <b>degraded</b> when the run's Wilson upper bound is more than 15 points under the baseline rate, <b>tool calls up</b> when median tool calls exceed 1.5× the baseline's, <b>recovered</b> when a flagged series returns inside both. Runs with fewer than 12 valid sessions are marked <b>low n</b> and get no other flag. The <b>av</b> arm is Claude Code on the <a href="/scholion/">Scholion</a> framework (hooks, a daemon and a workspace per task); its Δ columns are paired by task against the same day's <b>cold</b> run, with task-stratified 95% bootstrap intervals. No cell below 30 sessions carries a significance claim.</div>
+</main>
+<footer><div class="wrap">Data: <a href="/data/tracker.json">tracker.json</a> · raw rows on <a href="/runs/">Runs</a> · Code Apache-2.0, data CC BY 4.0</div></footer>
+<script src="/js/oe.js"></script>
+<script>
+OE.nav("/tracker/");
+var METRICS = {
+  rate: { f: OE.pct, min: 0, max: 1, band: true },
+  cost_per_accepted: { f: OE.usd },
+  median_turns: { f: OE.num },
+  median_tool_calls: { f: OE.num },
+  median_tokens_billed: { f: function (x) { return x == null ? "–" : Math.round(x).toLocaleString("en-US"); } }
+};
+// Paired by task against the same day's cold run of the same agent and model (null: no such run).
+function vs(p, k) {
+  var v = p.vs_cold && p.vs_cold[k];
+  return v && v[0] != null ? OE.delta(v[0]) + " " + OE.ci(v[1], v[2], OE.delta) : null;
+}
+OE.load("tracker").then(function (data) {
+  var ms = document.getElementById("metric"), ds = document.getElementById("dataset");
+  var names = {};
+  data.series.forEach(function (s) { names[s.dataset] = 1; });
+  Object.keys(names).sort().forEach(function (n) { ds.appendChild(OE.el("option", { value: n }, n)); });
+  function render() {
+    var m = METRICS[ms.value], key = ms.value;
+    var charts = document.getElementById("charts"); charts.textContent = "";
+    var rows = [];
+    data.series.forEach(function (s) {
+      if (ds.value && s.dataset !== ds.value) return;
+      Object.keys(s.arms).sort().forEach(function (arm) {
+        var pts = s.arms[arm];
+        charts.appendChild(OE.lineChart({
+          title: s.dataset + " · " + arm,
+          sub: s.agent + " · " + s.model + " · " + pts.length + " run" + (pts.length > 1 ? "s" : ""),
+          yMin: m.min, yMax: m.max, yFormat: m.f,
+          series: [{ name: arm, color: "var(--series-1)", points: pts.map(function (p) {
+            return { label: OE.date(p.date).slice(5) + " · v" + (p.agent_version || "?"), y: p[key],
+              lo: m.band ? p.wilson[0] : null, hi: m.band ? p.wilson[1] : null,
+              rows: [["run", p.run_id], ["accepted", p.accepted + "/" + p.n + " " + OE.ci(p.wilson[0], p.wilson[1], OE.pct)],
+                     ["cost/accepted", OE.usd(p.cost_per_accepted) + (p.cost_estimated ? " (estimated)" : "")],
+                     ["vs cold, cost", vs(p, "cost")], ["vs cold, turns", vs(p, "turns")],
+                     ["flags", (p.flags || []).join(", ") || "none"]].filter(function (r) { return r[1] !== null; }) };
+          }) }]
+        }));
+        pts.forEach(function (p) { rows.push({ s: s, arm: arm, p: p }); });
+      });
+    });
+    var t = document.getElementById("table"); t.textContent = "";
+    t.appendChild(OE.table([
+      { label: "date", value: function (r) { return OE.date(r.p.date); } },
+      { label: "dataset", value: function (r) { return r.s.dataset; } },
+      { label: "agent", value: function (r) { return r.s.agent + " " + (r.p.agent_version || ""); } },
+      { label: "model", value: function (r) { return r.s.model; } },
+      { label: "arm", value: function (r) { return r.arm; } },
+      { label: "accepted", num: true, value: function (r) { return r.p.accepted + "/" + r.p.n; } },
+      { label: "Wilson 95%", num: true, value: function (r) { return OE.ci(r.p.wilson[0], r.p.wilson[1], OE.pct); } },
+      { label: "cost/accepted", num: true, value: function (r) { return OE.usd(r.p.cost_per_accepted); } },
+      { label: "turns", num: true, value: function (r) { return OE.num(r.p.median_turns); } },
+      { label: "tool calls", num: true, value: function (r) { return OE.num(r.p.median_tool_calls); } },
+      { label: "Δ cost vs cold", num: true, value: function (r) { return vs(r.p, "cost") || "–"; } },
+      { label: "Δ turns vs cold", num: true, value: function (r) { return vs(r.p, "turns") || "–"; } },
+      { label: "flags", value: function (r) { return OE.flags(r.p.flags); } },
+      { label: "run", value: function (r) { var a = OE.el("a", { href: "/data/runs/" + r.p.run_id + ".jsonl" }, r.p.run_id); return a; } }
+    ], rows.sort(function (a, b) { return a.p.date < b.p.date ? 1 : -1; })));
+  }
+  ms.addEventListener("change", render); ds.addEventListener("change", render);
+  render();
+});
+</script>
+</body>
+</html>
