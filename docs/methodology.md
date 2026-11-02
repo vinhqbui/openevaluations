@@ -60,8 +60,8 @@ tasks, so far only Scholion's own runs) and interrupt (a real A cut at a pre-reg
   the rest). Frozen files are never edited; the generator checks the hashes.
 - **Channels.** `tools/gen/handoff.py` writes `datasets/handoff-interrupt/<task>--<channel>/`.
   Every image is the base tree as one commit with A's patch applied, uncommitted. repo-only adds
-  nothing; trace adds `/handoff/trace.md` (the trajectory rendered, outputs cut at 4000 characters,
-  A's tool calls in full); notes adds `/app/NOTES.md`. The instruction is one fixed lead sentence,
+  nothing; trace adds `/handoff/trace.md` (the trajectory rendered, messages and outputs cut at 4000 characters,
+  A's tool calls in full); notes adds `/app/NOTES.md`. The instruction is a fixed two-sentence lead,
   the channel's one sentence saying where its artifact is, and the task's goal. The records
   channel (A's Scholion records loaded into B's daemon) is not generated until `ClaudeCodeAv` can
   seed them.
