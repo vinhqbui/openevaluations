@@ -1,0 +1,227 @@
+name: handoff
+
+# The handoff benchmark's interrupt family (docs/PREREG-handoff-interrupt.md), in two stages that
+# are dispatched by hand, with a review of the frozen A's in between. Spends money on DeepSeek
+# Flash; nothing runs unless the LLM_API_KEY secret exists.
+#
+#   stage=predecessor  A (oe_agents.handoff_a:HandoffA, Claude Code on Scholion) once per
+#                      tallyho-cold task, cut at the pre-registered turn count; `oe freeze`;
+#                      tools/gen/handoff.py (leak check); nop and oracle on the generated tasks;
+#                      a PR adding the frozen A's and datasets/handoff-interrupt. Not auto-merged:
+#                      a person reads the frozen A's before any successor runs. A task already
+#                      frozen is never re-frozen.
+#   stage=successors   B on every (task, channel), one job per successor agent and channel, with
+#                      the Claude Code version A ran with; one PR with the run files.
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "predecessor or successors"
+        required: true
+        type: choice
+        options: [predecessor, successors]
+      budget_usd:
+        description: "Cap for this stage, USD"
+        default: "10"
+
+concurrency:
+  group: handoff
+
+env:
+  CUT_TURNS: "6"          # pre-registered; changing it needs a new PREREG
+  ATTEMPTS: "8"           # successor attempts per (task, channel)
+  AV_RELEASE: release/0.0.2
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      has_key: ${{ steps.v.outputs.has_key }}
+    steps:
+      - id: v
+        env:
+          KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then echo "has_key=1" >> "$GITHUB_OUTPUT"; else
+            echo "::notice::LLM_API_KEY not set; nothing runs."; fi
+
+  predecessor:
+    needs: prepare
+    if: needs.prepare.outputs.has_key == '1' && github.event.inputs.stage == 'predecessor'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      PYTHONUTF8: "1"
+      PYTHONPATH: ${{ github.workspace }}/agents
+      BUDGET: ${{ github.event.inputs.budget_usd || '10' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Run A and freeze it
+        env:
+          ANTHROPIC_BASE_URL: https://api.deepseek.com/anthropic
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.LLM_API_KEY }}
+          OE_CACHE: ${{ runner.temp }}/oe-cache
+        run: |
+          uv sync --frozen --extra run
+          day=$(date -u +%F)
+          job=handoff-a-$day
+          version=$(npm view @anthropic-ai/claude-code version)
+          extra="--ak max_turns=$CUT_TURNS --ak version=$version --ak av_version=$AV_RELEASE"
+          for v in ANTHROPIC_DEFAULT_HAIKU_MODEL ANTHROPIC_SMALL_FAST_MODEL CLAUDE_CODE_SUBAGENT_MODEL; do
+            extra="$extra --ae $v=deepseek-flash"
+          done
+          # Only tasks with no frozen A yet: a frozen A is never replaced.
+          for t in datasets/_shared/handoff/interrupt/*/; do
+            [ -d "$t" ] && extra="$extra -x *$(basename $t)"
+          done
+          set -f  # the -x patterns are for Harbor, not the shell
+          uv run harbor run -p datasets/tallyho-cold -a oe_agents.handoff_a:HandoffA -m anthropic/deepseek-flash \
+            -k 1 -n 4 -r 1 -o jobs --job-name $job --agent-setup-timeout-multiplier 2 $extra
+          set +f
+          uv run oe budget jobs --cap $BUDGET || echo "::warning::budget cap reached"
+          uv run oe freeze jobs/$job --out frozen-new --cut-turns $CUT_TURNS | tee freeze.txt || true
+          mkdir -p datasets/_shared/handoff/interrupt
+          for d in frozen-new/*/; do
+            name=$(basename $d)
+            if python3 -c "import json,sys; sys.exit(0 if json.load(open('$d/a.json'))['valid'] else 1)"; then
+              cp -r "$d" datasets/_shared/handoff/interrupt/$name
+            fi
+          done
+          echo "JOB=$job" >> "$GITHUB_ENV"
+      - name: Generate the channel tasks (leak check) and validate them with nop and oracle
+        run: |
+          uv run python tools/gen/handoff.py
+          uv run harbor run -p datasets/handoff-interrupt -a nop -n 4 -o jobs --job-name $JOB-nop
+          uv run oe rewards jobs/$JOB-nop --expect 0
+          uv run harbor run -p datasets/handoff-interrupt -a oracle -n 4 -o jobs --job-name $JOB-oracle
+          uv run oe rewards jobs/$JOB-oracle --expect 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: handoff-a-jobs
+          path: |
+            jobs/
+            frozen-new/
+          retention-days: 90
+      - name: Open the PR
+        env:
+          GH_TOKEN: ${{ secrets.TRACKER_PUSH_TOKEN || github.token }}
+        run: |
+          if [ -z "$(git status --porcelain datasets)" ]; then echo "::warning::no valid A was frozen"; exit 0; fi
+          branch=handoff/a-$(date -u +%F)-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          git config user.name "openevaluations handoff"
+          git config user.email "tracker@openevaluations.si"
+          git switch -c $branch
+          git add datasets/_shared/handoff datasets/handoff-interrupt
+          git add --chmod=+x $(git ls-files --others --cached datasets/handoff-interrupt | grep '\.sh$')
+          git commit -m "handoff: freeze A ($JOB)"
+          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} $branch
+          { echo "Frozen A's from $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID (cut at $CUT_TURNS turns)."
+            echo; echo '```'; cat freeze.txt; echo '```'; echo
+            echo "Leak check, nop (all 0) and oracle (all 1) passed. Read each NOTES.md and trace before merging;"
+            echo "invalid A's are in the run's handoff-a-jobs artifact and are re-run once per the PREREG."; } > body.md
+          gh pr create --title "handoff: freeze A ($JOB)" --base main --head $branch --body-file body.md
+
+  successors:
+    needs: prepare
+    if: needs.prepare.outputs.has_key == '1' && github.event.inputs.stage == 'successors'
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    strategy:
+      fail-fast: false
+      matrix:
+        leg: [claude-code, opencode]
+        channel: [repo-only, trace, notes]
+        include:
+          - leg: claude-code
+            agent: claude-code
+            model: anthropic/deepseek-flash
+          - leg: opencode
+            agent: opencode
+            model: deepseek/deepseek-flash
+    env:
+      PYTHONUTF8: "1"
+      BUDGET: ${{ github.event.inputs.budget_usd || '10' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Run B on the ${{ matrix.channel }} tasks
+        env:
+          ANTHROPIC_BASE_URL: ${{ startsWith(matrix.model, 'anthropic/') && 'https://api.deepseek.com/anthropic' || '' }}
+          ANTHROPIC_AUTH_TOKEN: ${{ startsWith(matrix.model, 'anthropic/') && secrets.LLM_API_KEY || '' }}
+          DEEPSEEK_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          uv sync --frozen --extra run
+          [ -n "$ANTHROPIC_BASE_URL" ] || unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN
+          [ -d datasets/handoff-interrupt ] || { echo "::error::no datasets/handoff-interrupt; run stage=predecessor first"; exit 1; }
+          job=handoff-b-${{ matrix.leg }}-${{ matrix.channel }}-$(date -u +%F)
+          extra=""
+          if [ "${{ matrix.agent }}" = claude-code ]; then
+            # the Claude Code version every frozen A ran with (one, or the run stops)
+            version=$(python3 -c "import json,glob; v={json.load(open(p))['agent']['version'] for p in glob.glob('datasets/_shared/handoff/interrupt/*/a.json')}; assert len(v)==1, v; print(v.pop())")
+            extra="--ak max_turns=40 --ak version=$version"
+            for v in ANTHROPIC_DEFAULT_HAIKU_MODEL ANTHROPIC_SMALL_FAST_MODEL CLAUDE_CODE_SUBAGENT_MODEL; do
+              extra="$extra --ae $v=deepseek-flash"
+            done
+          fi
+          mkdir -p jobs/$job
+          cat > jobs/$job/oe-env.json <<EOF
+          {"dataset": "handoff-interrupt", "attempts": $ATTEMPTS, "sandbox": "docker", "os": "linux",
+           "harbor_version": "$(uv run harbor --version | tr -d '\n')", "openevaluations_rev": "${GITHUB_SHA::7}",
+           "prereg": "docs/PREREG-handoff-interrupt.md",
+           "source": "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID",
+           "budget": {"cap_usd": $(python3 -c "print(round($BUDGET/6, 2))"), "spent_usd": null}}
+          EOF
+          uv run harbor run -p datasets/handoff-interrupt -i "*--${{ matrix.channel }}" -a ${{ matrix.agent }} \
+            -m ${{ matrix.model }} -k $ATTEMPTS -n 4 -r 1 -o jobs --job-name $job $extra
+          uv run oe budget jobs --cap $(python3 -c "print($BUDGET/6)") || echo "::warning::budget cap reached"
+      # Imported in `publish`: a successor's three channel jobs are one run, paired by task.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jobs-${{ matrix.leg }}-${{ matrix.channel }}
+          path: jobs/
+          retention-days: 90
+
+  publish:
+    needs: successors
+    if: always() && needs.successors.result != 'skipped'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: jobs-*
+          merge-multiple: true
+          path: jobs/
+      - name: Import one run per successor and open the PR
+        env:
+          GH_TOKEN: ${{ secrets.TRACKER_PUSH_TOKEN || github.token }}
+        run: |
+          uv sync --frozen
+          for leg in claude-code opencode; do
+            parts=$(ls -d jobs/handoff-b-$leg-* 2>/dev/null) || continue
+            uv run oe import-harbor $parts --merge --channels --machine github-actions --out runs
+          done
+          if [ -z "$(git ls-files --others --exclude-standard runs)" ]; then echo "::warning::no leg produced a run"; exit 0; fi
+          uv run oe detect && uv run oe validate && uv run oe site
+          branch=handoff/b-$(date -u +%F)-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          git config user.name "openevaluations handoff"
+          git config user.email "tracker@openevaluations.si"
+          git switch -c $branch
+          git add runs site/data
+          git commit -m "handoff: successors $(date -u +%F)"
+          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} $branch
+          gh pr create --title "handoff: successors $(date -u +%F)" --base main --head $branch \
+            --body "Handoff interrupt successors ($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID), per docs/PREREG-handoff-interrupt.md. One run file per (successor, channel); site/data/handoff.json pairs them by task."

@@ -11,13 +11,16 @@ from pathlib import Path
 
 from . import REPO, runfile, stats
 
-# How scholion's relay arms map onto the handoff benchmark's channels.
+# How scholion's relay arms map onto the handoff benchmark's channels; Harbor handoff runs
+# (tools/gen/handoff.py, `oe import-harbor --channels`) already name their arms by channel.
 RELAY_CHANNELS = {
     "cold": "repo-only",
     "baseline": "git-log",
     "notes": "notes",
     "av": "records (Scholion)",
+    "records": "records (Scholion)",
 }
+HANDOFF_FAMILIES = {"scholion-relay": "relay", "handoff-relay": "relay", "handoff-interrupt": "interrupt"}
 
 
 def _round(x):
@@ -97,7 +100,7 @@ def build(runs_dir, out_dir):
         if not private:
             by_day.setdefault((key, run["date"][:10]), []).append((run, points))
 
-        if run["dataset"]["name"] in ("scholion-relay", "handoff") and not private:
+        if run["dataset"]["name"] in HANDOFF_FAMILIES and not private:
             arms = _arms(ss)
             base = arms.get("cold") or arms.get("repo-only")
             cells = []
@@ -107,7 +110,7 @@ def build(runs_dir, out_dir):
                     p = stats.paired_report(base, v)
                     cell["vs_repo_only"] = {"cost": p["cost"], "tokens": p["tokens"], "turns": p["turns"]}
                 cells.append(cell)
-            handoff.append({"run_id": run["id"], "date": run["date"], "family": "relay" if run["dataset"]["name"] == "scholion-relay" else "interrupt",
+            handoff.append({"run_id": run["id"], "date": run["date"], "family": HANDOFF_FAMILIES[run["dataset"]["name"]],
                             "successor": run["agent"], "model": run["model"], "runner": run["harness"]["runner"],
                             "prereg": run.get("prereg"), "source": run.get("source"), "cells": cells})
 

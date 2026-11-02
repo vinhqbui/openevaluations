@@ -3,6 +3,5 @@ __pycache__/
 *.pyc
 .pytest_cache/
 jobs/
-datasets/handoff/frozen/*/workspace.tar
 .wrangler/
 node_modules/

@@ -33,10 +33,42 @@ def _import_scholion(a):
 def _import_harbor(a):
     from .import_harbor import import_job
 
-    for job in a.jobs:
-        p = import_job(job, a.out, machine=a.machine, dataset=a.dataset, arm=a.arm)
+    for job in ([a.jobs] if a.merge else a.jobs):
+        p = import_job(job, a.out, machine=a.machine, dataset=a.dataset, arm=a.arm, channels=a.channels)
         print(p.as_posix())
     return 0
+
+
+def _freeze(a):
+    from .handoff import freeze
+    from .import_harbor import trials
+
+    seen, bad = set(), 0
+    for d, r in trials(a.job):
+        task = r["task_name"].split("/")[-1]
+        if task in seen:
+            raise SystemExit(f"{a.job}: more than one A trial for {task}; A runs once per task (-k 1)")
+        seen.add(task)
+        fa = freeze(d, a.out, cut_turns=a.cut_turns)
+        bad += not fa["valid"]
+        state = "valid" if fa["valid"] else "INVALID: " + "; ".join(fa["problems"])
+        print(f"{task}: {state}; changed {fa['files_changed']}, {fa['records']} record(s), "
+              f"stopped at turn {fa['a_turns']} ({fa['a_stop']})")
+    print(f"{len(seen)} A(s) frozen into {Path(a.out).as_posix()}, {bad} invalid")
+    return 1 if bad else 0
+
+
+def _rewards(a):
+    from .import_harbor import _reward, trials
+
+    rows = list(trials(a.job))
+    bad = [(r["task_name"], _reward(r.get("verifier_result")), (r.get("exception_info") or {}).get("exception_type"))
+           for _, r in rows]
+    bad = [b for b in bad if b[2] or b[1] != a.expect]
+    for task, reward, exc in bad:
+        print(f"{task}: reward {reward}" + (f", {exc}" if exc else ""))
+    print(f"{len(rows) - len(bad)}/{len(rows)} trial(s) scored {a.expect:g}")
+    return 1 if bad or not rows else 0
 
 
 def _fmt(x, pct=False):
@@ -133,7 +165,21 @@ def main(argv=None):
     p.add_argument("--machine", default="local", choices=["local", "github-actions"])
     p.add_argument("--dataset", help="dataset name (default: from the job's config.json)")
     p.add_argument("--arm", help="arm name (default: the agent name)")
+    p.add_argument("--channels", action="store_true",
+                   help="handoff tasks: split '<task>--<channel>' into task and arm")
+    p.add_argument("--merge", action="store_true", help="the jobs are parts of one run: write one run file")
     p.set_defaults(fn=_import_harbor)
+
+    p = sub.add_parser("freeze", help="freeze a handoff predecessor job: one frozen A per task")
+    p.add_argument("job", help="the Harbor job directory of the A run")
+    p.add_argument("--out", default=str(REPO / "datasets" / "_shared" / "handoff" / "interrupt"))
+    p.add_argument("--cut-turns", type=int, required=True, help="the pre-registered max_turns A ran with")
+    p.set_defaults(fn=_freeze)
+
+    p = sub.add_parser("rewards", help="dataset validation: exit 1 unless every trial scored --expect (nop 0, oracle 1)")
+    p.add_argument("job")
+    p.add_argument("--expect", type=float, required=True)
+    p.set_defaults(fn=_rewards)
 
     p = sub.add_parser("stats", help="per-arm summary, or paired deltas with --paired BASE ARM[:arm]...")
     p.add_argument("files", nargs="*")

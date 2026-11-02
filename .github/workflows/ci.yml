@@ -19,4 +19,6 @@ jobs:
       - name: site/data is built from runs/
         run: uv run oe site --check
       - name: generated datasets are up to date
-        run: uv run python tools/gen/tallyho.py --check
+        run: |
+          uv run python tools/gen/tallyho.py --check
+          uv run python tools/gen/handoff.py --check
