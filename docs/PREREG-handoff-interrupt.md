@@ -24,8 +24,11 @@ results is labelled exploratory.
 - **Model:** `anthropic/deepseek-flash` through `https://api.deepseek.com/anthropic`, with the
   haiku, small-fast and subagent aliases set to `deepseek-flash`. Claude Code is the npm latest when
   A runs, recorded in each `a.json`.
-- **Tasks:** the four `tallyho-cold` tasks, all included. (The methodology's plan of six interrupt
-  tasks needs two more tallyho tasks; they are not written yet and are not part of this run.)
+- **Tasks:** six, all included: the four `tallyho-cold` tasks and the two `tallyho-more` tasks
+  (`order-price-snapshot`, `config-literal-values`). The two were written on 2026-11-02, after this
+  file's first version and before any run, on the same base tree; each hidden test fails on the
+  base tree and passes with its fix (`tools/tests/test_tasks.py`). They are not in the weekly
+  tracker's set, so `docs/PREREG-tracker-av.md` is unchanged.
 - **Cut:** `--ak max_turns=6`. The 2026-11-02 cold run took 8 to 21 turns per accepted session
   (median 13), so six turns is short of the fastest finish: A has usually read the code and may have
   started an edit.
@@ -48,8 +51,9 @@ results is labelled exploratory.
   with (`--ak version=`), on `anthropic/deepseek-flash` as above. Second successor: `opencode` on
   `deepseek/deepseek-flash`, reported separately and never pooled with Claude Code.
 - **Dataset and revision:** `datasets/handoff-interrupt` at the commit that merges the freeze PR:
-  4 tasks × 3 channels (repo-only, trace, notes).
-- **Attempts:** `-k 8` per (task, channel) per successor, so 32 sessions per channel cell.
+  6 tasks × 3 channels (repo-only, trace, notes), fewer if a task is dropped under the validity rule.
+- **Attempts:** `-k 8` per (task, channel) per successor, so 48 sessions per channel cell (40 with
+  one task dropped, 32 with two).
 - **Budget:** `$10` per stage, a sixth per (successor, channel) job; `oe budget` re-prices Claude
   Code's DeepSeek figures from `tools/oe/prices.toml`. Expected well under `$1` for the successor
   stage (about $0.005 a session).
@@ -64,8 +68,8 @@ results is labelled exploratory.
   (`vs_repo_only` in `site/data/handoff.json`), truncated sessions skipped.
 - **Decision rule:** a cell needs at least 30 valid sessions for any claim; below that, counts
   only. A channel is reported as cheaper (or dearer) than repo-only only when the 95% interval of its
-  paired cost delta excludes 0, and the same for turns. With four tasks, a claim is about these four
-  tasks and this A; it is not a claim about handoffs in general. If acceptance is at the ceiling in
+  paired cost delta excludes 0, and the same for turns. With six tasks, a claim is about these six
+  tasks and these A's; it is not a claim about handoffs in general. If acceptance is at the ceiling in
   every channel, the acceptance comparison is reported as uninformative, as in the tracker.
 - **Known overlap between channels:** the trace contains everything A did, including its writes to
   `NOTES.md`, so trace is a superset of notes by construction. That is the channel as defined, not

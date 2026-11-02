@@ -1,0 +1,36 @@
+diff --git a/tallyho/models.py b/tallyho/models.py
+index 7ef8a2f..6c646a1 100644
+--- a/tallyho/models.py
++++ b/tallyho/models.py
+@@ -103,7 +103,8 @@ class Order:
+             "placed_on": self.placed_on.isoformat() if self.placed_on else None,
+             "coupons": list(self.coupon_codes),
+             "lines": [
+-                {"sku": l.product.sku, "quantity": l.quantity, "price": l.product.price.minor}
++                {"sku": l.product.sku, "quantity": l.quantity, "price": l.product.price.minor,
++                 "currency": l.product.price.currency}
+                 for l in self.lines
+             ],
+         }
+diff --git a/tallyho/repository.py b/tallyho/repository.py
+index 42c7a47..1462c9d 100644
+--- a/tallyho/repository.py
++++ b/tallyho/repository.py
+@@ -2,6 +2,7 @@
+ 
+ from __future__ import annotations
+ 
++from dataclasses import replace
+ from datetime import date
+ 
+ from .models import Customer, Order, OrderLine, OrderStatus, Product
+@@ -62,6 +63,9 @@ class Repository:
+         lines = []
+         for l in r["lines"]:
+             p = self.product(l["sku"])
++            if "price" in l:
++                # The line keeps the price it was saved with; older records have no currency.
++                p = replace(p, price=Money(l["price"], l.get("currency", p.price.currency)))
+             lines.append(OrderLine(p, l["quantity"]))
+         return Order(
+             r["id"], self.customer(r["customer"]), lines, OrderStatus(r["status"]),

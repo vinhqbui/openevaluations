@@ -1,0 +1,15 @@
+name = "config-literal-values"
+repo_path = "~/bench-repos/tallyho"
+base_rev = "main"
+fix_rev = "fix-config"
+goal = """load_config crashes with configparser's interpolation error when a value contains a percent sign, such as the shop name `Half % Off`, and it accepts settings that break the shop later. Read every value literally (`%` has no special meaning), and make every bad setting a ConfigError instead: a currency tallyho does not know (see `tallyho.money.MINOR_UNITS`), a `page_size` that is not a positive integer, and a tax rate that is not a number from 0 to 100. A bad tax rate's error message names its region."""
+relevant_files = ["tallyho/config.py"]
+verify_cmd = "~/bench-work/venv/bin/python -m pytest -q -p no:cacheprovider tests"
+path_prepend = ["~/bench-work/venv/bin"]
+max_turns = 40
+model = "claude-haiku-5-5"
+session_timeout_secs = 900
+
+[[local_tests]]
+path = "tests/test_config_hidden.py"
+source = "files/test_config_hidden.py"

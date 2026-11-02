@@ -52,6 +52,10 @@ task built from that same frozen A, so only the channel differs. Families: relay
 tasks, so far only Scholion's own runs) and interrupt (a real A cut at a pre-registered turn count;
 `docs/PREREG-handoff-interrupt.md`).
 
+- **Tasks.** The four `tallyho-cold` tasks and the two of `tallyho-more`, a separate set on the
+  same base tree, so the weekly tracker's task set never changes. `tools/tests/test_tasks.py`
+  checks every task: its hidden test fails on the base tree, and with its fix the whole suite
+  passes.
 - **A.** `oe_agents.handoff_a:HandoffA` is the tracker's `av` arm with a request to keep
   `NOTES.md`, cut by Claude Code's `--max-turns`. Afterwards `/app` is tarred, and
   `oe freeze <job> --cut-turns N` writes `datasets/_shared/handoff/interrupt/<task>/`:
