@@ -1,0 +1,25 @@
+schema_version = "1.4"
+source = "https://github.com/vinhqbui/openevaluations/tree/main/datasets/_shared/tallyho/tasks-more"
+
+[task]
+name = "openevaluations/config-literal-values"
+description = "tallyho: config-literal-values"
+keywords = ["python", "bugfix", "tallyho"]
+
+[metadata]
+relevant_files = ["tallyho/config.py"]
+max_turns = 40
+dead_ends = []
+
+[agent]
+timeout_sec = 900
+user = "agent"
+
+[verifier]
+timeout_sec = 180
+
+[environment]
+build_timeout_sec = 600
+network_mode = "public"
+cpus = 1
+memory_mb = 2048

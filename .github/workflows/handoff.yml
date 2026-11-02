@@ -5,7 +5,7 @@ name: handoff
 # Flash; nothing runs unless the LLM_API_KEY secret exists.
 #
 #   stage=predecessor  A (oe_agents.handoff_a:HandoffA, Claude Code on Scholion) once per
-#                      tallyho-cold task, cut at the pre-registered turn count; `oe freeze`;
+#                      tallyho-cold and tallyho-more task, cut at the pre-registered turn count; `oe freeze`;
 #                      tools/gen/handoff.py (leak check); nop and oracle on the generated tasks;
 #                      a PR adding the frozen A's and datasets/handoff-interrupt. Not auto-merged:
 #                      a person reads the frozen A's before any successor runs. A task already
@@ -80,11 +80,17 @@ jobs:
             [ -d "$t" ] && extra="$extra -x *$(basename $t)"
           done
           set -f  # the -x patterns are for Harbor, not the shell
-          uv run harbor run -p datasets/tallyho-cold -a oe_agents.handoff_a:HandoffA -m anthropic/deepseek-flash \
-            -k 1 -n 4 -r 1 -o jobs --job-name $job --agent-setup-timeout-multiplier 2 $extra
+          for ds in tallyho-cold tallyho-more; do   # the interrupt family's six tasks
+            uv run harbor run -p datasets/$ds -a oe_agents.handoff_a:HandoffA -m anthropic/deepseek-flash \
+              -k 1 -n 4 -r 1 -o jobs --job-name $job-$ds --agent-setup-timeout-multiplier 2 $extra
+          done
           set +f
           uv run oe budget jobs --cap $BUDGET || echo "::warning::budget cap reached"
-          uv run oe freeze jobs/$job --out frozen-new --cut-turns $CUT_TURNS | tee freeze.txt || true
+          : > freeze.txt
+          for ds in tallyho-cold tallyho-more; do
+            [ -d jobs/$job-$ds ] || continue
+            uv run oe freeze jobs/$job-$ds --out frozen-new --cut-turns $CUT_TURNS | tee -a freeze.txt || true
+          done
           mkdir -p datasets/_shared/handoff/interrupt
           for d in frozen-new/*/; do
             name=$(basename $d)

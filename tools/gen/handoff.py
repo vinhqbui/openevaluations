@@ -150,9 +150,11 @@ def _load_a(d):
 
 
 def _spec(task):
-    spec = tomllib.loads((TALLYHO / "tasks" / f"{task}.toml").read_text(encoding="utf-8"))
+    """A task's spec, hidden test and fix, from the tracker's set or the tallyho-more set."""
+    tasks = next(d for d in (TALLYHO / "tasks", TALLYHO / "tasks-more") if (d / f"{task}.toml").exists())
+    spec = tomllib.loads((tasks / f"{task}.toml").read_text(encoding="utf-8"))
     (hidden,) = spec["local_tests"]
-    return spec, Path(hidden["path"]).name, TALLYHO / "tasks" / hidden["source"], \
+    return spec, Path(hidden["path"]).name, tasks / hidden["source"], \
         TALLYHO / "fixes" / f"{spec['fix_rev'].removeprefix('fix-')}.patch"
 
 

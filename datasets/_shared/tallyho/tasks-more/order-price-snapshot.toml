@@ -1,0 +1,15 @@
+name = "order-price-snapshot"
+repo_path = "~/bench-repos/tallyho"
+base_rev = "main"
+fix_rev = "fix-snapshot"
+goal = """Orders read back from the store are priced at each product's current price, so changing a product's price silently changes the totals of orders saved before. An order read from the store must keep the price, and the currency, each line had when the order was saved; the product's other fields (name, category, taxable) still come from the current product record. Store each line's currency in the order record as `currency`, next to `price`. Order records saved without a line price keep using the current product price, and ones with a price but no currency use the product's currency."""
+relevant_files = ["tallyho/models.py", "tallyho/repository.py"]
+verify_cmd = "~/bench-work/venv/bin/python -m pytest -q -p no:cacheprovider tests"
+path_prepend = ["~/bench-work/venv/bin"]
+max_turns = 40
+model = "claude-haiku-5-5"
+session_timeout_secs = 900
+
+[[local_tests]]
+path = "tests/test_price_snapshot_hidden.py"
+source = "files/test_price_snapshot_hidden.py"
