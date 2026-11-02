@@ -52,6 +52,9 @@
 <h2>Change detection</h2>
 <p>Each run is compared with the four before it in the same series, meaning the same dataset, agent, model and arm. A run is flagged <b>degraded</b> when its Wilson upper bound is more than 15 points under the baseline acceptance rate. It is flagged <b>tool calls up</b> when its median tool calls exceed 1.5× the baseline's. A flagged series that comes back inside both thresholds is marked <b>recovered</b>. Fewer than 12 valid sessions gives <b>low n</b> and no other flag.</p>
 
+<h2 id="handoff">Handoff benchmark</h2>
+<p>Agent A works on a task and stops; agent B takes over. A runs once per task and is frozen: its working tree as a patch, its transcript, its <code>NOTES.md</code> and its Scholion records, with a hash of each so the frozen files are never edited. Each channel is then generated as its own task from that one A. Every image holds the same tree, A's changes applied and uncommitted. repo-only adds nothing, trace adds the transcript and notes adds the notes file. Before any successor runs, a leak check looks for any part of the hidden tests in every artifact, and each generated task must score 0 with an agent that does nothing (A had not already solved it) and 1 with the reference fix applied after A's work is reset. Successors are paired by task against repo-only. The interrupt family's rules are pre-registered in <a href="https://github.com/vinhqbui/openevaluations/blob/main/docs/PREREG-handoff-interrupt.md">PREREG-handoff-interrupt.md</a>.</p>
+
 <h2>Threats to validity</h2>
 <ul>
   <li><b>Small task sets.</b> Weekly sets are small so they stay cheap. Treat them as a regression tracker, not a capability ranking.</li>
