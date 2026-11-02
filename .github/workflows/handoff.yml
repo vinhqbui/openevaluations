@@ -68,6 +68,7 @@ jobs:
           OE_CACHE: ${{ runner.temp }}/oe-cache
         run: |
           uv sync --frozen --extra run
+          uv run python -m oe_agents.av_settings fetch   # the pinned Scholion release, checked before any trial
           day=$(date -u +%F)
           job=handoff-a-$day
           version=$(npm view @anthropic-ai/claude-code version)
@@ -102,6 +103,7 @@ jobs:
       - name: Generate the channel tasks (leak check) and validate them with nop and oracle
         run: |
           uv run python tools/gen/handoff.py
+          [ -d datasets/handoff-interrupt ] || { echo "::error::no valid A was frozen (see the freeze output above)"; exit 1; }
           uv run harbor run -p datasets/handoff-interrupt -a nop -n 4 -o jobs --job-name $JOB-nop
           uv run oe rewards jobs/$JOB-nop --expect 0
           uv run harbor run -p datasets/handoff-interrupt -a oracle -n 4 -o jobs --job-name $JOB-oracle
