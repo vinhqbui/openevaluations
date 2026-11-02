@@ -98,7 +98,10 @@ jobs:
               extra="$extra --ae $v=deepseek-flash"
             done
           fi
-          if [ "${{ matrix.arm }}" = av ]; then scholion_rev='"release/0.0.2"'; fi
+          if [ "${{ matrix.arm }}" = av ]; then
+            scholion_rev='"release/0.0.2"'
+            uv run python -m oe_agents.av_settings fetch   # the pinned release, checked once before any trial
+          fi
           mkdir -p jobs/$job
           cat > jobs/$job/oe-env.json <<EOF
           {"dataset": "tallyho-cold", "arm": "${{ matrix.arm }}", "attempts": 3, "sandbox": "docker", "os": "linux",

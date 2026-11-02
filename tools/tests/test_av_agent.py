@@ -1,7 +1,9 @@
 """The Scholion arm: Claude Code with av hooks, a daemon and a jj workspace, as a Harbor agent."""
 
+import hashlib
 import json
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -124,6 +126,33 @@ def test_release_tarball_is_checked_against_the_pinned_sha(tmp_path, monkeypatch
     with pytest.raises(RuntimeError, match="sha256"):
         av_settings.release_tarball(download=lambda url, dest: None)
     assert not bad.exists()  # a bad cached file is removed so the next run downloads again
+
+
+def test_fetch_preflight_fails_once_and_clearly_on_a_changed_release(tmp_path, monkeypatch, capsys):
+    """Run before `harbor run` in CI, so a changed release stops the leg before any trial installs."""
+    monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "_urlretrieve", lambda url, dest: Path(dest).write_bytes(b"re-uploaded"))
+    assert av_settings.main(["fetch"]) == 1
+    err = capsys.readouterr().err
+    assert "::error::" in err and av_settings.SHA256 in err and av_settings.AV_RELEASE in err
+
+
+def test_fetch_preflight_passes_with_the_pinned_bytes(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "SHA256", hashlib.sha256(b"the release").hexdigest())
+    monkeypatch.setattr(av_settings, "_urlretrieve", lambda url, dest: Path(dest).write_bytes(b"the release"))
+    assert av_settings.main(["fetch"]) == 0
+    assert capsys.readouterr().out.strip().endswith(".tar.gz")
+
+
+def test_download_goes_to_a_private_part_file(tmp_path, monkeypatch):
+    seen = []
+    monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "SHA256", hashlib.sha256(b"x").hexdigest())
+    av_settings.release_tarball(download=lambda url, dest: (seen.append(Path(dest).name), Path(dest).write_bytes(b"x")))
+    (name,) = seen
+    assert name.endswith(".part") and name != f"{av_settings.TARBALL}.tar.part"  # unique per process
+    assert not list(tmp_path.glob("*.part"))
 
 
 def test_glibc_check():

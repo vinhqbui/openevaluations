@@ -11,6 +11,7 @@ import json
 import os
 import re
 import urllib.request
+import uuid
 from pathlib import Path
 
 AV_RELEASE = "release/0.0.2"
@@ -125,17 +126,43 @@ def _urlretrieve(url, dest):
             f.write(chunk)
 
 
-def release_tarball(download=_urlretrieve):
+def release_tarball(download=None):
     """The pinned release tarball on the host, downloaded once into $OE_CACHE and sha256-checked."""
     cache = Path(os.environ.get("OE_CACHE") or Path.home() / ".cache" / "openevaluations")
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / f"{TARBALL}.tar.gz"
     if not path.exists():
-        tmp = path.with_suffix(".part")
-        download(URL, tmp)
-        tmp.replace(path)
+        tmp = cache / f"{TARBALL}.{os.getpid()}.{uuid.uuid4().hex[:8]}.part"  # never shared with another process
+        try:
+            (download or _urlretrieve)(URL, tmp)
+            tmp.replace(path)
+        finally:
+            tmp.unlink(missing_ok=True)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     if digest != SHA256:
         path.unlink()
         raise RuntimeError(f"{path}: sha256 {digest} is not the pinned {SHA256}")
     return path
+
+
+def main(argv=None):
+    """`python -m oe_agents.av_settings fetch`: download and check the pinned release once, before
+    `harbor run`, so a changed release stops a CI leg with one clear error and no paid trial."""
+    import sys
+
+    argv = sys.argv[1:] if argv is None else argv
+    if argv != ["fetch"]:
+        print("usage: python -m oe_agents.av_settings fetch", file=sys.stderr)
+        return 2
+    try:
+        print(release_tarball())
+    except RuntimeError as e:
+        print(f"::error::Scholion {AV_RELEASE} ({URL}) does not match the sha256 pinned in "
+              f"agents/oe_agents/av_settings.py ({SHA256}). The release asset changed or the pin is "
+              f"wrong; no trial was started. {e}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
