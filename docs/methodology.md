@@ -47,8 +47,30 @@ Series = (dataset, agent, model, arm). Baseline = the previous four runs of the 
 
 ## Handoff benchmark (phase P3)
 
-Predecessor A runs once per task and is frozen (workspace, NOTES.md, ATIF trajectory, Scholion
-records). Each channel is a generated single-step Harbor task built from the same frozen A, so
-only the channel differs. Channels: repo-only, trace, notes, records. Families: relay (curated
-A, 10 tasks) and interrupt (real A cut at a pre-registered turn count, 6 tasks). A leak check
-keeps hidden tests and fix hunks out of every frozen artifact.
+Predecessor A runs once per task and is frozen; each channel is a generated single-step Harbor
+task built from that same frozen A, so only the channel differs. Families: relay (curated A, 10
+tasks, so far only Scholion's own runs) and interrupt (a real A cut at a pre-registered turn count;
+`docs/PREREG-handoff-interrupt.md`).
+
+- **A.** `oe_agents.handoff_a:HandoffA` is the tracker's `av` arm with a request to keep
+  `NOTES.md`, cut by Claude Code's `--max-turns`. Afterwards `/app` is tarred, and
+  `oe freeze <job> --cut-turns N` writes `datasets/_shared/handoff/interrupt/<task>/`:
+  `workspace.patch` (A's tree against the base, `NOTES.md` excluded), `NOTES.md`,
+  `trajectory.json`, `records.json` and `a.json` (who A was, where it stopped, validity, sha256 of
+  the rest). Frozen files are never edited; the generator checks the hashes.
+- **Channels.** `tools/gen/handoff.py` writes `datasets/handoff-interrupt/<task>--<channel>/`.
+  Every image is the base tree as one commit with A's patch applied, uncommitted. repo-only adds
+  nothing; trace adds `/handoff/trace.md` (the trajectory rendered, outputs cut at 4000 characters,
+  A's tool calls in full); notes adds `/app/NOTES.md`. The instruction is one fixed lead sentence,
+  the channel's one sentence saying where its artifact is, and the task's goal. The records
+  channel (A's Scholion records loaded into B's daemon) is not generated until `ClaudeCodeAv` can
+  seed them.
+- **Leak check.** Markers: the hidden test's file stem, its test function names and its lines of 20
+  or more characters, and the fix's added lines of 20 or more characters, all minus anything
+  already in the base tree. A hidden-test marker in any artifact stops generation. A fix line
+  stops it for a curated (relay) A; in a real A, whose image never held the fix, it is A's own
+  progress and is counted as `fix_lines_in_a` in task.toml.
+- **Validation.** `-a nop` scores 0 (A had not already solved the task) and `-a oracle`, which
+  resets A's work and applies the fix, scores 1 on every generated task (`oe rewards`).
+- **Import.** `oe import-harbor <jobs...> --channels --merge` makes one run per successor:
+  `<task>--<channel>` becomes task and arm, so `/handoff` pairs channels against repo-only by task.

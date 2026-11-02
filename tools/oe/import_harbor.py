@@ -93,20 +93,37 @@ def trials(job_dir):
             yield res.parent, r
 
 
-def import_job(job_dir, out_dir, machine="local", dataset=None, arm=None, task_root=None):
-    job_dir = Path(job_dir)
-    rows = list(trials(job_dir))
+def _task_arm(task_name, arm, channels):
+    """(task, arm) of a trial; handoff tasks are named '<task>--<channel>' and the channel is the arm."""
+    name = task_name.split("/")[-1]
+    if not channels:
+        return name, arm
+    task, sep, channel = name.partition("--")
+    if not sep:
+        raise SystemExit(f"{task_name}: not a handoff channel task ('<task>--<channel>')")
+    return task, channel
+
+
+def import_job(job_dir, out_dir, machine="local", dataset=None, arm=None, task_root=None, channels=False):
+    """One run file from one job directory, or from several (a list) run as parts of one run."""
+    jobs = [Path(j) for j in (job_dir if isinstance(job_dir, (list, tuple)) else [job_dir])]
+    rows = [(j, d, r) for j in jobs for d, r in trials(j)]
     if not rows:
-        raise SystemExit(f"{job_dir}: no trial result.json found")
+        raise SystemExit(f"{', '.join(map(str, jobs))}: no trial result.json found")
+    job_of = {d: j for j, d, _ in rows}
+    rows = [(d, r) for _, d, r in rows]
     env = {}
-    if (job_dir / "oe-env.json").exists():
-        env = json.loads((job_dir / "oe-env.json").read_text(encoding="utf-8"))
+    if (jobs[0] / "oe-env.json").exists():
+        env = json.loads((jobs[0] / "oe-env.json").read_text(encoding="utf-8"))
     # Run-level agent and model from a trial that got past setup (a failed install says "unknown").
     infos = [r.get("agent_info") or {} for _, r in rows]
     info = next((i for i in infos if i.get("version") not in (None, "unknown")), infos[0])
     mi = info.get("model_info") or {}
-    dataset = dataset or env.get("dataset") or job_dir.name
+    dataset = dataset or env.get("dataset") or jobs[0].name
     arm = arm or env.get("arm") or info.get("name", "agent")
+    arms = sorted({_task_arm(r["task_name"], arm, channels)[1] for _, r in rows})
+    if channels:
+        arm = "multi"
     starts = [_ts(r.get("started_at")) for _, r in rows if r.get("started_at")]
     date = min(starts) if starts else datetime.now()
     digest = hashlib.sha1("".join(sorted(r["trial_name"] for _, r in rows)).encode()).hexdigest()[:6]
@@ -118,7 +135,7 @@ def import_job(job_dir, out_dir, machine="local", dataset=None, arm=None, task_r
                     "visibility": env.get("visibility", "public")},
         "agent": {"name": info.get("name", "unknown"), "version": info.get("version")},
         "model": {"provider": _model_provider(mi), "name": mi.get("name") or "unknown"},
-        "config": {"arm": arm, "arms": [arm], "agent_kwargs": env.get("agent_kwargs", {}),
+        "config": {"arm": arm, "arms": arms, "agent_kwargs": env.get("agent_kwargs", {}),
                    "attempts_per_task": env.get("attempts")},
         "harness": {"runner": "harbor", "harbor_version": env.get("harbor_version"),
                     "openevaluations_rev": env.get("openevaluations_rev"), "agent_impl_rev": env.get("agent_impl_rev"),
@@ -129,9 +146,9 @@ def import_job(job_dir, out_dir, machine="local", dataset=None, arm=None, task_r
     }
     by_task = {}
     for d, r in rows:
-        by_task.setdefault(r["task_name"].split("/")[-1], []).append((d, r))
+        by_task.setdefault(_task_arm(r["task_name"], arm, channels), []).append((d, r))
     sessions = []
-    for task, items in sorted(by_task.items()):
+    for (task, s_arm), items in sorted(by_task.items()):
         items.sort(key=lambda x: x[1].get("started_at") or "")
         for attempt, (d, r) in enumerate(items, start=1):
             ar = r.get("agent_result") or {}
@@ -146,10 +163,10 @@ def import_job(job_dir, out_dir, machine="local", dataset=None, arm=None, task_r
             traj = atif.load(traj_path)
             ae = r.get("agent_execution") or {}
             t0, t1 = _ts(ae.get("started_at")), _ts(ae.get("finished_at"))
-            task_dir = Path(task_root) / task if task_root else _task_dir(json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else None)
+            task_dir = Path(task_root) / r["task_name"].split("/")[-1] if task_root else _task_dir(json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else None)
             dead = _dead_ends(task_dir)
             sessions.append({
-                "type": "session", "run_id": rid, "task": task, "arm": arm, "attempt": attempt,
+                "type": "session", "run_id": rid, "task": task, "arm": s_arm, "attempt": attempt,
                 "status": status, "reason": meta.get("oe_invalid") or (exc or {}).get("exception_message"),
                 "reward": reward, "accepted": status == "ok" and reward >= 1.0,
                 "cost_usd": cost, "cost_source": cs,
@@ -163,7 +180,7 @@ def import_job(job_dir, out_dir, machine="local", dataset=None, arm=None, task_r
                 "truncated": _truncated(d / "agent"),
                 "error_class": (exc or {}).get("exception_type"),
                 "trajectory": {"kind": "atif" if traj else "none",
-                               "path": f"{job_dir.name}/{d.name}/agent/trajectory.json" if traj else None},
+                               "path": f"{job_of[d].name}/{d.name}/agent/trajectory.json" if traj else None},
                 "trial_name": r["trial_name"],
             })
     return runfile.write(Path(out_dir) / f"{rid}.jsonl", run, sessions)
