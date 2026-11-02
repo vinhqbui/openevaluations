@@ -155,6 +155,28 @@ def test_download_goes_to_a_private_part_file(tmp_path, monkeypatch):
     assert not list(tmp_path.glob("*.part"))
 
 
+def test_fetch_preflight_reports_a_failed_download_and_leaves_no_part_file(tmp_path, monkeypatch, capsys):
+    def offline(url, dest):
+        Path(dest).write_bytes(b"half")
+        raise OSError("connection reset")
+    monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "_urlretrieve", offline)
+    assert av_settings.main(["fetch"]) == 1
+    err = capsys.readouterr().err
+    assert "::error::" in err and "connection reset" in err and "could not download" in err
+    assert not list(tmp_path.iterdir())
+
+
+def test_two_downloads_use_different_part_files(tmp_path, monkeypatch):
+    seen = []
+    monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "SHA256", hashlib.sha256(b"x").hexdigest())
+    for _ in range(2):
+        av_settings.release_tarball(download=lambda url, dest: (seen.append(Path(dest).name), Path(dest).write_bytes(b"x")))
+        (tmp_path / f"{av_settings.TARBALL}.tar.gz").unlink()
+    assert len(set(seen)) == 2
+
+
 def test_glibc_check():
     assert av_settings.glibc_ok("ldd (Debian GLIBC 2.41-12) 2.41")
     assert av_settings.glibc_ok("ldd (GNU libc) 2.39")

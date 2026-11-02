@@ -140,7 +140,7 @@ def release_tarball(download=None):
             tmp.unlink(missing_ok=True)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     if digest != SHA256:
-        path.unlink()
+        path.unlink(missing_ok=True)
         raise RuntimeError(f"{path}: sha256 {digest} is not the pinned {SHA256}")
     return path
 
@@ -160,6 +160,10 @@ def main(argv=None):
         print(f"::error::Scholion {AV_RELEASE} ({URL}) does not match the sha256 pinned in "
               f"agents/oe_agents/av_settings.py ({SHA256}). The release asset changed or the pin is "
               f"wrong; no trial was started. {e}", file=sys.stderr)
+        return 1
+    except OSError as e:  # URLError, HTTPError and timeouts are OSErrors
+        print(f"::error::could not download Scholion {AV_RELEASE} ({URL}); no trial was started. {e}",
+              file=sys.stderr)
         return 1
     return 0
 
