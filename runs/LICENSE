@@ -1,0 +1,8 @@
+The run files in this directory (runs/*.jsonl) and their copies under site/data/ are licensed
+under the Creative Commons Attribution 4.0 International License (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/
+
+Attribution: "openevaluations (https://openevaluations.si)", with the run id.
+
+Runs whose id starts with "scholion-" were recorded by scholion-bench
+(https://github.com/vinhqbui/scholion, bench/results/) and converted with `oe import-scholion`.

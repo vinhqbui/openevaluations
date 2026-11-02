@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>openevaluations · open, longitudinal evaluations of coding agents</title>
+<meta name="description" content="Open evaluations of coding-agent CLIs: the same tasks, every week, every version, with the raw rows published. Plus a runnable benchmark for handing a task from one agent to another.">
+<link rel="canonical" href="https://openevaluations.si/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://openevaluations.si/">
+<meta property="og:title" content="openevaluations: coding agents, measured in the open">
+<meta property="og:description" content="Weekly runs of coding-agent CLIs on fixed tasks, raw data downloadable, and a handoff benchmark.">
+<meta property="og:image" content="https://openevaluations.si/og.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="text/markdown" href="/llms.txt" title="openevaluations for agents (llms.txt)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<div class="nav"><div class="wrap">
+  <a class="brand" href="/"><b>o</b> openevaluations</a>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+</div></div>
+<main class="wrap">
+<header class="page">
+  <h1>Coding agents, <em>measured in the open</em>.</h1>
+  <p class="lede">The same tasks, run on a schedule against each new CLI version, with every session's raw row published. Also a benchmark for the moment one agent hands a task to another.</p>
+</header>
+
+<div class="tiles" id="tiles" aria-live="polite"></div>
+
+<section>
+  <h2>Why this exists</h2>
+  <div class="cards">
+    <div class="card"><h3>Agents change under you</h3><p>A coding agent is a model plus a harness, and the harness ships weekly. A CLI release can move pass rates and tool calls even when the model stays the same. Public trackers of this exist, but their data stays closed.</p></div>
+    <div class="card"><h3>Handoffs are not measured</h3><p>Benchmarks score one agent on one uninterrupted task. Real work is picked up from someone else. The protocol for measuring that exists in a paper, but no code was released. Here it is runnable.</p></div>
+    <div class="card"><h3>LLM-app evals are a different job</h3><p>Frameworks such as DeepEval score the LLM application you build, from its traces. They do not run Claude Code or Codex on a repository task and check the result with hidden tests. That is what this site does.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>How it works</h2>
+  <div class="cards">
+    <div class="card"><h3>Fixed tasks, hidden tests</h3><p>Each task is a repository at a base commit, a goal, and hidden tests that decide acceptance. The tasks are in the <a href="https://harborframework.com">Harbor</a> format, so any of its 40+ agent adapters can run them.</p></div>
+    <div class="card"><h3>An open results format</h3><p>One JSON line per session: reward, cost and where the cost came from, tokens, LLM calls, tool calls, wall time, and the agent's own version string. <a href="/methodology/">Schema oe/1</a>.</p></div>
+    <div class="card"><h3>Honest statistics</h3><p>Wilson intervals on acceptance, paired bootstraps for arm deltas, pre-registration before paid runs, and no significance claim below 30 sessions per cell.</p></div>
+  </div>
+  <div class="honest"><b>Status.</b> The data so far is the 18 runs that seeded this project: Claude Code on two small Python task sets, recorded by <a href="/scholion/">Scholion</a>'s own benchmark harness. Weekly Harbor runs of Claude Code and a second agent start next. Scholion is one evaluated arm here, not the subject.</div>
+</section>
+</main>
+<footer><div class="wrap">Code Apache-2.0, data CC BY 4.0 · <a href="https://github.com/vinhqbui/openevaluations">github.com/vinhqbui/openevaluations</a> · <a href="/llms.txt">llms.txt</a> · Not affiliated with any agent vendor.</div></footer>
+<script src="/js/oe.js"></script>
+<script>
+Promise.all([OE.load("runs"), OE.load("datasets")]).then(function (d) {
+  var runs = d[0].runs, sessions = 0, agents = {}, versions = {};
+  runs.forEach(function (r) { agents[r.agent.name] = 1; if (r.agent.version) versions[r.agent.name + r.agent.version] = 1; Object.keys(r.arms).forEach(function (a) { sessions += r.arms[a].n; }); });
+  var tiles = document.getElementById("tiles");
+  [[runs.length, "runs published", "raw rows downloadable"],
+   [sessions.toLocaleString("en-US"), "valid agent sessions", Object.keys(d[1].datasets).length + " datasets"],
+   [Object.keys(versions).length, "agent CLI versions seen", Object.keys(agents).join(", ")]].forEach(function (t) {
+    var e = OE.el("div", { class: "tile" });
+    e.appendChild(OE.el("div", { class: "v" }, String(t[0])));
+    e.appendChild(OE.el("div", { class: "l" }, t[1]));
+    e.appendChild(OE.el("div", { class: "s" }, t[2]));
+    tiles.appendChild(e);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+ "datasets": {
+  "scholion-relay": {
+   "agents": [
+    "claude-code"
+   ],
+   "runs": 4,
+   "sessions": 300,
+   "tasks": [
+    "relay-coupon-remove",
+    "relay-customer-region",
+    "relay-ledger-refund",
+    "relay-line-taxes",
+    "relay-money-plain",
+    "relay-order-ids",
+    "relay-product-slug",
+    "relay-quote-split",
+    "relay-refund-event",
+    "relay-store-count"
+   ]
+  },
+  "tallyho-cold": {
+   "agents": [
+    "claude-code"
+   ],
+   "runs": 15,
+   "sessions": 444,
+   "tasks": [
+    "compound-discounts",
+    "csv-escaping",
+    "paginated-scan",
+    "summarize-abbrev"
+   ]
+  }
+ }
+}

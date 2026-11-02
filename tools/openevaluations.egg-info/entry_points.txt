@@ -1,0 +1,2 @@
+[console_scripts]
+oe = oe.cli:main

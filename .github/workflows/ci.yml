@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      - run: uv run pytest -q
+      - name: run files match schema oe/1
+        run: uv run oe validate runs/
+      - name: site/data is built from runs/
+        run: uv run oe site --check
+      - name: generated datasets are up to date
+        run: uv run python tools/gen/tallyho.py --check

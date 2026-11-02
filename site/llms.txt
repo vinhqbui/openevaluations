@@ -1,0 +1,54 @@
+# openevaluations
+
+> Open, longitudinal evaluations of coding-agent CLIs (Claude Code, Codex and others). The same small task sets are run on a schedule against each new CLI version. Every session's raw row is published in an open JSON Lines format (oe/1). There is also a runnable benchmark for handing a task from one agent to another. Code Apache-2.0, data CC BY 4.0.
+
+Source: https://github.com/vinhqbui/openevaluations
+Status: early. The published data so far is 18 runs of Claude Code recorded by Scholion's benchmark harness. Weekly runs on Harbor, with Claude Code and a second agent, are starting.
+
+## What is measured
+
+- Acceptance: hidden tests pass after the session (reward 1). Reported with a Wilson 95% interval.
+- Cost per accepted task, with a cost source per session: measured, estimated, capped or unavailable.
+- Billed tokens (input + cache writes + output, without cache reads), LLM calls, turns, tool calls, wall time.
+- Repeated dead ends: the agent's edits match a known wrong approach.
+- The agent CLI's own version string on every run, so changes can be tied to releases.
+
+## Rules
+
+- Tasks run through Harbor (https://harborframework.com), one fresh container per trial, with history collapsed to one commit.
+- Arm and channel deltas are paired by task, with a task-stratified bootstrap (2000 resamples, fixed seed).
+- No significance claim below 30 valid sessions per cell. Paid comparisons are pre-registered.
+- Change flags per series (dataset, agent, model, arm), against the previous four runs: degraded, tool_calls_up, recovered, low_n.
+
+## Data
+
+- Run index: https://openevaluations.si/data/runs.json
+- Tracker series: https://openevaluations.si/data/tracker.json
+- Handoff results: https://openevaluations.si/data/handoff.json
+- Raw run files: https://openevaluations.si/data/runs/<run-id>.jsonl (line 1 = run, then one line per session)
+- Schemas: https://openevaluations.si/data/schema/run.schema.json and https://openevaluations.si/data/schema/session.schema.json
+
+## Datasets
+
+- tallyho-cold: 4 one-file bugs in a 25-file Python library; the weekly tracker set.
+- handoff: relay family (10 tasks, a curated predecessor) and interrupt family (6 tasks, a real predecessor cut off halfway); channels repo-only, trace, notes, records.
+- scholion-relay: the relay family as recorded by Scholion's harness before the Harbor port (arms cold, baseline, notes, av).
+- scholion-cold: 4 injected bugs in a 20k-line Rust codebase; manual runs only.
+
+## Pages
+
+- Tracker: https://openevaluations.si/tracker/
+- Handoff benchmark: https://openevaluations.si/handoff/
+- Datasets: https://openevaluations.si/datasets/
+- Runs: https://openevaluations.si/runs/
+- Methodology: https://openevaluations.si/methodology/
+
+## Scholion
+
+Scholion is open-source, context-first version control for coding agents. It is one of the evaluated arms here. Its project page and agent-readable description moved to:
+
+- https://openevaluations.si/scholion/
+- https://openevaluations.si/scholion/llms.txt
+- Guide, handing a task between agents: https://openevaluations.si/guides/handoff-between-ai-coding-agents
+- Guide, persistent memory for coding agents over MCP: https://openevaluations.si/guides/memory-for-coding-agents
+- Replay of a recorded run: https://openevaluations.si/demo

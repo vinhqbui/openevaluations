@@ -1,0 +1,25 @@
+schema_version = "1.4"
+source = "https://github.com/vinhqbui/scholion/tree/main/bench/tasks-tallyho"
+
+[task]
+name = "openevaluations/compound-discounts"
+description = "tallyho: compound-discounts"
+keywords = ["python", "bugfix", "tallyho"]
+
+[metadata]
+relevant_files = ["tallyho/pricing/discounts.py"]
+max_turns = 40
+dead_ends = []
+
+[agent]
+timeout_sec = 900
+user = "agent"
+
+[verifier]
+timeout_sec = 180
+
+[environment]
+build_timeout_sec = 600
+network_mode = "public"
+cpus = 1
+memory_mb = 2048

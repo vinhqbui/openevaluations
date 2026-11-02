@@ -1,0 +1,1070 @@
+{
+ "runs": [
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.316"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 12,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.010578,
+     "cost_per_accepted_ci": [
+      0.008726,
+      0.012485
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 10.0,
+     "median_tokens_billed": 21892.0,
+     "median_tool_calls": 12.0,
+     "median_turns": 13.0,
+     "median_wall_secs": 29.326055,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-02T03:16:17Z",
+   "flags": [],
+   "id": "2026-11-02-tallyho-cold-claude-code-cold-8278fe",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": null,
+   "raw": "/data/runs/2026-11-02-tallyho-cold-claude-code-cold-8278fe.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.316"
+   },
+   "arms": {
+    "av": {
+     "accepted": 30,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.006418,
+     "cost_per_accepted_ci": [
+      0.005463,
+      0.00751
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 22770.0,
+     "median_tool_calls": 15.0,
+     "median_turns": 17.0,
+     "median_wall_secs": 31.389393,
+     "n": 30,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.886483,
+      1.0
+     ]
+    },
+    "cold": {
+     "accepted": 16,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.012488,
+     "cost_per_accepted_ci": [
+      0.00848,
+      0.02008
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 22604.0,
+     "median_tool_calls": 16.0,
+     "median_turns": 17.0,
+     "median_wall_secs": 26.985132,
+     "n": 30,
+     "rate": 0.533333,
+     "skipped": 0,
+     "wilson": [
+      0.36142,
+      0.697679
+     ]
+    },
+    "notes": {
+     "accepted": 30,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.006581,
+     "cost_per_accepted_ci": [
+      0.005535,
+      0.007808
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 22558.5,
+     "median_tool_calls": 16.0,
+     "median_turns": 17.0,
+     "median_wall_secs": 28.886544,
+     "n": 30,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.886483,
+      1.0
+     ]
+    }
+   },
+   "dataset": "scholion-relay",
+   "date": "2026-10-31T16:12:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-31-relay-image",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": "PREREG.md",
+   "raw": "/data/runs/scholion-2026-10-31-relay-image.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-31-relay-image",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.312"
+   },
+   "arms": {
+    "av": {
+     "accepted": 30,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.012773,
+     "cost_per_accepted_ci": [
+      0.010928,
+      0.014738
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 22384.0,
+     "median_tool_calls": 15.0,
+     "median_turns": 17.0,
+     "median_wall_secs": 28.030647,
+     "n": 30,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.886483,
+      1.0
+     ]
+    },
+    "cold": {
+     "accepted": 18,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.022084,
+     "cost_per_accepted_ci": [
+      0.015617,
+      0.032459
+     ],
+     "dead_ends": 1,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 21663.5,
+     "median_tool_calls": 15.5,
+     "median_turns": 16.5,
+     "median_wall_secs": 23.52553,
+     "n": 30,
+     "rate": 0.6,
+     "skipped": 0,
+     "wilson": [
+      0.423201,
+      0.754096
+     ]
+    },
+    "notes": {
+     "accepted": 30,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.013012,
+     "cost_per_accepted_ci": [
+      0.01101,
+      0.015293
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 23333.0,
+     "median_tool_calls": 15.0,
+     "median_turns": 16.0,
+     "median_wall_secs": 27.380535,
+     "n": 30,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.886483,
+      1.0
+     ]
+    }
+   },
+   "dataset": "scholion-relay",
+   "date": "2026-10-29T11:56:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-29-relay-lean",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-29-relay-lean.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-29-relay-lean",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.312"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 11,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.02952,
+     "cost_per_accepted_ci": [
+      0.01923,
+      0.05021
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 24051,
+     "median_tool_calls": 20,
+     "median_turns": 21,
+     "median_wall_secs": 34.033659,
+     "n": 19,
+     "rate": 0.578947,
+     "skipped": 11,
+     "wilson": [
+      0.362756,
+      0.768584
+     ]
+    }
+   },
+   "dataset": "scholion-relay",
+   "date": "2026-10-29T04:31:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-29-relay-cold-pilot",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-29-relay-cold-pilot.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-29-relay-cold-pilot",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.312"
+   },
+   "arms": {
+    "av": {
+     "accepted": 30,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.017441,
+     "cost_per_accepted_ci": [
+      0.015294,
+      0.019731
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 28752.5,
+     "median_tool_calls": 27.0,
+     "median_turns": 28.0,
+     "median_wall_secs": 51.350494,
+     "n": 30,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.886483,
+      1.0
+     ]
+    },
+    "baseline": {
+     "accepted": 30,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.01427,
+     "cost_per_accepted_ci": [
+      0.01226,
+      0.016592
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 25398.5,
+     "median_tool_calls": 21.0,
+     "median_turns": 22.0,
+     "median_wall_secs": 33.433494,
+     "n": 30,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.886483,
+      1.0
+     ]
+    },
+    "notes": {
+     "accepted": 30,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.014004,
+     "cost_per_accepted_ci": [
+      0.012216,
+      0.015917
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 24627.0,
+     "median_tool_calls": 20.0,
+     "median_turns": 21.0,
+     "median_wall_secs": 31.931913,
+     "n": 30,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.886483,
+      1.0
+     ]
+    }
+   },
+   "dataset": "scholion-relay",
+   "date": "2026-10-29T02:53:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-28-relay",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-28-relay.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-28-relay",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.312"
+   },
+   "arms": {
+    "av": {
+     "accepted": 40,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.00716,
+     "cost_per_accepted_ci": [
+      0.006605,
+      0.007727
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 21199.5,
+     "median_tool_calls": 9.0,
+     "median_turns": 10.0,
+     "median_wall_secs": 28.828523,
+     "n": 40,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.912375,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-28T00:50:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-28-haiku-hook-03-nomap-max5",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-28-haiku-hook-03-nomap-max5.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-28-haiku-hook/03-nomap-max5",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.312"
+   },
+   "arms": {
+    "av": {
+     "accepted": 40,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.007179,
+     "cost_per_accepted_ci": [
+      0.006666,
+      0.007761
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 20466.0,
+     "median_tool_calls": 9.0,
+     "median_turns": 10.0,
+     "median_wall_secs": 28.477391,
+     "n": 40,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.912375,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-28T00:50:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-28-haiku-hook-02-nomap-max3",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-28-haiku-hook-02-nomap-max3.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-28-haiku-hook/02-nomap-max3",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.312"
+   },
+   "arms": {
+    "av": {
+     "accepted": 40,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.006978,
+     "cost_per_accepted_ci": [
+      0.006423,
+      0.007512
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 20421.5,
+     "median_tool_calls": 8.0,
+     "median_turns": 9.0,
+     "median_wall_secs": 27.27771,
+     "n": 40,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.912375,
+      1.0
+     ]
+    },
+    "baseline": {
+     "accepted": 40,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.007249,
+     "cost_per_accepted_ci": [
+      0.006602,
+      0.007909
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 20474.0,
+     "median_tool_calls": 10.0,
+     "median_turns": 11.0,
+     "median_wall_secs": 29.432357,
+     "n": 40,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.912375,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-28T00:50:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-28-haiku-hook-01-defaults",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-28-haiku-hook-01-defaults.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-28-haiku-hook/01-defaults",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "av": {
+     "accepted": 40,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005685,
+     "cost_per_accepted_ci": [
+      0.005228,
+      0.006112
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 16846.5,
+     "median_tool_calls": 7.0,
+     "median_turns": 8.0,
+     "median_wall_secs": 25.571905,
+     "n": 40,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.912375,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T13:12:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-04-final-shipped-av",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-04-final-shipped-av.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/04-final-shipped-av",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "baseline": {
+     "accepted": 40,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005689,
+     "cost_per_accepted_ci": [
+      0.005231,
+      0.006117
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 16233.5,
+     "median_tool_calls": 7.0,
+     "median_turns": 8.0,
+     "median_wall_secs": 26.299638,
+     "n": 40,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.912375,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T12:36:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-04-final-shipped-baseline",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-04-final-shipped-baseline.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/04-final-shipped-baseline",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "baseline": {
+     "accepted": 24,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005793,
+     "cost_per_accepted_ci": [
+      0.005205,
+      0.006348
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 16659.5,
+     "median_tool_calls": 7.0,
+     "median_turns": 8.0,
+     "median_wall_secs": 28.482417,
+     "n": 24,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.862019,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T11:48:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-03-baseline-b",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-03-baseline-b.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/03-baseline-b",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "av": {
+     "accepted": 24,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005549,
+     "cost_per_accepted_ci": [
+      0.004936,
+      0.006118
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 16417.5,
+     "median_tool_calls": 6.0,
+     "median_turns": 7.0,
+     "median_wall_secs": 26.497536,
+     "n": 24,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.862019,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T11:48:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-03-av-signatures-b",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-03-av-signatures-b.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/03-av-signatures-b",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "av": {
+     "accepted": 24,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005535,
+     "cost_per_accepted_ci": [
+      0.004945,
+      0.006109
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 17026.0,
+     "median_tool_calls": 6.0,
+     "median_turns": 7.0,
+     "median_wall_secs": 25.745633,
+     "n": 24,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.862019,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T11:48:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-03-av-full-b",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-03-av-full-b.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/03-av-full-b",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "baseline": {
+     "accepted": 16,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005824,
+     "cost_per_accepted_ci": [
+      0.005101,
+      0.006642
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 15863.5,
+     "median_tool_calls": 7.5,
+     "median_turns": 9.0,
+     "median_wall_secs": 28.615471,
+     "n": 16,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.806387,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T11:39:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-03-baseline-a",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-03-baseline-a.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/03-baseline-a",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "av": {
+     "accepted": 16,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.067807,
+     "cost_per_accepted_ci": [
+      0.005043,
+      0.192504
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 16989.0,
+     "median_tool_calls": 6.5,
+     "median_turns": 7.5,
+     "median_wall_secs": 26.168497,
+     "n": 16,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.806387,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T11:39:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-03-av-signatures-a",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-03-av-signatures-a.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/03-av-signatures-a",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "av": {
+     "accepted": 16,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.006312,
+     "cost_per_accepted_ci": [
+      0.005314,
+      0.00733
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 17953.0,
+     "median_tool_calls": 6.0,
+     "median_turns": 7.0,
+     "median_wall_secs": 25.40373,
+     "n": 16,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.806387,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T11:39:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-03-av-full-a",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-03-av-full-a.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/03-av-full-a",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "av": {
+     "accepted": 16,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005779,
+     "cost_per_accepted_ci": [
+      0.00506,
+      0.006457
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 17334.5,
+     "median_tool_calls": 6.0,
+     "median_turns": 7.0,
+     "median_wall_secs": 25.463014,
+     "n": 16,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.806387,
+      1.0
+     ]
+    },
+    "baseline": {
+     "accepted": 15,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.006076,
+     "cost_per_accepted_ci": [
+      0.005087,
+      0.007518
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 15186.5,
+     "median_tool_calls": 7.0,
+     "median_turns": 8.0,
+     "median_wall_secs": 24.920237,
+     "n": 16,
+     "rate": 0.9375,
+     "skipped": 0,
+     "wilson": [
+      0.716707,
+      0.988881
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T10:30:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-02-av-with-mcp",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-02-av-with-mcp.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/02-av-with-mcp",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "av": {
+     "accepted": 16,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005881,
+     "cost_per_accepted_ci": [
+      0.005052,
+      0.006672
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 17223.0,
+     "median_tool_calls": 6.0,
+     "median_turns": 7.0,
+     "median_wall_secs": 26.62668,
+     "n": 16,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.806387,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T10:30:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-02-av-hooks-only",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-02-av-hooks-only.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/02-av-hooks-only",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.311"
+   },
+   "arms": {
+    "av": {
+     "accepted": 8,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.006209,
+     "cost_per_accepted_ci": [
+      0.00487,
+      0.007699
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 18175.5,
+     "median_tool_calls": 5.5,
+     "median_turns": 6.5,
+     "median_wall_secs": 24.478804,
+     "n": 8,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.675584,
+      1.0
+     ]
+    },
+    "av_no_packs": {
+     "accepted": 8,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.006478,
+     "cost_per_accepted_ci": [
+      0.005275,
+      0.007483
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 18372.0,
+     "median_tool_calls": 8.0,
+     "median_turns": 9.0,
+     "median_wall_secs": 26.772203,
+     "n": 8,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.675584,
+      1.0
+     ]
+    },
+    "baseline": {
+     "accepted": 8,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.005858,
+     "cost_per_accepted_ci": [
+      0.004728,
+      0.007128
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": null,
+     "median_tokens_billed": 15069.5,
+     "median_tool_calls": 7.0,
+     "median_turns": 8.0,
+     "median_wall_secs": 26.575329,
+     "n": 8,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.675584,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-10-27T10:05:00Z",
+   "flags": [],
+   "id": "scholion-2026-10-27-haiku-01-pilot-before-fixes",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": null,
+   "raw": "/data/runs/scholion-2026-10-27-haiku-01-pilot-before-fixes.jsonl",
+   "runner": "scholion-bench",
+   "source": "https://github.com/vinhqbui/scholion/tree/main/bench/results/2026-10-27-haiku/01-pilot-before-fixes",
+   "visibility": "public"
+  }
+ ]
+}

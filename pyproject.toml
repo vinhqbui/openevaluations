@@ -1,0 +1,31 @@
+[project]
+name = "openevaluations"
+version = "0.1.0"
+description = "Open, longitudinal evaluations of coding-agent CLIs: results schema, importers, stats and the openevaluations.si site builder"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+dependencies = ["jsonschema>=4.23"]
+
+[project.optional-dependencies]
+# Harbor runs the agents (P1+). Not needed to validate, import or build the site.
+run = ["harbor"]
+
+[project.scripts]
+oe = "oe.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "tools" }
+packages = ["oe"]
+
+[tool.pytest.ini_options]
+testpaths = ["tools/tests"]
+# agents/oe_agents: the custom Harbor agents (harbor run needs PYTHONPATH=agents as well)
+pythonpath = ["agents"]

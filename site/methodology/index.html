@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methodology · openevaluations</title>
+<meta name="description" content="How openevaluations runs coding agents, what it measures, the oe/1 results schema, and the statistical rules.">
+<link rel="canonical" href="https://openevaluations.si/methodology/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<div class="nav"><div class="wrap">
+  <a class="brand" href="/"><b>o</b> openevaluations</a>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+</div></div>
+<main class="wrap" style="max-width:860px">
+<header class="page">
+  <h1><em>Methodology</em></h1>
+  <p class="lede">What is run, what is measured, and which claims the numbers can carry.</p>
+</header>
+
+<h2>Running</h2>
+<p>Agents run through <a href="https://harborframework.com">Harbor</a>, the Terminal-Bench team's open harness. Each trial gets a fresh Docker container. The task's repository is collapsed to a single commit, so the fix cannot be read from history. The agent's own CLI runs headless with the goal as its prompt. When it stops, hidden tests are copied in and decide the reward. The weekly tracker does not pin the CLI version, because measuring version drift is the point. Each run records the version the CLI reports for itself.</p>
+<p>Scholion is evaluated as an arm, through a Harbor agent that wraps Claude Code with Scholion's daemon and hooks. Plain Claude Code, Codex and other CLIs run through Harbor's own adapters.</p>
+
+<h2>What a session records</h2>
+<ul>
+  <li><b>Acceptance.</b> The hidden tests pass, which is a reward of 1.</li>
+  <li><b>Cost.</b> Every cost has a source: <code>measured</code> by the CLI, <code>estimated</code> from token counts, <code>capped</code> when a session hit its spending cap, or <code>unavailable</code>.</li>
+  <li><b>Tokens.</b> Billed tokens are input plus cache writes plus output, with cache reads excluded.</li>
+  <li><b>Effort.</b> LLM calls, turns and tool calls, taken from the trajectory.</li>
+  <li><b>Repeated dead ends.</b> For handoff tasks, a pattern matches the known wrong edit in the agent's writes.</li>
+  <li><b>Wall time</b> for the agent's own execution.</li>
+</ul>
+
+<h2 id="schema">Results format: oe/1</h2>
+<p>A run is a JSON Lines file. Line 1 is the run: dataset and revision, agent name and version, model, arm, harness versions, machine, budget, pre-registration and flags. Every following line is one session. Schemas: <a href="/data/schema/run.schema.json">run.schema.json</a>, <a href="/data/schema/session.schema.json">session.schema.json</a>. A run on a private task set publishes only its run line and an aggregate. Its sessions and task names stay private.</p>
+
+<h2>Statistics</h2>
+<ul>
+  <li><b>Acceptance</b> is reported with a Wilson 95% interval.</li>
+  <li><b>Cost per accepted task</b> is total spend over accepted sessions, with a session bootstrap.</li>
+  <li><b>Arm and channel deltas</b> are paired by task: the mean over tasks of arm ÷ control − 1, with a task-stratified bootstrap, 2000 resamples, fixed seed. Truncated sessions are skipped.</li>
+  <li><b>No significance claim</b> is made below 30 valid sessions per cell.</li>
+  <li><b>Pre-registration.</b> Paid comparison runs write their question, arms, model, budget and decision rule in a PREREG file first. Anything added afterwards is labelled exploratory.</li>
+</ul>
+
+<h2>Change detection</h2>
+<p>Each run is compared with the four before it in the same series, meaning the same dataset, agent, model and arm. A run is flagged <b>degraded</b> when its Wilson upper bound is more than 15 points under the baseline acceptance rate. It is flagged <b>tool calls up</b> when its median tool calls exceed 1.5× the baseline's. A flagged series that comes back inside both thresholds is marked <b>recovered</b>. Fewer than 12 valid sessions gives <b>low n</b> and no other flag.</p>
+
+<h2>Threats to validity</h2>
+<ul>
+  <li><b>Small task sets.</b> Weekly sets are small so they stay cheap. Treat them as a regression tracker, not a capability ranking.</li>
+  <li><b>Author bias.</b> The task sets were written alongside Scholion, which is one of the evaluated arms. Public tasks, published prompts and pre-registration are the guard.</li>
+  <li><b>Contamination.</b> The task repositories were written for benchmarking in 2026 and are unlikely to be in training data. Their patches are public now, though.</li>
+  <li><b>Harness effects.</b> The same model scores differently under different harnesses. Every row names its harness, and results are never pooled across harnesses.</li>
+</ul>
+</main>
+<footer><div class="wrap">Code Apache-2.0, data CC BY 4.0 · <a href="https://github.com/vinhqbui/openevaluations">source</a></div></footer>
+<script src="/js/oe.js"></script>
+<script>OE.nav("/methodology/");</script>
+</body>
+</html>
