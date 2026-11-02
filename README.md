@@ -48,7 +48,7 @@ uv run oe import-harbor jobs/<job> --dataset tallyho-cold && uv run oe detect &&
 | P1: `tallyho-cold` in Harbor format, nop and oracle validated; first runs (Claude Code and OpenCode on DeepSeek Flash) | done |
 | P2: `ClaudeCodeAv` Harbor agent (Scholion arm), weekly against the cold arm (`docs/PREREG-tracker-av.md`) | done; pilot valid, first weekly run pending |
 | P3: handoff benchmark (freeze, four channels, PREREG) | planned |
-| P4: weekly tracker workflow and the openevaluations.si cutover | workflow written (three legs on DeepSeek); the `DEEPSEEK_API_KEY` and `TRACKER_PUSH_TOKEN` secrets and the domain move are pending |
+| P4: weekly tracker workflow and the openevaluations.si cutover | workflow written (three legs on DeepSeek); the `LLM_API_KEY` and `TRACKER_PUSH_TOKEN` secrets and the domain move are pending |
 
 ## Contributing a run
 

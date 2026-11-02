@@ -2,7 +2,7 @@ name: tracker
 
 # Weekly runs of the tracked agents on tallyho-cold, published as runs/*.jsonl through one pull
 # request that merges itself once CI passes. Spends money (about $0.15 a leg on DeepSeek Flash);
-# every leg is skipped unless the DEEPSEEK_API_KEY secret exists.
+# every leg is skipped unless the LLM_API_KEY secret exists.
 #
 # Legs (one runner each), all on DeepSeek Flash:
 #   claude-code-cold  Claude Code as shipped
@@ -12,7 +12,8 @@ name: tracker
 # Both Claude Code legs install the same Claude Code version, read once per run in `prepare`, so
 # the pairing compares the framework and nothing else; the version still moves week to week.
 #
-# Secrets: DEEPSEEK_API_KEY; TRACKER_PUSH_TOKEN (a fine-grained PAT with contents + pull-requests
+# Secrets: LLM_API_KEY (the DeepSeek API key used in CI; DEEPSEEK_API_KEY is kept for local use);
+# TRACKER_PUSH_TOKEN (a fine-grained PAT with contents + pull-requests
 # write; a PR opened with the default GITHUB_TOKEN does not trigger CI, so without it the PR waits
 # for a manual merge).
 
@@ -37,11 +38,11 @@ jobs:
     steps:
       - id: v
         env:
-          KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          KEY: ${{ secrets.LLM_API_KEY }}
         run: |
           echo "claude_version=$(npm view @anthropic-ai/claude-code version)" >> "$GITHUB_OUTPUT"
           if [ -n "$KEY" ]; then echo "has_key=1" >> "$GITHUB_OUTPUT"; else
-            echo "::notice::DEEPSEEK_API_KEY not set; no leg runs."; fi
+            echo "::notice::LLM_API_KEY not set; no leg runs."; fi
 
   run:
     needs: prepare
@@ -77,11 +78,12 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Run tallyho-cold
         env:
-          # Claude Code reaches DeepSeek through its Anthropic-compatible API; OpenCode reads
-          # DEEPSEEK_API_KEY itself. No ANTHROPIC_API_KEY: Harbor would prefer it.
+          # Claude Code reaches DeepSeek through its Anthropic-compatible API. OpenCode's deepseek
+          # provider only reads the DEEPSEEK_API_KEY variable, so the LLM_API_KEY secret is exported
+          # under that name inside this step. No ANTHROPIC_API_KEY: Harbor would prefer it.
           ANTHROPIC_BASE_URL: ${{ startsWith(matrix.model, 'anthropic/') && 'https://api.deepseek.com/anthropic' || '' }}
-          ANTHROPIC_AUTH_TOKEN: ${{ startsWith(matrix.model, 'anthropic/') && secrets.DEEPSEEK_API_KEY || '' }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_AUTH_TOKEN: ${{ startsWith(matrix.model, 'anthropic/') && secrets.LLM_API_KEY || '' }}
+          DEEPSEEK_API_KEY: ${{ secrets.LLM_API_KEY }}
           OE_CACHE: ${{ runner.temp }}/oe-cache   # the Scholion release tarball (runner is a step-level context)
         run: |
           uv sync --frozen --extra run
