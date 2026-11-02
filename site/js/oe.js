@@ -171,7 +171,11 @@
 
   OE.nav = function (current) {
     document.querySelectorAll(".nav nav a").forEach(function (a) {
-      if (a.getAttribute("href") === current) a.setAttribute("aria-current", "page");
+      if (a.getAttribute("href") !== current) return;
+      a.setAttribute("aria-current", "page");
+      // On phones the links scroll sideways: bring the current one into view.
+      var nav = a.parentNode;
+      if (nav.scrollWidth > nav.clientWidth) nav.scrollLeft = a.offsetLeft - nav.offsetLeft - 16;
     });
   };
 })();
