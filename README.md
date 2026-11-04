@@ -16,7 +16,7 @@ container per trial, with hidden tests deciding acceptance.
 ## Weekly tracker legs
 
 Every Monday (`.github/workflows/tracker.yml`), `tallyho-cold`, 3 attempts per task, all on
-DeepSeek Flash, each CLI at the newest npm release that week:
+DeepSeek Flash, each CLI at its newest release that week:
 
 | Leg | CLI | How it reaches DeepSeek | Harbor agent |
 |---|---|---|---|
