@@ -98,6 +98,24 @@ def test_non_claude_models_are_repriced_and_marked_estimated(tmp_path):
     assert abs(s["cost_usd"] - 0.009783336) < 1e-9
 
 
+def test_codex_reports_no_cost_so_its_tokens_are_priced_and_marked_estimated(tmp_path):
+    # Harbor's codex agent leaves cost_usd None without litellm; the 2026-11-04 smoke trial's usage
+    job = fake_job(tmp_path, n=1)
+    res = job / "compound-discounts__0" / "result.json"
+    r = json.loads(res.read_text())
+    r["agent_info"] = {"name": "codex", "version": "0.166.0",
+                       "model_info": {"name": "deepseek-flash", "provider": "deepseek"}}
+    r["agent_result"].update(n_input_tokens=228166, n_cache_tokens=209280, n_output_tokens=9416, cost_usd=None)
+    res.write_text(json.dumps(r))
+    run, (s,) = runfile.read(import_job(job, tmp_path / "runs"))
+    assert run["agent"] == {"name": "codex", "version": "0.166.0"}
+    assert run["model"] == {"provider": "deepseek", "name": "deepseek-flash"}
+    assert s["cost_source"] == "estimated"
+    # 18886 * 0.30 + 209280 * 0.006 + 9416 * 1.20, per million
+    assert abs(s["cost_usd"] - 0.01822068) < 1e-9
+    assert spent(job) == (s["cost_usd"], 0)
+
+
 def _deepseek(job):
     for res in job.glob("*/result.json"):
         r = json.loads(res.read_text())
