@@ -25,6 +25,9 @@ uv run oe rewards jobs/<job> --expect 0|1      # nop/oracle validation of a data
 ```
 
 On Windows set `PYTHONUTF8=1` before `harbor run` (its console output is UTF-8).
+On Windows also give `-o` a short root (e.g. `D:\oej`) for the av arm: its Claude session sits under
+`agent/sessions/projects/<jj-workspace slug>/`, which passes 260 characters below `jobs/` in a
+worktree, and Harbor then silently drops the trajectory and the token counts.
 
 The Scholion arm (`agents/oe_agents/`) needs `PYTHONPATH=<repo>/agents` for `harbor run -a
 oe_agents.claude_code_av:ClaudeCodeAv`, and `--agent-setup-timeout-multiplier 2`. Claude Code on

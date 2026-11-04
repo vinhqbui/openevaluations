@@ -2,6 +2,182 @@
  "runs": [
   {
    "agent": {
+    "name": "codex",
+    "version": "0.166.0"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 12,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.013298,
+     "cost_per_accepted_ci": [
+      0.011246,
+      0.015159
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 12.5,
+     "median_tokens_billed": 18942.5,
+     "median_tool_calls": 18.0,
+     "median_turns": null,
+     "median_wall_secs": 58.699827,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-04T17:55:00Z",
+   "flags": [],
+   "id": "2026-11-04-tallyho-cold-codex-cold-1ca17b",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": null,
+   "raw": "/data/runs/2026-11-04-tallyho-cold-codex-cold-1ca17b.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.318"
+   },
+   "arms": {
+    "av": {
+     "accepted": 12,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.010783,
+     "cost_per_accepted_ci": [
+      0.009554,
+      0.011957
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 14.0,
+     "median_tokens_billed": 22100.5,
+     "median_tool_calls": 12.5,
+     "median_turns": 14.5,
+     "median_wall_secs": 40.886074,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-04T17:34:23Z",
+   "flags": [],
+   "id": "2026-11-04-tallyho-cold-claude-code-av-4c3176",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": null,
+   "raw": "/data/runs/2026-11-04-tallyho-cold-claude-code-av-4c3176.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.318"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 12,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.009934,
+     "cost_per_accepted_ci": [
+      0.008574,
+      0.01125
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 10.0,
+     "median_tokens_billed": 21069.5,
+     "median_tool_calls": 12.5,
+     "median_turns": 13.5,
+     "median_wall_secs": 34.17214,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-04T16:47:45Z",
+   "flags": [],
+   "id": "2026-11-04-tallyho-cold-claude-code-cold-5febae",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": null,
+   "raw": "/data/runs/2026-11-04-tallyho-cold-claude-code-cold-5febae.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "opencode",
+    "version": "1.19.5"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 12,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.002822,
+     "cost_per_accepted_ci": [
+      0.002048,
+      0.003703
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 9.5,
+     "median_tokens_billed": 7267.5,
+     "median_tool_calls": 9.0,
+     "median_turns": null,
+     "median_wall_secs": 38.761298,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-04T16:29:15Z",
+   "flags": [],
+   "id": "2026-11-04-tallyho-cold-opencode-cold-b6b026",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": null,
+   "raw": "/data/runs/2026-11-04-tallyho-cold-opencode-cold-b6b026.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
     "name": "claude-code",
     "version": "2.1.316"
    },

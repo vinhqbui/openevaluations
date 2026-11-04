@@ -21,10 +21,12 @@
   },
   "tallyho-cold": {
    "agents": [
-    "claude-code"
+    "claude-code",
+    "codex",
+    "opencode"
    ],
-   "runs": 15,
-   "sessions": 444,
+   "runs": 19,
+   "sessions": 492,
    "tasks": [
     "compound-discounts",
     "csv-escaping",
