@@ -32,6 +32,10 @@ DeepSeek: `ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic`, `ANTHROPIC_AU
 DeepSeek key, `ANTHROPIC_API_KEY` unset, `-m anthropic/deepseek-flash`, and `--ae` the haiku,
 small-fast and subagent aliases to `deepseek-flash` (see `.github/workflows/tracker.yml`).
 `agents/oe_agents/av_settings.py` pins the Scholion release by sha256; bump both together.
+Codex on DeepSeek: `-a oe_agents.codex_deepseek:CodexDeepSeek -m deepseek/deepseek-flash` (also
+`PYTHONPATH=agents`); `codex_settings.py` writes the custom provider (`wire_api = "responses"`, the
+only one Codex still accepts; `env_key = "DEEPSEEK_API_KEY"`). Harbor's Codex reports no cost, so
+`oe` prices its tokens from `prices.toml` (`cost_source` "estimated").
 
 ## Rules
 

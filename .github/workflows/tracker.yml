@@ -1,16 +1,21 @@
 name: tracker
 
 # Weekly runs of the tracked agents on tallyho-cold, published as runs/*.jsonl through one pull
-# request that merges itself once CI passes. Spends money (about $0.15 a leg on DeepSeek Flash);
-# every leg is skipped unless the LLM_API_KEY secret exists.
+# request that merges itself once CI passes. Spends money (about $0.15 a leg on DeepSeek Flash;
+# the budget input is split evenly over the legs); every leg is skipped unless the LLM_API_KEY
+# secret exists.
 #
 # Legs (one runner each), all on DeepSeek Flash:
 #   claude-code-cold  Claude Code as shipped
 #   claude-code-av    Claude Code on the Scholion framework (agents/oe_agents/claude_code_av.py):
 #                     av hooks, a daemon and a jj workspace per task; paired against the cold leg
 #   opencode-cold     OpenCode, the second agent
+#   codex-cold        OpenAI's Codex CLI (agents/oe_agents/codex_deepseek.py): Harbor's Codex agent
+#                     with a custom model provider, DeepSeek's Responses API (wire_api "responses")
 # Both Claude Code legs install the same Claude Code version, read once per run in `prepare`, so
 # the pairing compares the framework and nothing else; the version still moves week to week.
+# The Codex leg installs the Codex CLI version read in `prepare` the same way (npm, in the trial
+# container, through Harbor's `--ak version=`), so the row names the version that ran.
 #
 # Secrets: LLM_API_KEY (the DeepSeek API key used in CI; DEEPSEEK_API_KEY is kept for local use);
 # TRACKER_PUSH_TOKEN (a fine-grained PAT with contents + pull-requests
@@ -34,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       claude_version: ${{ steps.v.outputs.claude_version }}
+      codex_version: ${{ steps.v.outputs.codex_version }}
       has_key: ${{ steps.v.outputs.has_key }}
     steps:
       - id: v
@@ -41,6 +47,7 @@ jobs:
           KEY: ${{ secrets.LLM_API_KEY }}
         run: |
           echo "claude_version=$(npm view @anthropic-ai/claude-code version)" >> "$GITHUB_OUTPUT"
+          echo "codex_version=$(npm view @openai/codex version)" >> "$GITHUB_OUTPUT"
           if [ -n "$KEY" ]; then echo "has_key=1" >> "$GITHUB_OUTPUT"; else
             echo "::notice::LLM_API_KEY not set; no leg runs."; fi
 
@@ -54,17 +61,26 @@ jobs:
       matrix:
         include:
           - leg: claude-code-cold
+            family: claude
             agent: claude-code
             arm: cold
             model: anthropic/deepseek-flash
             extra: "--ak max_turns=40"
           - leg: claude-code-av
+            family: claude
             agent: oe_agents.claude_code_av:ClaudeCodeAv
             arm: av
             model: anthropic/deepseek-flash
             extra: "--ak max_turns=40 --ak av_version=release/0.0.2"
           - leg: opencode-cold
+            family: opencode
             agent: opencode
+            arm: cold
+            model: deepseek/deepseek-flash
+            extra: ""
+          - leg: codex-cold
+            family: codex
+            agent: oe_agents.codex_deepseek:CodexDeepSeek
             arm: cold
             model: deepseek/deepseek-flash
             extra: ""
@@ -73,14 +89,17 @@ jobs:
       PYTHONUTF8: "1"
       PYTHONPATH: ${{ github.workspace }}/agents
       CLAUDE_VERSION: ${{ needs.prepare.outputs.claude_version }}
+      CODEX_VERSION: ${{ needs.prepare.outputs.codex_version }}
+      LEGS: "4"   # the matrix size: each leg's share of the budget
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - name: Run tallyho-cold
         env:
           # Claude Code reaches DeepSeek through its Anthropic-compatible API. OpenCode's deepseek
-          # provider only reads the DEEPSEEK_API_KEY variable, so the LLM_API_KEY secret is exported
-          # under that name inside this step. No ANTHROPIC_API_KEY: Harbor would prefer it.
+          # provider and Codex's model provider (env_key in agents/oe_agents/codex_settings.py)
+          # only read the DEEPSEEK_API_KEY variable, so the LLM_API_KEY secret is exported under
+          # that name inside this step. No ANTHROPIC_API_KEY: Harbor would prefer it.
           ANTHROPIC_BASE_URL: ${{ startsWith(matrix.model, 'anthropic/') && 'https://api.deepseek.com/anthropic' || '' }}
           ANTHROPIC_AUTH_TOKEN: ${{ startsWith(matrix.model, 'anthropic/') && secrets.LLM_API_KEY || '' }}
           DEEPSEEK_API_KEY: ${{ secrets.LLM_API_KEY }}
@@ -92,11 +111,14 @@ jobs:
           job=tracker-tallyho-${{ matrix.leg }}-$day
           extra="${{ matrix.extra }}"
           scholion_rev=null
-          if [ "${{ matrix.agent }}" != opencode ]; then
+          if [ "${{ matrix.family }}" = claude ]; then
             extra="$extra --ak version=$CLAUDE_VERSION"
             for v in ANTHROPIC_DEFAULT_HAIKU_MODEL ANTHROPIC_SMALL_FAST_MODEL CLAUDE_CODE_SUBAGENT_MODEL; do
               extra="$extra --ae $v=deepseek-flash"
             done
+          fi
+          if [ "${{ matrix.family }}" = codex ]; then
+            extra="$extra --ak version=$CODEX_VERSION"
           fi
           if [ "${{ matrix.arm }}" = av ]; then
             scholion_rev='"release/0.0.2"'
@@ -108,11 +130,11 @@ jobs:
            "harbor_version": "$(uv run harbor --version | tr -d '\n')", "openevaluations_rev": "${GITHUB_SHA::7}",
            "scholion_rev": $scholion_rev,
            "source": "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID",
-           "budget": {"cap_usd": $(python3 -c "print(round($BUDGET/3, 2))"), "spent_usd": null}}
+           "budget": {"cap_usd": $(python3 -c "print(round($BUDGET/$LEGS, 2))"), "spent_usd": null}}
           EOF
           uv run harbor run -p datasets/tallyho-cold -a "${{ matrix.agent }}" -m ${{ matrix.model }} \
             -k 3 -n 4 -r 1 -o jobs --job-name $job --agent-setup-timeout-multiplier 2 $extra
-          uv run oe budget jobs --cap $(python3 -c "print($BUDGET/3)") || echo "::warning::budget cap reached"
+          uv run oe budget jobs --cap $(python3 -c "print($BUDGET/$LEGS)") || echo "::warning::budget cap reached"
           mkdir -p runs-new
           uv run oe import-harbor jobs/$job --machine github-actions --out runs-new
       - uses: actions/upload-artifact@v4

@@ -5,6 +5,9 @@ import tomllib
 from pathlib import Path
 
 PRICES = Path(__file__).with_name("prices.toml")
+# Agents whose Harbor adapter never reports a cost (Codex: only through litellm, which Harbor
+# does not install); their tokens are priced from prices.toml and the row says "estimated".
+NO_COST_AGENTS = {"codex"}
 
 
 def _prices():
@@ -25,6 +28,7 @@ def trial_cost(r):
 
     Claude Code prices a non-Claude model (DeepSeek through its Anthropic-compatible API) at a
     Claude list-price fallback (costBasis "unknown"), about 20x too high: re-price from prices.toml.
+    Codex reports none at all (NO_COST_AGENTS): price its tokens the same way.
     """
     info = r.get("agent_info") or {}
     model = ((info.get("model_info") or {}).get("name") or "").split("/")[-1]
@@ -34,6 +38,9 @@ def trial_cost(r):
         cost = estimate(model, ar.get("n_input_tokens"), ar.get("n_cache_tokens"), ar.get("n_output_tokens"))
         return cost, "unavailable" if cost is None else "estimated"
     cost = ar.get("cost_usd")
+    if cost is None and info.get("name") in NO_COST_AGENTS:
+        cost = estimate(model, ar.get("n_input_tokens"), ar.get("n_cache_tokens"), ar.get("n_output_tokens"))
+        return cost, "unavailable" if cost is None else "estimated"
     if cost is None:
         return None, "unavailable"
     return cost, "estimated" if meta.get("cost_source") == "litellm_estimate" else "measured"
