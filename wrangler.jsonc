@@ -8,5 +8,13 @@
   },
   // Cloudflare's Git integration runs `wrangler preview` for non-production branches; it needs
   // this block, even empty.
-  "previews": {}
+  "previews": {},
+  // Root of openevaluations.si (the zone is on Cloudflare). Left commented so that merging does not
+  // flip anything: the root is still attached to the Scholion Worker scholion-deploy, and a custom
+  // domain can belong to one Worker only. At the cutover (vinhqbui/scholion, site/README.md,
+  // "Cutover") the owner removes the root from scholion-deploy, then uncomments this block (and
+  // the comma above) and merges; the site workflow deploys it. Or add the domain in the dashboard.
+  // "routes": [
+  //   { "pattern": "openevaluations.si", "custom_domain": true }
+  // ]
 }
