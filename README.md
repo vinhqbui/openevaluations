@@ -46,8 +46,8 @@ uv run harbor run -p datasets/tallyho-cold -a claude-code -m anthropic/claude-ha
 PYTHONPATH=agents uv run harbor run -p datasets/tallyho-cold -a oe_agents.codex_deepseek:CodexDeepSeek   -m deepseek/deepseek-flash -k 3 -o jobs --agent-setup-timeout-multiplier 2   # needs DEEPSEEK_API_KEY
 uv run oe import-harbor jobs/<job> --dataset tallyho-cold && uv run oe detect && uv run oe site
 
-# the ledger: reports.json is the Scholion Cloud daemon's answer to (admin token; see the
-# foundry runbook) GET /v1/ee/reports?repo=scholion&from=2026-11-09&to=2026-11-15, one repo, Monday to Sunday
+# the ledger: reports.json is one repo's week (Monday to Sunday) from the Scholion Cloud daemon,
+# GET /v1/ee/reports?repo=scholion&from=2026-11-09&to=2026-11-15 (admin token; see the foundry runbook)
 uv run oe import-reports reports.json && uv run oe site
 ```
 
