@@ -2,7 +2,7 @@
 
 Open, longitudinal evaluations of coding-agent CLIs, published at **https://openevaluations.si**.
 
-- **Tracker.** The same small task sets run weekly against Claude Code and other agent CLIs.
+- **Tracker.** The same small task sets, meant to run weekly (the schedule is off for now) against Claude Code and other agent CLIs.
   Every run records the CLI's own version, so a release that moves the pass rate or the number of
   tool calls shows up as a flagged point.
 - **Handoff benchmark.** Agent A works on a task and stops; agent B takes over. Each channel
@@ -18,8 +18,8 @@ container per trial, with hidden tests deciding acceptance.
 
 ## Weekly tracker legs
 
-Every Monday (`.github/workflows/tracker.yml`), `tallyho-cold`, 3 attempts per task, all on
-DeepSeek Flash, each CLI at its newest release that week:
+By hand for now (`gh workflow run tracker.yml`; the weekly schedule is off), `tallyho-cold`, 3 attempts per task, all on
+DeepSeek Flash, each CLI at its newest release that day:
 
 | Leg | CLI | How it reaches DeepSeek | Harbor agent |
 |---|---|---|---|
@@ -72,7 +72,7 @@ uv run oe import-reports reports.json && uv run oe site
 | P2: `ClaudeCodeAv` Harbor agent (Scholion arm), weekly against the cold arm (`docs/PREREG-tracker-av.md`) | done; pilot valid, first weekly run pending |
 | P3: handoff benchmark (freeze, four channels, PREREG) | interrupt family built (`oe freeze`, `tools/gen/handoff.py`, leak check, `docs/PREREG-handoff-interrupt.md`, `.github/workflows/handoff.yml`) with repo-only, trace and notes; first A and successor runs pending; the records channel and the Harbor relay family are not built yet |
 | Ledger (agentvcs Plan 15 Phase 3): `oe import-reports` (a Scholion Cloud reports export, one repo and one week, into `runs/<week>-ledger-<repo>.jsonl`), its validate rule, `site/ledger/`, `docs/PREREG-ledger.md` | built; no week published yet (the foundry has not merged its first week) |
-| P4: weekly tracker workflow and the openevaluations.si cutover | workflow written (four legs on DeepSeek: Claude Code cold and av, OpenCode, Codex; a one-trial Codex smoke run passed on 2026-11-04); the `LLM_API_KEY` and `TRACKER_PUSH_TOKEN` secrets and the domain move are pending |
+| P4: weekly tracker workflow and the openevaluations.si cutover | workflow written (four legs on DeepSeek: Claude Code cold and av, OpenCode, Codex; a one-trial Codex smoke run passed on 2026-11-04); the weekly schedule is off for now (owner, 2026-11-05); the `LLM_API_KEY` and `TRACKER_PUSH_TOKEN` secrets and the domain move are pending |
 
 ## Contributing a run
 

@@ -14,6 +14,8 @@ The site's version is `site/methodology/index.html`; this file is the source of 
 
 ## The weekly tracker
 
+The weekly schedule is off for now (2026-11-05); runs are started by hand.
+
 Three legs on DeepSeek Flash, `-k 3` on `tallyho-cold`: Claude Code (`cold`), Claude Code on the
 Scholion framework (`av`, `agents/oe_agents/claude_code_av.py`) and OpenCode (`cold`). Both Claude
 Code legs install the same Claude Code version, read from npm when the run starts. The `av` arm,
