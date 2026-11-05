@@ -39,6 +39,26 @@ def _import_harbor(a):
     return 0
 
 
+def _import_reports(a):
+    from .import_reports import LedgerError, import_file
+
+    arms = {}
+    for spec in a.arm or []:
+        owner, sep, arm = spec.partition("=")
+        if not sep or not owner:
+            print(f"--arm {spec}: OWNER=teams or OWNER=autopilot", file=sys.stderr)
+            return 2
+        arms[owner] = arm
+    try:
+        p = import_file(a.reports, a.out, repo=a.repo, week=a.week, arms=arms,
+                        revision=a.revision, notes=a.notes)
+    except LedgerError as e:
+        print(f"{a.reports}: {e}", file=sys.stderr)
+        return 1
+    print(p.as_posix())
+    return 0
+
+
 def _freeze(a):
     from .handoff import freeze
     from .import_harbor import trials
@@ -109,8 +129,8 @@ def _detect(a):
     changed = 0
     for r in runs:
         run = r["run"]
-        if run["dataset"]["visibility"] == "private":
-            continue
+        if run["dataset"]["visibility"] == "private" or run["harness"]["runner"] == "scholion-cloud":
+            continue  # private runs publish no sessions; ledger runs are no tracker series
         key = (run["dataset"]["name"], run["agent"]["name"], run["model"]["name"], run["config"]["arm"])
         prev = hist.setdefault(key, [])
         flags = sorted(set(stats.detect_change(r, prev)) | (set(run["flags"]) & {"budget_stopped"}))
@@ -169,6 +189,18 @@ def main(argv=None):
                    help="handoff tasks: split '<task>--<channel>' into task and arm")
     p.add_argument("--merge", action="store_true", help="the jobs are parts of one run: write one run file")
     p.set_defaults(fn=_import_harbor)
+
+    p = sub.add_parser("import-reports",
+                       help="convert a Scholion Cloud reports export (one repo, one week) into a ledger run")
+    p.add_argument("reports", help="the JSON of GET /v1/ee/reports?repo=R&from=<Monday>&to=<Sunday>")
+    p.add_argument("--repo", help="the export's repo (checked against it)")
+    p.add_argument("--week", help="YYYY-MM-DD, the Monday the export covers (checked against it)")
+    p.add_argument("--arm", action="append", metavar="OWNER=ARM",
+                   help="the path (teams or autopilot) of a task owner the default table does not name")
+    p.add_argument("--revision", type=int, help="supersede a published week (2, 3, ...); needs --notes")
+    p.add_argument("--notes", help="why this run supersedes the week")
+    p.add_argument("--out", default=str(REPO / "runs"))
+    p.set_defaults(fn=_import_reports)
 
     p = sub.add_parser("freeze", help="freeze a handoff predecessor job: one frozen A per task")
     p.add_argument("job", help="the Harbor job directory of the A run")

@@ -1,0 +1,203 @@
+{
+  "repo": "scholion",
+  "from": "2026-11-02T00:00:00Z",
+  "to": "2026-11-09T00:00:00Z",
+  "summary": {
+    "review_latency": {
+      "features": 4,
+      "mean_secs": 1665.0,
+      "median_secs": 1320.0,
+      "p90_secs": 2832.0,
+      "by_reviewer": {
+        "fable-sonnet": {"features": 3, "mean_secs": 1980.0, "median_secs": 1740.0, "p90_secs": 2988.0},
+        "reviewer": {"features": 1, "mean_secs": 720.0, "median_secs": 720.0, "p90_secs": 720.0}
+      }
+    },
+    "gate_wait": {
+      "decisions": 5,
+      "timed": 5,
+      "mean_secs": 4604.0,
+      "median_secs": 2880.0,
+      "p90_secs": 9684.0,
+      "by_actor": {
+        "owner@example.com": {"decisions": 5, "timed": 5, "mean_secs": 4604.0, "median_secs": 2880.0, "p90_secs": 9684.0}
+      }
+    },
+    "review_rounds": {
+      "features": 4,
+      "mean": 0.25,
+      "distribution": {"0": 3, "1": 1, "2": 0, "3+": 0},
+      "by_persona": {
+        "builder": {"features": 1, "mean": 0.0},
+        "fable-opus": {"features": 3, "mean": 0.3333333333333333}
+      }
+    },
+    "memory_signal": {
+      "features": 4,
+      "records_written": 23,
+      "records_written_by_kind": {"attempt": 3, "decision": 5, "handoff": 1, "intent": 4, "note": 2, "review": 6, "validation": 2},
+      "pack_tokens": 9412,
+      "pack_items": 61,
+      "known_findings": 1,
+      "per_feature": {"records_written": 5.75, "pack_tokens": 2353.0, "pack_items": 15.25, "known_findings": 0.25}
+    },
+    "features_merged": 4,
+    "feature_cost_usd": 4.789531,
+    "feature_credits": 6.0,
+    "cost_per_merged_feature_usd": 1.197383,
+    "spend_usd": 5.141645,
+    "spend_credits": 9.0,
+    "spend_per_merged_feature_usd": 1.285411,
+    "unpriced_tokens": 1200,
+    "reverts": 1,
+    "escalations": 1,
+    "gate_decisions": 5,
+    "human_interventions": 6,
+    "backlog_to_merge": {"features": 3, "mean_secs": 83700.0, "median_secs": 97200.0, "p90_secs": 123840.0}
+  },
+  "features": [
+    {
+      "task_id": "0b6c5f1e-3a51-4a8e-9d55-1f1c2b7a9e01", "repo": "scholion", "slug": "trunk-advance-after-merge",
+      "title": "Trunk advance after merge", "owner": "fable-opus", "persona": true,
+      "backlog_id": "6f0d2c11-8b7e-4c3a-a1d2-0e5b9f7c3a10", "target_id": "c1a7e9d0-5b2f-4e8a-9c6d-3f1b0a2e7d44",
+      "target": "Loop noise", "queued_at": "2026-11-02T09:00:00+00:00", "started_at": "2026-11-02T09:20:00+00:00",
+      "merged_at": "2026-11-02T15:30:00+00:00", "merged_by": "owner@example.com",
+      "backlog_to_merge_secs": 23400.0, "task_to_merge_secs": 22200.0, "cost_usd": 1.84213, "credits": 0.0,
+      "tokens": 3120455, "unpriced_tokens": 0, "models": "claude-opus-5-5 claude-sonnet-5-5", "reverts": 0
+    },
+    {
+      "task_id": "4d2e8a90-1c3b-4f5e-8a7d-2b9c0e1f3a02", "repo": "scholion", "slug": "lease-renewal-on-request-changes",
+      "title": "Lease renewal on request_changes", "owner": "fable-opus", "persona": true,
+      "backlog_id": "7a1e3d22-9c8f-4d4b-b2e3-1f6c0a8d4b21", "target_id": "c1a7e9d0-5b2f-4e8a-9c6d-3f1b0a2e7d44",
+      "target": "Loop noise", "queued_at": "2026-11-03T08:00:00+00:00", "started_at": "2026-11-03T08:05:00+00:00",
+      "merged_at": "2026-11-04T11:00:00+00:00", "merged_by": "owner@example.com",
+      "backlog_to_merge_secs": 97200.0, "task_to_merge_secs": 96900.0, "cost_usd": 2.513377, "credits": 0.0,
+      "tokens": 4402210, "unpriced_tokens": 0, "models": "claude-opus-5-5 claude-sonnet-5-5", "reverts": 0
+    },
+    {
+      "task_id": "9e7f1b3c-2d4a-4b6e-9f8a-3c0d1e2f4b03", "repo": "scholion", "slug": "attention-lists-stale-reviews",
+      "title": "Attention lists stale reviews", "owner": "builder", "persona": true,
+      "backlog_id": "8b2f4e33-0d9a-4e5c-c3f4-2a7d1b9e5c32", "target_id": "c1a7e9d0-5b2f-4e8a-9c6d-3f1b0a2e7d44",
+      "target": "Loop noise", "queued_at": "2026-11-04T22:00:00+00:00", "started_at": "2026-11-04T22:01:00+00:00",
+      "merged_at": "2026-11-06T10:15:00+00:00", "merged_by": "owner@example.com",
+      "backlog_to_merge_secs": 130500.0, "task_to_merge_secs": 130440.0, "cost_usd": 0.031906, "credits": 6.0,
+      "tokens": 1850221, "unpriced_tokens": 0, "models": "deepseek-flash", "reverts": 1
+    },
+    {
+      "task_id": "a3c5d7e9-4f6b-4c8d-8e0f-4d1e2f3a5c04", "repo": "scholion", "slug": "digest-names-the-repo",
+      "title": "Digest names the repo (secret plan)", "owner": "fable-opus", "persona": true,
+      "backlog_id": null, "target_id": null, "target": null, "queued_at": null,
+      "started_at": "2026-11-07T13:00:00+00:00", "merged_at": "2026-11-07T16:45:00+00:00", "merged_by": "owner@example.com",
+      "backlog_to_merge_secs": null, "task_to_merge_secs": 13500.0, "cost_usd": 0.402118, "credits": 0.0,
+      "tokens": 690311, "unpriced_tokens": 1200, "models": "claude-opus-5-5 claude-sonnet-5-5", "reverts": 0
+    }
+  ],
+  "targets": [
+    {"target_id": "c1a7e9d0-5b2f-4e8a-9c6d-3f1b0a2e7d44", "target": "Loop noise", "features": 3, "cost_usd": 4.387413,
+     "credits": 6.0, "cost_per_merged_feature_usd": 1.462471, "mean_backlog_to_merge_secs": 83700.0},
+    {"target_id": null, "target": null, "features": 1, "cost_usd": 0.402118, "credits": 0.0,
+     "cost_per_merged_feature_usd": 0.402118, "mean_backlog_to_merge_secs": null}
+  ],
+  "personas": [
+    {"agent": "builder", "persona": true, "tasks_started": 2, "tasks_merged": 1, "merge_rate": 0.5, "reverts": 1,
+     "tokens": 2310540, "spend_usd": 0.06402, "credits": 9.0, "features": 1, "feature_cost_usd": 0.031906,
+     "cost_per_merged_feature_usd": 0.031906},
+    {"agent": "fable-opus", "persona": true, "tasks_started": 4, "tasks_merged": 3, "merge_rate": 0.75, "reverts": 0,
+     "tokens": 6810230, "spend_usd": 3.91204, "credits": 0.0, "features": 3, "feature_cost_usd": 4.757625,
+     "cost_per_merged_feature_usd": 1.585875},
+    {"agent": "fable-sonnet", "persona": true, "tasks_started": 0, "tasks_merged": 0, "merge_rate": null, "reverts": 0,
+     "tokens": 1402427, "spend_usd": 1.065585, "credits": 0.0, "features": 0, "feature_cost_usd": 0.0,
+     "cost_per_merged_feature_usd": null},
+    {"agent": "reviewer", "persona": true, "tasks_started": 0, "tasks_merged": 0, "merge_rate": null, "reverts": 0,
+     "tokens": 540000, "spend_usd": 0.1, "credits": 0.0, "features": 0, "feature_cost_usd": 0.0,
+     "cost_per_merged_feature_usd": null}
+  ],
+  "models": [
+    {"model": "claude-opus-5-5", "tokens": 6810230, "spend_usd": 3.91204, "credits": 0.0, "features": 3,
+     "feature_cost_usd": 4.757625, "cost_per_merged_feature_usd": 1.585875},
+    {"model": "claude-sonnet-5-5", "tokens": 1402427, "spend_usd": 1.065585, "credits": 0.0, "features": 3,
+     "feature_cost_usd": 4.757625, "cost_per_merged_feature_usd": 1.585875},
+    {"model": "deepseek-flash", "tokens": 2850540, "spend_usd": 0.16402, "credits": 9.0, "features": 1,
+     "feature_cost_usd": 0.031906, "cost_per_merged_feature_usd": 0.031906}
+  ],
+  "reverts": [
+    {"at": "2026-11-05T09:00:00+00:00", "repo": "scholion", "task_id": "9e7f1b3c-2d4a-4b6e-9f8a-3c0d1e2f4b03",
+     "slug": "attention-lists-stale-reviews", "title": "Attention lists stale reviews", "owner": "builder"}
+  ],
+  "interventions": [
+    {"at": "2026-11-02T15:30:00+00:00", "kind": "gate.merge", "task_id": "0b6c5f1e-3a51-4a8e-9d55-1f1c2b7a9e01",
+     "repo": "scholion", "slug": "trunk-advance-after-merge", "title": "Trunk advance after merge", "owner": "fable-opus",
+     "actor": "owner@example.com", "detail": ""},
+    {"at": "2026-11-03T16:10:00+00:00", "kind": "gate.request_changes", "task_id": "4d2e8a90-1c3b-4f5e-8a7d-2b9c0e1f3a02",
+     "repo": "scholion", "slug": "lease-renewal-on-request-changes", "title": "Lease renewal on request_changes",
+     "owner": "fable-opus", "actor": "owner@example.com", "detail": "Renew the lease on request_changes too, not only on submit"},
+    {"at": "2026-11-04T11:00:00+00:00", "kind": "gate.merge", "task_id": "4d2e8a90-1c3b-4f5e-8a7d-2b9c0e1f3a02",
+     "repo": "scholion", "slug": "lease-renewal-on-request-changes", "title": "Lease renewal on request_changes",
+     "owner": "fable-opus", "actor": "owner@example.com", "detail": ""},
+    {"at": "2026-11-05T03:12:00+00:00", "kind": "escalation", "task_id": "f1e2d3c4-b5a6-4978-8a9b-0c1d2e3f4a05",
+     "repo": "scholion", "slug": "e4-smoke-times-out", "title": "E4 smoke times out", "owner": "builder",
+     "actor": "builder", "detail": "review sent it back 3 times (max_review_rounds 2)"},
+    {"at": "2026-11-06T10:15:00+00:00", "kind": "gate.merge", "task_id": "9e7f1b3c-2d4a-4b6e-9f8a-3c0d1e2f4b03",
+     "repo": "scholion", "slug": "attention-lists-stale-reviews", "title": "Attention lists stale reviews", "owner": "builder",
+     "actor": "owner@example.com", "detail": ""},
+    {"at": "2026-11-07T16:45:00+00:00", "kind": "gate.merge", "task_id": "a3c5d7e9-4f6b-4c8d-8e0f-4d1e2f3a5c04",
+     "repo": "scholion", "slug": "digest-names-the-repo", "title": "Digest names the repo (secret plan)", "owner": "fable-opus",
+     "actor": "owner@example.com", "detail": ""}
+  ],
+  "runner_outcomes": [
+    {"repo": "scholion", "outcome": "escalated", "sessions": 1, "mean_wall_secs": 1804.0, "check_failed": 1},
+    {"repo": "scholion", "outcome": "reviewed", "sessions": 2, "mean_wall_secs": 402.5, "check_failed": 0},
+    {"repo": "scholion", "outcome": "submitted", "sessions": 2, "mean_wall_secs": 1210.0, "check_failed": 0}
+  ],
+  "review_latency": [
+    {"task_id": "0b6c5f1e-3a51-4a8e-9d55-1f1c2b7a9e01", "repo": "scholion", "slug": "trunk-advance-after-merge",
+     "title": "Trunk advance after merge", "owner": "fable-opus", "merged_at": "2026-11-02T15:30:00+00:00",
+     "reviewer": "fable-sonnet", "verdict": "approve", "submitted_at": "2026-11-02T13:10:00+00:00",
+     "verdict_at": "2026-11-02T13:39:00+00:00", "latency_secs": 1740.0},
+    {"task_id": "4d2e8a90-1c3b-4f5e-8a7d-2b9c0e1f3a02", "repo": "scholion", "slug": "lease-renewal-on-request-changes",
+     "title": "Lease renewal on request_changes", "owner": "fable-opus", "merged_at": "2026-11-04T11:00:00+00:00",
+     "reviewer": "fable-sonnet", "verdict": "approve", "submitted_at": "2026-11-03T12:00:00+00:00",
+     "verdict_at": "2026-11-03T12:55:00+00:00", "latency_secs": 3300.0},
+    {"task_id": "9e7f1b3c-2d4a-4b6e-9f8a-3c0d1e2f4b03", "repo": "scholion", "slug": "attention-lists-stale-reviews",
+     "title": "Attention lists stale reviews", "owner": "builder", "merged_at": "2026-11-06T10:15:00+00:00",
+     "reviewer": "reviewer", "verdict": "approve", "submitted_at": "2026-11-05T01:30:00+00:00",
+     "verdict_at": "2026-11-05T01:42:00+00:00", "latency_secs": 720.0},
+    {"task_id": "a3c5d7e9-4f6b-4c8d-8e0f-4d1e2f3a5c04", "repo": "scholion", "slug": "digest-names-the-repo",
+     "title": "Digest names the repo (secret plan)", "owner": "fable-opus", "merged_at": "2026-11-07T16:45:00+00:00",
+     "reviewer": "fable-sonnet", "verdict": "approve", "submitted_at": "2026-11-07T15:00:00+00:00",
+     "verdict_at": "2026-11-07T15:15:00+00:00", "latency_secs": 900.0}
+  ],
+  "gate_wait": [
+    {"at": "2026-11-02T15:30:00+00:00", "action": "gate.merge", "task_id": "0b6c5f1e-3a51-4a8e-9d55-1f1c2b7a9e01",
+     "repo": "scholion", "slug": "trunk-advance-after-merge", "title": "Trunk advance after merge", "owner": "fable-opus",
+     "stage": "merge", "actor": "owner@example.com", "since": "2026-11-02T13:39:00+00:00", "wait_secs": 6660.0},
+    {"at": "2026-11-03T16:10:00+00:00", "action": "gate.request_changes", "task_id": "4d2e8a90-1c3b-4f5e-8a7d-2b9c0e1f3a02",
+     "repo": "scholion", "slug": "lease-renewal-on-request-changes", "title": "Lease renewal on request_changes",
+     "owner": "fable-opus", "stage": "merge", "actor": "owner@example.com", "since": "2026-11-03T12:55:00+00:00",
+     "wait_secs": 11700.0},
+    {"at": "2026-11-04T11:00:00+00:00", "action": "gate.merge", "task_id": "4d2e8a90-1c3b-4f5e-8a7d-2b9c0e1f3a02",
+     "repo": "scholion", "slug": "lease-renewal-on-request-changes", "title": "Lease renewal on request_changes",
+     "owner": "fable-opus", "stage": "merge", "actor": "owner@example.com", "since": "2026-11-04T10:12:00+00:00",
+     "wait_secs": 2880.0},
+    {"at": "2026-11-06T10:15:00+00:00", "action": "gate.merge", "task_id": "9e7f1b3c-2d4a-4b6e-9f8a-3c0d1e2f4b03",
+     "repo": "scholion", "slug": "attention-lists-stale-reviews", "title": "Attention lists stale reviews", "owner": "builder",
+     "stage": "merge", "actor": "owner@example.com", "since": "2026-11-06T09:56:00+00:00", "wait_secs": 1140.0},
+    {"at": "2026-11-07T16:45:00+00:00", "action": "gate.merge", "task_id": "a3c5d7e9-4f6b-4c8d-8e0f-4d1e2f3a5c04",
+     "repo": "scholion", "slug": "digest-names-the-repo", "title": "Digest names the repo (secret plan)", "owner": "fable-opus",
+     "stage": "merge", "actor": "owner@example.com", "since": "2026-11-07T16:34:20+00:00", "wait_secs": 640.0}
+  ],
+  "review_rounds": [
+    {"task_id": "0b6c5f1e-3a51-4a8e-9d55-1f1c2b7a9e01", "repo": "scholion", "slug": "trunk-advance-after-merge",
+     "title": "Trunk advance after merge", "owner": "fable-opus", "persona": true, "merged_at": "2026-11-02T15:30:00+00:00",
+     "request_changes": 0},
+    {"task_id": "4d2e8a90-1c3b-4f5e-8a7d-2b9c0e1f3a02", "repo": "scholion", "slug": "lease-renewal-on-request-changes",
+     "title": "Lease renewal on request_changes", "owner": "fable-opus", "persona": true,
+     "merged_at": "2026-11-04T11:00:00+00:00", "request_changes": 1},
+    {"task_id": "9e7f1b3c-2d4a-4b6e-9f8a-3c0d1e2f4b03", "repo": "scholion", "slug": "attention-lists-stale-reviews",
+     "title": "Attention lists stale reviews", "owner": "builder", "persona": true, "merged_at": "2026-11-06T10:15:00+00:00",
+     "request_changes": 0},
+    {"task_id": "a3c5d7e9-4f6b-4c8d-8e0f-4d1e2f3a5c04", "repo": "scholion", "slug": "digest-names-the-repo",
+     "title": "Digest names the repo (secret plan)", "owner": "fable-opus", "persona": true,
+     "merged_at": "2026-11-07T16:45:00+00:00", "request_changes": 0}
+  ]
+}

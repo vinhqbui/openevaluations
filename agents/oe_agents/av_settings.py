@@ -16,7 +16,7 @@ from pathlib import Path
 
 AV_RELEASE = "release/0.0.2"
 TARBALL = "scholion-v0.0.2-x86_64-unknown-linux-gnu"
-SHA256 = "47370bcc3a0367d5a4efe1289c119c54892f0773698b9066e11d9a0c908c2693"
+SHA256 = "68ab867aac926a37bc775e37645a4010a4b626d6c53465092c60ffbb5d36c2c0"
 URL = f"https://github.com/vinhqbui/scholion/releases/download/{AV_RELEASE}/{TARBALL}.tar.gz"
 MIN_GLIBC = (2, 39)  # what the release binaries link against
 

@@ -25,6 +25,7 @@ Status: early. The published data so far is 18 runs of Claude Code recorded by S
 - Run index: https://openevaluations.si/data/runs.json
 - Tracker series: https://openevaluations.si/data/tracker.json
 - Handoff results: https://openevaluations.si/data/handoff.json
+- Ledger weeks: https://openevaluations.si/data/ledger.json
 - Raw run files: https://openevaluations.si/data/runs/<run-id>.jsonl (line 1 = run, then one line per session)
 - Schemas: https://openevaluations.si/data/schema/run.schema.json and https://openevaluations.si/data/schema/session.schema.json
 
@@ -42,6 +43,7 @@ Status: early. The published data so far is 18 runs of Claude Code recorded by S
 - Datasets: https://openevaluations.si/datasets/
 - Runs: https://openevaluations.si/runs/
 - Methodology: https://openevaluations.si/methodology/
+- Ledger (Scholion Cloud working its own backlog: cost per merged feature and human interventions per feature, by week; 2 to 10 features a week, reported, never claimed, not a tracker series): https://openevaluations.si/ledger/
 
 ## Scholion
 

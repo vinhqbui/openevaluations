@@ -53,7 +53,7 @@
       "required": ["runner"],
       "additionalProperties": false,
       "properties": {
-        "runner": {"enum": ["harbor", "scholion-bench"]},
+        "runner": {"enum": ["harbor", "scholion-bench", "scholion-cloud"], "description": "scholion-cloud: a ledger run (oe import-reports), not an evaluation"},
         "harbor_version": {"type": ["string", "null"]},
         "openevaluations_rev": {"type": ["string", "null"]},
         "agent_impl_rev": {"type": ["string", "null"]},
@@ -92,6 +92,56 @@
         "cost_per_accepted": {"type": ["number", "null"]},
         "median_tokens_billed": {"type": ["number", "null"]},
         "median_llm_calls": {"type": ["number", "null"]}
+      }
+    },
+    "ledger": {
+      "type": "object",
+      "description": "a ledger run's week (harness.runner scholion-cloud only): the Scholion Cloud daemon's report summary for one repo, as exported",
+      "required": ["repo", "from", "to", "features_merged", "human_interventions", "reverts", "owners", "models"],
+      "additionalProperties": false,
+      "properties": {
+        "repo": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+        "from": {"type": "string", "format": "date-time"},
+        "to": {"type": "string", "format": "date-time"},
+        "features_merged": {"type": "integer", "minimum": 0},
+        "feature_cost_usd": {"type": ["number", "null"]},
+        "cost_per_merged_feature_usd": {"type": ["number", "null"]},
+        "spend_usd": {"type": ["number", "null"]},
+        "spend_per_merged_feature_usd": {"type": ["number", "null"]},
+        "unpriced_tokens": {"type": ["integer", "null"]},
+        "reverts": {"type": ["integer", "null"]},
+        "escalations": {"type": ["integer", "null"]},
+        "gate_decisions": {"type": ["integer", "null"]},
+        "human_interventions": {"type": ["integer", "null"]},
+        "backlog_to_merge_median_secs": {"type": ["number", "null"]},
+        "review_latency_median_secs": {"type": ["number", "null"]},
+        "gate_wait_median_secs": {"type": ["number", "null"]},
+        "review_rounds_mean": {"type": ["number", "null"]},
+        "runner_outcomes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "outcome": {"type": ["string", "null"]},
+              "sessions": {"type": ["integer", "null"]},
+              "mean_wall_secs": {"type": ["number", "null"]},
+              "check_failed": {"type": ["integer", "null"]}
+            }
+          }
+        },
+        "memory_signal": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "records_written": {"type": ["integer", "null"]},
+            "pack_tokens": {"type": ["integer", "null"]},
+            "pack_items": {"type": ["integer", "null"]},
+            "known_findings": {"type": ["integer", "null"]}
+          }
+        },
+        "owners": {"type": "object", "description": "task owner (persona) -> arm, as the importer mapped them", "additionalProperties": {"enum": ["teams", "autopilot"]}},
+        "models": {"type": "array", "items": {"type": "string"}}
       }
     },
     "source": {"type": ["string", "null"], "description": "where the raw data came from"},
