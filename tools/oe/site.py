@@ -63,12 +63,64 @@ def _cold_for(run, points, day):
     return others[0][1]["cold"] if len(others) == 1 else None
 
 
+def _mean(xs):
+    return sum(xs) / len(xs) if xs else None
+
+
+def _ledger_cell(sessions):
+    """Cost per merged feature and interventions per feature over ledger sessions (ok ones)."""
+    ok = [s for s in sessions if s.get("status") == "ok"]
+    costs = [s["cost_usd"] for s in ok if s.get("cost_usd") is not None]
+    return {
+        "n": len(ok),
+        "cost_per_merged_feature_usd": _mean(costs),
+        "interventions_per_feature": _mean([s.get("interventions") or 0 for s in ok]),
+        "median_wall_secs": stats.median([s["wall_secs"] for s in ok if s.get("reason") is None]),
+    }
+
+
+def _ledger(entries):
+    """ledger.json: per repo, one row per week (a week's highest revision), oldest first."""
+    weeks = {}
+    for run, ss in entries:
+        lg = run["ledger"]
+        week = run["id"].split("-ledger-")[0]
+        rev = int(run["id"].rpartition(".")[2]) if "." in run["id"] else 1
+        key = (lg["repo"], week)
+        if key in weeks and weeks[key][0] >= rev:
+            continue
+        arms = {}
+        for s in ss:
+            arms.setdefault(s["arm"], []).append(s)
+        row = {
+            "week": week, "run_id": run["id"], "revision": rev, "raw": f"/data/runs/{run['id']}.jsonl",
+            **_ledger_cell(ss),
+            "arms": {a: _ledger_cell(v) for a, v in sorted(arms.items())},
+            "partial_cost_features": sum(1 for s in ss if (s.get("unpriced_tokens") or 0) > 0),
+            "not_from_backlog": sum(1 for s in ss if s.get("reason")),
+            "reverts": lg.get("reverts"),
+            "human_interventions": lg.get("human_interventions"),
+            "escalations": lg.get("escalations"),
+            "gate_decisions": lg.get("gate_decisions"),
+            "backlog_to_merge_median_secs": lg.get("backlog_to_merge_median_secs"),
+            "review_latency_median_secs": lg.get("review_latency_median_secs"),
+            "gate_wait_median_secs": lg.get("gate_wait_median_secs"),
+            "review_rounds_mean": lg.get("review_rounds_mean"),
+            "notes": run.get("notes"),
+        }
+        weeks[key] = (rev, row)
+    repos = {}
+    for (repo, week), (_, row) in sorted(weeks.items()):
+        repos.setdefault(repo, []).append(row)
+    return {"repos": [{"repo": r, "weeks": w} for r, w in sorted(repos.items())]}
+
+
 def build(runs_dir, out_dir):
     runs = runfile.load_all(runs_dir)
     out_dir = Path(out_dir)
     index, series, handoff = [], {}, []
     by_day = {}  # (series key, day) -> [(run, {arm: (point, sessions)})], to pair arms with a cold arm
-    datasets = {}
+    datasets, ledger = {}, []
     for r in runs:
         run, ss = r["run"], r["sessions"]
         private = run["dataset"]["visibility"] == "private"
@@ -82,6 +134,10 @@ def build(runs_dir, out_dir):
             "prereg": run.get("prereg"), "arms": per_arm,
             "raw": None if private else f"/data/runs/{run['id']}.jsonl",
         })
+        if run["harness"]["runner"] == "scholion-cloud":
+            # The ledger (oe import-reports) has its own page; it is never a tracker series or a dataset.
+            ledger.append((run, ss))
+            continue
         ds = datasets.setdefault(run["dataset"]["name"], {"runs": 0, "sessions": 0, "tasks": set(), "agents": set()})
         ds["runs"] += 1
         ds["sessions"] += len(ss)
@@ -128,6 +184,7 @@ def build(runs_dir, out_dir):
     _dump({"runs": index[::-1]}, out_dir / "runs.json")
     _dump({"series": [series[k] for k in sorted(series)]}, out_dir / "tracker.json")
     _dump({"runs": handoff[::-1]}, out_dir / "handoff.json")
+    _dump(_ledger(ledger), out_dir / "ledger.json")
     _dump({"datasets": {k: {"runs": v["runs"], "sessions": v["sessions"], "tasks": sorted(v["tasks"]),
                             "agents": sorted(v["agents"])} for k, v in sorted(datasets.items())}},
           out_dir / "datasets.json")

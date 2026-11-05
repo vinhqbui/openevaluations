@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger · openevaluations</title>
+<meta name="description" content="What a merged, reviewed feature cost when Scholion Cloud worked its own backlog, and how often a human stepped in, week by week. Reported, not claimed.">
+<link rel="canonical" href="https://openevaluations.si/ledger/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<div class="nav"><div class="wrap">
+  <a class="brand" href="/"><b>o</b> openevaluations</a>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+</div></div>
+<main class="wrap">
+<header class="page">
+  <h1>The <em>ledger</em></h1>
+  <p class="lede">Scholion Cloud works its own backlog (the foundry): agents build, personas review, a human approves every merge. Each week, per repository: what a merged feature cost, and how many times a human stepped in per feature.</p>
+</header>
+<div class="honest small">This is a ledger, not an evaluation. It records one team's real work; there is no control arm, the tasks are whatever the backlog held, and a week has 2 to 10 merged features. <b>No claim is made from it</b>, about Scholion or about any agent. It is not a <a href="/tracker/">tracker</a> series. What is counted, how a reverted feature counts and what is left out: <a href="https://github.com/vinhqbui/openevaluations/blob/main/docs/PREREG-ledger.md">PREREG-ledger.md</a>.</div>
+<div id="ledger" aria-live="polite"></div>
+<h2>How to <em>read it</em></h2>
+<ul class="muted">
+  <li><b>Cost per merged feature</b>: every priced token on the feature's task (the builder's and its reviewers'), from the daemon's <code>priced_usage</code>, divided by the features merged that week. Teams-path agents run on a subscription; their tokens are priced at list prices, not what was paid.</li>
+  <li><b>Interventions per feature</b>: board decisions (approve, request changes, merge) and runner escalations on the week's merged features, divided by them. In the foundry every merge is a human's board decision, so about one per feature is expected.</li>
+  <li><b>Paths</b>: <b>teams</b> is the director's agents working in Scholion task workspaces; <b>autopilot</b> is the Scholion Cloud runner taking small items on its own. A path is derived from the persona that owned the task.</li>
+</ul>
+</main>
+<footer><div class="wrap">Data: <a href="/data/ledger.json">ledger.json</a> · raw rows on <a href="/runs/">Runs</a> · Code Apache-2.0, data CC BY 4.0 · <a href="https://scholion.openevaluations.si">Scholion</a></div></footer>
+<script src="/js/oe.js"></script>
+<script>
+function hours(x) { return x == null ? "–" : (x / 3600).toFixed(1) + " h"; }
+function perArm(w, k, f) {
+  return ["teams", "autopilot"].filter(function (a) { return w.arms[a]; })
+    .map(function (a) { return [a + " (n " + w.arms[a].n + ")", f(w.arms[a][k])]; });
+}
+function chart(r, title, key, f, yMin) {
+  return OE.lineChart({
+    title: r.repo + " · " + title,
+    sub: r.weeks.length + " week" + (r.weeks.length > 1 ? "s" : "") + " · n is the features merged that week",
+    yMin: yMin, yFormat: f,
+    series: [{ name: "all", color: "var(--series-1)", points: r.weeks.map(function (w) {
+      return { label: w.week.slice(5) + " · n " + w.n, y: w[key],
+        rows: [["week of", w.week], ["features", String(w.n)]].concat(perArm(w, key, f)) };
+    }) }]
+  });
+}
+OE.load("ledger").then(function (data) {
+  var root = document.getElementById("ledger");
+  if (!data.repos.length) {
+    root.appendChild(OE.el("p", { class: "muted" }, "No ledger week is published yet. The first appears once the foundry has merged its first week of backlog."));
+    return;
+  }
+  data.repos.forEach(function (r) {
+    root.appendChild(OE.el("h2", null, r.repo));
+    var charts = OE.el("div", { class: "grid-charts" });
+    charts.appendChild(chart(r, "cost per merged feature", "cost_per_merged_feature_usd", OE.usd, 0));
+    charts.appendChild(chart(r, "interventions per feature", "interventions_per_feature", OE.num, 0));
+    root.appendChild(charts);
+    root.appendChild(OE.table([
+      { label: "week of", value: function (w) { return w.week; } },
+      { label: "features", num: true, value: function (w) { return String(w.n); } },
+      { label: "teams / autopilot", num: true, value: function (w) { return (w.arms.teams ? w.arms.teams.n : 0) + " / " + (w.arms.autopilot ? w.arms.autopilot.n : 0); } },
+      { label: "cost/feature", num: true, value: function (w) { return OE.usd(w.cost_per_merged_feature_usd) + (w.partial_cost_features ? " *" : ""); } },
+      { label: "teams", num: true, value: function (w) { return w.arms.teams ? OE.usd(w.arms.teams.cost_per_merged_feature_usd) : "–"; } },
+      { label: "autopilot", num: true, value: function (w) { return w.arms.autopilot ? OE.usd(w.arms.autopilot.cost_per_merged_feature_usd) : "–"; } },
+      { label: "interventions/feature", num: true, value: function (w) { return OE.num(w.interventions_per_feature); } },
+      { label: "reverts", num: true, value: function (w) { return w.reverts == null ? "–" : String(w.reverts); } },
+      { label: "backlog→merge (median)", num: true, value: function (w) { return hours(w.backlog_to_merge_median_secs); } },
+      { label: "run", value: function (w) { return OE.el("a", { href: w.raw }, w.run_id); } }
+    ], r.weeks.slice().reverse()));
+  });
+  root.appendChild(OE.el("p", { class: "small muted" }, "* some tokens on a feature had no price; its cost leaves them out (counted in the run's unpriced_tokens)."));
+});
+</script>
+</body>
+</html>

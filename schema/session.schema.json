@@ -47,6 +47,8 @@
         "hub_trial_id": {"type": ["string", "null"]}
       }
     },
-    "trial_name": {"type": ["string", "null"]}
+    "trial_name": {"type": ["string", "null"]},
+    "interventions": {"type": ["integer", "null"], "minimum": 0, "description": "ledger runs: human interventions on the feature in the week (gate decisions, escalations)"},
+    "unpriced_tokens": {"type": ["integer", "null"], "minimum": 0, "description": "ledger runs: tokens on the feature with no price; cost_usd leaves them out"}
   }
 }
