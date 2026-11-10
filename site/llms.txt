@@ -43,6 +43,7 @@ Status: early. The published data so far is 18 runs of Claude Code recorded by S
 - Datasets: https://openevaluations.si/datasets/
 - Runs: https://openevaluations.si/runs/
 - Methodology: https://openevaluations.si/methodology/
+- Note, 2026-11-10 (pilot, 40 trials): a new hard tier did not separate Claude Code on DeepSeek Flash from DeepSeek Pro; both solved every hard task, at about six times the cost per solved task on Pro: https://openevaluations.si/notes/tiers-pilot/
 - Ledger (Scholion Cloud working its own backlog: cost per merged feature and human interventions per feature, by week; 2 to 10 features a week, reported, never claimed, not a tracker series): https://openevaluations.si/ledger/
 
 ## Scholion

@@ -36,6 +36,7 @@
 </div>
 <div class="grid-charts" id="charts" aria-live="polite"></div>
 <details class="tableview" open><summary>Table view</summary><div id="table"></div></details>
+<p class="small">Note, 10 November 2026: <a href="/notes/tiers-pilot/">our hard tier did not separate a cheap model from a costly one</a> (pilot, 40 trials).</p>
 <div class="honest small">Flags compare a run with the four before it in the same series: <b>degraded</b> when the run's Wilson upper bound is more than 15 points under the baseline rate, <b>tool calls up</b> when median tool calls exceed 1.5× the baseline's, <b>recovered</b> when a flagged series returns inside both. Runs with fewer than 12 valid sessions are marked <b>low n</b> and get no other flag. The <b>av</b> arm is Claude Code on the <a href="/scholion/">Scholion</a> framework (hooks, a daemon and a workspace per task); its Δ columns are paired by task against the same day's <b>cold</b> run, with task-stratified 95% bootstrap intervals. No cell below 30 sessions carries a significance claim.</div>
 </main>
 <footer><div class="wrap">Data: <a href="/data/tracker.json">tracker.json</a> · raw rows on <a href="/runs/">Runs</a> · Code Apache-2.0, data CC BY 4.0 · <a href="/ledger/">Ledger</a> · <a href="https://scholion.openevaluations.si">Scholion</a></div></footer>
