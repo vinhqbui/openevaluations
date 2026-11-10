@@ -2,6 +2,234 @@
  "runs": [
   {
    "agent": {
+    "name": "claude-code",
+    "version": "2.1.318"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 1,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.164747,
+     "cost_per_accepted_ci": [
+      0.068916,
+      null
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 20.0,
+     "median_tokens_billed": 31638.0,
+     "median_tool_calls": 28.5,
+     "median_turns": 29.5,
+     "median_wall_secs": 110.623179,
+     "n": 2,
+     "rate": 0.5,
+     "skipped": 0,
+     "wilson": [
+      0.094529,
+      0.905471
+     ]
+    }
+   },
+   "dataset": "tallyho-more",
+   "date": "2026-11-10T15:38:57Z",
+   "flags": [
+    "low_n"
+   ],
+   "id": "2026-11-10-tallyho-more-claude-code-cold-31a084",
+   "model": {
+    "name": "deepseek-v4-pro",
+    "provider": "deepseek"
+   },
+   "prereg": "docs/PREREG-tracker-tiers.md",
+   "raw": "/data/runs/2026-11-10-tallyho-more-claude-code-cold-31a084.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.318"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 1,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.030745,
+     "cost_per_accepted_ci": [
+      0.016795,
+      null
+     ],
+     "dead_ends": 0,
+     "invalid": 1,
+     "median_llm_calls": 14.5,
+     "median_tokens_billed": 27591.5,
+     "median_tool_calls": 16.5,
+     "median_turns": 17.5,
+     "median_wall_secs": 47.53169,
+     "n": 2,
+     "rate": 0.5,
+     "skipped": 0,
+     "wilson": [
+      0.094529,
+      0.905471
+     ]
+    }
+   },
+   "dataset": "tallyho-more",
+   "date": "2026-11-10T15:35:32Z",
+   "flags": [
+    "low_n"
+   ],
+   "id": "2026-11-10-tallyho-more-claude-code-cold-1a1c5d",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": "docs/PREREG-tracker-tiers.md",
+   "raw": "/data/runs/2026-11-10-tallyho-more-claude-code-cold-1a1c5d.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.318"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 3,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.084277,
+     "cost_per_accepted_ci": [
+      0.038807,
+      0.27171
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 13.0,
+     "median_tokens_billed": 27504.0,
+     "median_tool_calls": 13.5,
+     "median_turns": 14.5,
+     "median_wall_secs": 96.489859,
+     "n": 4,
+     "rate": 0.75,
+     "skipped": 0,
+     "wilson": [
+      0.300636,
+      0.954414
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-10T12:26:57Z",
+   "flags": [
+    "low_n"
+   ],
+   "id": "2026-11-10-tallyho-cold-claude-code-cold-67816f",
+   "model": {
+    "name": "deepseek-v4-pro",
+    "provider": "deepseek"
+   },
+   "prereg": "docs/PREREG-tracker-tiers.md",
+   "raw": "/data/runs/2026-11-10-tallyho-cold-claude-code-cold-67816f.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.318"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 12,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.016727,
+     "cost_per_accepted_ci": [
+      0.014341,
+      0.019286
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 16.0,
+     "median_tokens_billed": 29151.5,
+     "median_tool_calls": 23.0,
+     "median_turns": 24.0,
+     "median_wall_secs": 49.602272,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-hard",
+   "date": "2026-11-10T12:22:28Z",
+   "flags": [],
+   "id": "2026-11-10-tallyho-hard-claude-code-cold-ebc5d4",
+   "model": {
+    "name": "deepseek-flash",
+    "provider": "deepseek"
+   },
+   "prereg": "docs/PREREG-tracker-tiers.md",
+   "raw": "/data/runs/2026-11-10-tallyho-hard-claude-code-cold-ebc5d4.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.318"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 8,
+     "cost_estimated": true,
+     "cost_per_accepted": 0.099775,
+     "cost_per_accepted_ci": [
+      0.079322,
+      0.120731
+     ],
+     "dead_ends": 0,
+     "invalid": 1,
+     "median_llm_calls": 20.0,
+     "median_tokens_billed": 38694.5,
+     "median_tool_calls": 28.0,
+     "median_turns": 29.0,
+     "median_wall_secs": 186.958382,
+     "n": 8,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.675584,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-hard",
+   "date": "2026-11-10T12:07:20Z",
+   "flags": [
+    "low_n"
+   ],
+   "id": "2026-11-10-tallyho-hard-claude-code-cold-e9c518",
+   "model": {
+    "name": "deepseek-v4-pro",
+    "provider": "deepseek"
+   },
+   "prereg": "docs/PREREG-tracker-tiers.md",
+   "raw": "/data/runs/2026-11-10-tallyho-hard-claude-code-cold-e9c518.jsonl",
+   "runner": "harbor",
+   "source": null,
+   "visibility": "public"
+  },
+  {
+   "agent": {
     "name": "codex",
     "version": "0.166.0"
    },

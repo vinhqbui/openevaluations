@@ -201,3 +201,20 @@ def test_run_agent_version_skips_trials_that_failed_setup(tmp_path):
     first.write_text(json.dumps(r))
     run, _ = runfile.read(import_job(job, tmp_path / "runs"))
     assert run["agent"]["version"] == "2.1.320"
+
+
+def test_deepseek_v4_pro_is_priced_at_its_peak_list_rate(tmp_path):
+    # api-docs.deepseek.com/quick_start/pricing, checked 2026-11-10: deepseek-v4-pro peak rates
+    # $1.32 input (cache miss), $0.044 cache hit, $3.96 output per million tokens
+    job = fake_job(tmp_path, n=1)
+    res = job / "compound-discounts__0" / "result.json"
+    r = json.loads(res.read_text())
+    r["agent_info"]["model_info"] = {"name": "deepseek-v4-pro", "provider": "anthropic"}
+    r["agent_result"].update(n_input_tokens=142322, n_cache_tokens=125056, n_output_tokens=3211, cost_usd=0.9)
+    res.write_text(json.dumps(r))
+    run, (s,) = runfile.read(import_job(job, tmp_path / "runs"))
+    assert run["model"] == {"provider": "deepseek", "name": "deepseek-v4-pro"}
+    assert s["cost_source"] == "estimated"
+    # 17266 * 1.32 + 125056 * 0.044 + 3211 * 3.96, per million
+    assert abs(s["cost_usd"] - 0.041009144) < 1e-9
+    assert spent(job) == (s["cost_usd"], 0)

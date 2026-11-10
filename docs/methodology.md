@@ -27,6 +27,17 @@ point stays unpaired.
 Claude Code reports DeepSeek sessions at a Claude list-price fallback. `oe import-harbor` and
 `oe budget` re-price them from `tools/oe/prices.toml` (`cost_source: estimated`).
 
+## Tiers
+
+`datasets/tiers.toml` gives each tallyho dataset a tier: `tallyho-cold` and `tallyho-more` are
+**easy** (one-file-or-two bugs; Claude Code on DeepSeek Flash solved 12 of 12 tracker sessions),
+and `tallyho-hard` is **hard**. The hard tasks are a feature across three modules, a seeded
+regression whose cause is far from its symptom, a refactor pinned by hidden behaviour tests, and a
+spec with edge cases the obvious fix misses. Every metric is reported per tier and never pooled
+across tiers. The tiered comparison of DeepSeek Flash and Pro is pre-registered in
+`docs/PREREG-tracker-tiers.md`. `tallyho-hard` passed nop (0) and oracle (1) on 2026-11-10;
+`datasets/_shared/tallyho/tasks-hard/VALIDATION.md` has the record and the obvious fixes that fail.
+
 ## Statistics
 
 - Acceptance: Wilson 95% interval.
