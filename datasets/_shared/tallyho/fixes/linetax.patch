@@ -1,0 +1,68 @@
+diff --git a/tallyho/pricing/quote.py b/tallyho/pricing/quote.py
+index 5588907..2dd7774 100644
+--- a/tallyho/pricing/quote.py
++++ b/tallyho/pricing/quote.py
+@@ -2,7 +2,7 @@
+ 
+ from __future__ import annotations
+ 
+-from dataclasses import dataclass
++from dataclasses import dataclass, field
+ from datetime import date
+ 
+ from ..models import Order
+@@ -19,6 +19,7 @@ class Quote:
+     discounted: Money
+     tax: Money
+     total: Money
++    line_taxes: list[tuple[str, Money]] = field(default_factory=list)
+ 
+     def lines(self) -> list[str]:
+         out = [f"Subtotal  {self.subtotal}"]
+@@ -27,6 +28,20 @@ class Quote:
+         return out
+ 
+ 
++def _spread(amount: int, weights: list[int]) -> list[int]:
++    """``amount`` split in proportion to ``weights``: floors, then the cents left over one each to
++    the largest remainders (the earlier one on a tie). The parts add up exactly to ``amount``."""
++    whole = sum(weights)
++    if not whole:
++        return [0] * len(weights)
++    parts = [amount * w // whole for w in weights]
++    rems = [amount * w % whole for w in weights]
++    order = sorted(range(len(weights)), key=lambda i: (-rems[i], i))
++    for i in order[: amount - sum(parts)]:
++        parts[i] += 1
++    return parts
++
++
+ def quote_order(
+     order: Order,
+     coupons: CouponBook | None = None,
+@@ -41,13 +56,15 @@ def quote_order(
+         order.coupon_codes, subtotal, order.customer.tier, today
+     )
+     discounted, applied = apply_discounts(subtotal, discounts)
+-    taxable = total(
+-        (l.subtotal for l in order.lines
+-         if l.product.taxable and l.product.category not in taxes.exempt_categories),
+-        order.currency,
+-    )
+-    # Discounts reduce the taxable base proportionally.
+-    if subtotal.minor:
+-        taxable = Money(taxable.minor * discounted.minor // subtotal.minor, order.currency)
+-    tax = taxes.tax(taxable, order.customer.region)
+-    return Quote(subtotal, applied, discounted, tax, discounted + tax)
++    # The discount is spread over the lines exactly; each taxable line is taxed on what is left.
++    shares = _spread(subtotal.minor - discounted.minor, [l.subtotal.minor for l in order.lines])
++    line_taxes = []
++    for line, share in zip(order.lines, shares):
++        p = line.product
++        if p.taxable and p.category not in taxes.exempt_categories:
++            tax_due = taxes.tax(line.subtotal - Money(share, order.currency), order.customer.region)
++        else:
++            tax_due = Money.zero(order.currency)
++        line_taxes.append((p.sku, tax_due))
++    tax = total((t for _, t in line_taxes), order.currency)
++    return Quote(subtotal, applied, discounted, tax, discounted + tax, line_taxes)

@@ -165,6 +165,17 @@ def _budget(a):
     return 1 if a.cap is not None and total + a.reserve > a.cap else 0
 
 
+def _tiers(a):
+    from .tiers import load_tiers, markdown, tier_tables
+
+    picked = [r for r in runfile.load_all(a.runs) if a.prereg and r["run"].get("prereg") == a.prereg]
+    paths = {r["path"].resolve() for r in picked}
+    picked += [{"path": Path(p), **dict(zip(("run", "sessions"), runfile.read(p))) } for p in a.also or []
+               if Path(p).resolve() not in paths]
+    print(markdown(tier_tables([(r["run"], r["sessions"]) for r in picked], load_tiers())), end="")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="oe", description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -233,6 +244,12 @@ def main(argv=None):
     p.add_argument("--cap", type=float)
     p.add_argument("--reserve", type=float, default=0.0)
     p.set_defaults(fn=_budget)
+
+    p = sub.add_parser("tiers", help="per-tier tables (datasets/tiers.toml) of a pre-registered comparison")
+    p.add_argument("--runs", default=str(REPO / "runs"))
+    p.add_argument("--prereg", help="include the runs whose prereg is this path")
+    p.add_argument("--also", nargs="+", metavar="RUNFILE", help="run files to include as well (reused data)")
+    p.set_defaults(fn=_tiers)
 
     a = ap.parse_args(argv)
     return a.fn(a)

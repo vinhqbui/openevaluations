@@ -1,0 +1,92 @@
+diff --git a/tallyho/store/base.py b/tallyho/store/base.py
+index 2ff85ac..060cd70 100644
+--- a/tallyho/store/base.py
++++ b/tallyho/store/base.py
+@@ -2,6 +2,7 @@
+ 
+ from __future__ import annotations
+ 
++import bisect
+ from abc import ABC, abstractmethod
+ from dataclasses import dataclass, field
+ 
+@@ -33,8 +34,21 @@ class RecordStore(ABC):
+         """Remove the record; missing records are ignored."""
+ 
+     @abstractmethod
++    def _ids(self, collection: str) -> list[str]:
++        """Every id in ``collection``, sorted."""
++
++    @abstractmethod
++    def _records(self, collection: str, ids: list[str]) -> list[dict]:
++        """The records with ``ids``, in that order, as the caller's own copies."""
++
+     def list_page(self, collection: str, cursor: str | None = None, limit: int = 50) -> Page:
+         """Records in id order, starting after ``cursor``, at most ``min(limit, max_page_size)``."""
++        keys = self._ids(collection)
++        start = bisect.bisect_right(keys, cursor) if cursor is not None else 0
++        size = max(1, min(limit, self.max_page_size))
++        chunk = keys[start : start + size]
++        more = start + size < len(keys)
++        return Page(self._records(collection, chunk), chunk[-1] if more and chunk else None)
+ 
+     def put_many(self, collection: str, records: list[dict]) -> None:
+         for r in records:
+diff --git a/tallyho/store/jsonfile.py b/tallyho/store/jsonfile.py
+index 7f1b8c9..ff25429 100644
+--- a/tallyho/store/jsonfile.py
++++ b/tallyho/store/jsonfile.py
+@@ -8,7 +8,7 @@ import tempfile
+ from pathlib import Path
+ 
+ from ..errors import NotFound, ValidationError
+-from .base import Page, RecordStore
++from .base import RecordStore
+ 
+ 
+ class JsonFileStore(RecordStore):
+@@ -64,9 +64,9 @@ class JsonFileStore(RecordStore):
+         if data.pop(record_id, None) is not None:
+             self._save(collection, data)
+ 
+-    def list_page(self, collection: str, cursor: str | None = None, limit: int = 50) -> Page:
++    def _ids(self, collection: str) -> list[str]:
++        return sorted(self._load(collection))
++
++    def _records(self, collection: str, ids: list[str]) -> list[dict]:
+         data = self._load(collection)
+-        keys = sorted(k for k in data if cursor is None or k > cursor)
+-        size = max(1, min(limit, self.max_page_size))
+-        chunk = keys[:size]
+-        return Page([data[k] for k in chunk], chunk[-1] if len(keys) > size else None)
++        return [data[k] for k in ids]
+diff --git a/tallyho/store/memory.py b/tallyho/store/memory.py
+index 49ceefc..1468003 100644
+--- a/tallyho/store/memory.py
++++ b/tallyho/store/memory.py
+@@ -6,7 +6,7 @@ import bisect
+ import copy
+ 
+ from ..errors import NotFound, ValidationError
+-from .base import Page, RecordStore
++from .base import RecordStore
+ 
+ 
+ class MemoryStore(RecordStore):
+@@ -36,11 +36,8 @@ class MemoryStore(RecordStore):
+         if coll.pop(record_id, None) is not None:
+             self._keys[collection].remove(record_id)
+ 
+-    def list_page(self, collection: str, cursor: str | None = None, limit: int = 50) -> Page:
+-        keys = self._keys.get(collection, [])
+-        start = bisect.bisect_right(keys, cursor) if cursor else 0
+-        size = max(1, min(limit, self.max_page_size))
+-        chunk = keys[start : start + size]
+-        more = start + size < len(keys)
+-        records = [copy.deepcopy(self._data[collection][k]) for k in chunk]
+-        return Page(records, chunk[-1] if more and chunk else None)
++    def _ids(self, collection: str) -> list[str]:
++        return self._keys.get(collection, [])
++
++    def _records(self, collection: str, ids: list[str]) -> list[dict]:
++        return [copy.deepcopy(self._data[collection][k]) for k in ids]

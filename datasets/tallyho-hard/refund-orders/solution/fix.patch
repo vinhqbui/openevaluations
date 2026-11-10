@@ -1,0 +1,60 @@
+diff --git a/tallyho/ledger.py b/tallyho/ledger.py
+index 8af619c..01a234f 100644
+--- a/tallyho/ledger.py
++++ b/tallyho/ledger.py
+@@ -43,6 +43,13 @@ class Ledger:
+             ("tax_payable", z, quote.tax),
+         )
+ 
++    def record_refund(self, on: date, order_id: str) -> None:
++        """Reverse the sale of ``order_id`` with exactly the amounts it was recorded with."""
++        sale = [e for e in self.entries if e.memo == f"order {order_id}"]
++        if not sale:
++            raise ValidationError(f"no sale recorded for order {order_id}", field="order")
++        self.post(on, f"refund {order_id}", *((e.account, e.credit, e.debit) for e in sale))
++
+     def balances(self) -> dict[str, Money]:
+         out: dict[str, int] = defaultdict(int)
+         for e in self.entries:
+diff --git a/tallyho/models.py b/tallyho/models.py
+index 7ef8a2f..e7f02ce 100644
+--- a/tallyho/models.py
++++ b/tallyho/models.py
+@@ -17,6 +17,7 @@ class OrderStatus(str, Enum):
+     PAID = "paid"
+     SHIPPED = "shipped"
+     CANCELLED = "cancelled"
++    REFUNDED = "refunded"
+ 
+ 
+ @dataclass(frozen=True)
+diff --git a/tallyho/workflow.py b/tallyho/workflow.py
+index 297bcb3..d77629c 100644
+--- a/tallyho/workflow.py
++++ b/tallyho/workflow.py
+@@ -14,9 +14,10 @@ from .pricing.coupons import CouponBook
+ _ALLOWED = {
+     OrderStatus.DRAFT: {OrderStatus.PLACED, OrderStatus.CANCELLED},
+     OrderStatus.PLACED: {OrderStatus.PAID, OrderStatus.CANCELLED},
+-    OrderStatus.PAID: {OrderStatus.SHIPPED},
+-    OrderStatus.SHIPPED: set(),
++    OrderStatus.PAID: {OrderStatus.SHIPPED, OrderStatus.REFUNDED},
++    OrderStatus.SHIPPED: {OrderStatus.REFUNDED},
+     OrderStatus.CANCELLED: set(),
++    OrderStatus.REFUNDED: set(),
+ }
+ 
+ 
+@@ -46,5 +47,12 @@ class Workflow:
+     def ship(self, order: Order) -> None:
+         self._move(order, OrderStatus.SHIPPED)
+ 
++    def refund(self, order: Order, on: date) -> None:
++        """Refund a paid or shipped order: the sale is reversed with the amounts it was charged."""
++        if OrderStatus.REFUNDED not in _ALLOWED[order.status]:
++            raise ValidationError(f"cannot refund a {order.status.value} order", field="status")
++        self.ledger.record_refund(on, order.id)
++        self._move(order, OrderStatus.REFUNDED)
++
+     def cancel(self, order: Order) -> None:
+         self._move(order, OrderStatus.CANCELLED)

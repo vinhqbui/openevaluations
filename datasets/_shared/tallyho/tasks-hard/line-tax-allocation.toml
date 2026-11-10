@@ -1,0 +1,16 @@
+name = "line-tax-allocation"
+fix_rev = "fix-linetax"
+goal = """`quote_order` taxes an order as a whole: it scales the taxable share down by the discount with integer division, so the tax can be a cent off, and a receipt cannot show the tax per line. Change it to tax line by line:
+
+1. Spread the order's total discount (`subtotal - discounted`, in minor units) over the order's lines in proportion to each line's subtotal. Each line first gets its exact share rounded down to a whole minor unit. Then the minor units still left over go one each to the lines with the largest fractional remainders; on a tie the earlier line goes first. The shares add up exactly to the total discount. When the subtotal is zero every share is zero.
+2. A line is taxable when its product is `taxable` and its category is not in the tax table's `exempt_categories`. A taxable line's tax is (its subtotal minus its share) at the customer's region's rate, rounded half to even to a whole minor unit, the way `TaxTable.tax` rounds. Every other line's tax is zero.
+3. `Quote.tax` is the sum of the line taxes, and `Quote.total` is still `discounted + tax`. Add a `Quote.line_taxes` field: a list with one `(sku, tax)` pair per order line, in the order's line order, each tax a `Money` in the order's currency. An order with no lines has an empty list.
+
+Leave everything else about quotes as it is."""
+relevant_files = ["tallyho/pricing/quote.py"]
+max_turns = 40
+timeout_sec = 1800
+
+[[local_tests]]
+path = "tests/test_line_tax_hidden.py"
+source = "files/test_line_tax_hidden.py"
