@@ -90,3 +90,5 @@ tasks, so far only Scholion's own runs) and interrupt (a real A cut at a pre-reg
   `agent-a`'s before Claude starts; `/handoff` is then deleted, so the records reach B only through
   av's pack and hooks. `python -m oe.xvendor` runs it: one Harbor job per trial in rounds, each
   vendor's spend gated before every launch against its own cap.
+  Its first run (2026-11-10) left no usable A on the six interrupt-family tasks, so no B ran:
+  `docs/results/2026-11-10-handoff-xvendor.md`.
