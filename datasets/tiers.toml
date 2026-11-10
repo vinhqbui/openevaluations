@@ -1,0 +1,10 @@
+# Difficulty tier of each tallyho dataset. Reports give every metric per tier and never pool
+# tiers (docs/PREREG-tracker-tiers.md). The directories keep their names: workflows and the
+# handoff benchmark refer to them.
+#   easy: one-file-or-two bugs; Claude Code on DeepSeek Flash solved 12/12 tallyho-cold sessions
+#   hard: multi-file features, far-from-symptom causes, behaviour-keeping refactors, edge cases
+
+[tiers]
+tallyho-cold = "easy"
+tallyho-more = "easy"
+tallyho-hard = "hard"

@@ -1,0 +1,15 @@
+name = "export-tax-drift"
+fix_rev = "fix-taxdrift"
+# The image's tree is tallyho with base/export-tax-drift/ copied over it: a seeded regression
+# whose symptom (configs, quotes, the CSV export) is far from its cause.
+base_overlay = "base/export-tax-drift"
+goal = """One Python process runs tallyho for several shops. For each shop it calls `load_config` on that shop's file and quotes the shop's orders with `quote_order(order, taxes=cfg.taxes)`; at the end it writes a CSV of all the orders with `orders_to_csv`. Since the latest release the numbers drift: once one shop's config has a `[tax]` section, the shops loaded after it are taxed at its rates for regions their own config never mentions, and the CSV's totals stop using the standard rates.
+
+Fix it. A quote made with a config's `taxes` uses the rates from that config's `[tax]` section and the shipped default rates for every other region. A quote or CSV export made without a tax table always uses the shipped defaults, the ones `default_tax_table()` returns in a fresh process. Neither may depend on which configs were loaded, or which tax tables were changed in code, earlier in the same process."""
+relevant_files = ["tallyho/pricing/tax.py"]
+max_turns = 40
+timeout_sec = 1800
+
+[[local_tests]]
+path = "tests/test_tax_drift_hidden.py"
+source = "files/test_tax_drift_hidden.py"

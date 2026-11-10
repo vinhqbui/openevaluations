@@ -1,7 +1,7 @@
 # Fallback prices for `oe budget`, in USD per million tokens, used only when a trial reports no
 # cost (Harbor's codex adapter never does without litellm). Check them against the providers'
 # price pages before each PREREG; a stale row only weakens the budget guard, never a result.
-checked = "2026-11-01"
+checked = "2026-11-10"   # deepseek rows: https://api-docs.deepseek.com/quick_start/pricing
 
 [models.claude-haiku-5-5]
 input = 1.0
@@ -17,3 +17,10 @@ output = 15.0
 input = 0.30
 cache_read = 0.006
 output = 1.20
+
+# DeepSeek bills off-peak at half these rates; the rows are the peak rates (01:00-04:00 and
+# 06:00-10:00 UTC on weekdays), so an estimate is an upper bound on what was billed.
+[models.deepseek-v4-pro]
+input = 1.32
+cache_read = 0.044
+output = 3.96

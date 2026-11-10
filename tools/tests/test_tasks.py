@@ -12,7 +12,7 @@ import pytest
 from oe import REPO
 
 TALLYHO = REPO / "datasets" / "_shared" / "tallyho"
-SPECS = sorted((TALLYHO / "tasks").glob("*.toml")) + sorted((TALLYHO / "tasks-more").glob("*.toml"))
+SPECS = [p for d in ("tasks", "tasks-more", "tasks-hard") for p in sorted((TALLYHO / d).glob("*.toml"))]
 
 
 def _gen(name):
@@ -32,6 +32,33 @@ def test_the_tracker_set_is_still_the_four_tasks_and_the_more_set_is_separate(tm
     assert not set(more) & {p.name for p in (tmp_path / "cold").iterdir()}
 
 
+def test_the_hard_set_is_separate_and_its_overlay_is_in_the_image(tmp_path):
+    gen = _gen("tallyho")
+    hard = gen.generate(tmp_path / "hard", gen.SHARED / "tasks-hard", gen.README_HARD)
+    assert hard == ["export-tax-drift", "line-tax-allocation", "refund-orders", "store-paging-refactor"]
+    assert "tallyho-hard" in (tmp_path / "hard" / "README.md").read_text()
+    seeded = tmp_path / "hard" / "export-tax-drift" / "environment" / "src" / "tallyho" / "pricing" / "tax.py"
+    assert "lru_cache" in seeded.read_text(encoding="utf-8")
+    plain = tmp_path / "hard" / "refund-orders" / "environment" / "src" / "tallyho" / "pricing" / "tax.py"
+    assert plain.read_bytes() == (TALLYHO / "src" / "tallyho" / "pricing" / "tax.py").read_bytes()
+    task = tomllib.loads((tmp_path / "hard" / "refund-orders" / "task.toml").read_text(encoding="utf-8"))
+    assert task["agent"]["timeout_sec"] == 1800 and task["metadata"]["max_turns"] == 40
+    cold = tomllib.loads((REPO / "datasets" / "tallyho-cold" / "csv-escaping" / "task.toml").read_text(encoding="utf-8"))
+    assert cold["agent"]["timeout_sec"] == 900
+
+
+def test_every_tallyho_dataset_has_a_tier():
+    tiers = tomllib.loads((REPO / "datasets" / "tiers.toml").read_text(encoding="utf-8"))["tiers"]
+    assert tiers == {"tallyho-cold": "easy", "tallyho-more": "easy", "tallyho-hard": "hard"}
+    assert all((REPO / "datasets" / name).is_dir() for name in tiers)
+
+
+def _base_tree(spec_path, spec, app):
+    shutil.copytree(TALLYHO / "src", app)
+    if spec.get("base_overlay"):
+        shutil.copytree(spec_path.parent / spec["base_overlay"], app, dirs_exist_ok=True)
+
+
 def _run_suite(app, hidden):
     shutil.copyfile(hidden, app / "tests" / hidden.name)
     r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "tests"], cwd=app,
@@ -47,7 +74,7 @@ def test_hidden_test_fails_on_the_base_and_passes_with_the_fix(tmp_path, spec_pa
     hidden = spec_path.parent / hidden["source"]
     fix = TALLYHO / "fixes" / f"{spec['fix_rev'].removeprefix('fix-')}.patch"
     app = tmp_path / "app"
-    shutil.copytree(TALLYHO / "src", app)
+    _base_tree(spec_path, spec, app)
     assert _run_suite(app, hidden) != 0, "the hidden test passes on the base tree"
     subprocess.run(["git", "init", "-q"], cwd=app, check=True)
     subprocess.run(["git", "apply", "--whitespace=nowarn", str(fix)], cwd=app, check=True)

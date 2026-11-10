@@ -1,0 +1,20 @@
+diff --git a/tallyho/pricing/tax.py b/tallyho/pricing/tax.py
+index fdc24dc..98a1ae5 100644
+--- a/tallyho/pricing/tax.py
++++ b/tallyho/pricing/tax.py
+@@ -4,7 +4,6 @@ from __future__ import annotations
+ 
+ from dataclasses import dataclass, field
+ from decimal import Decimal
+-from functools import lru_cache
+ 
+ from ..money import Money
+ 
+@@ -27,7 +26,6 @@ class TaxTable:
+         return amount.times(self.rate(region) / 100)
+ 
+ 
+-@lru_cache(maxsize=None)
+ def default_tax_table() -> TaxTable:
+     return TaxTable(
+         rates={
