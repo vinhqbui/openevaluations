@@ -103,8 +103,12 @@ class HandoffA(ClaudeCodeAv):
         cut = stream_result(p.read_text(encoding="utf-8", errors="replace"))
         wrap = stream_result((self.logs_dir / "claude-code.txt").read_text(encoding="utf-8", errors="replace")
                              if (self.logs_dir / "claude-code.txt").exists() else "")
-        if context.cost_usd is not None and cut.get("total_cost_usd") is not None:
-            context.cost_usd = float(context.cost_usd) + float(cut["total_cost_usd"])
+        # Claude Code's total_cost_usd after `--continue` is the whole session's (seen 2026-11-10:
+        # the wrap-up's modelUsage holds the cut's tokens too), so it is already the A's cost; add
+        # the cut's only when the wrap-up reports less than the cut, i.e. its own part alone.
+        c, w = cut.get("total_cost_usd"), wrap.get("total_cost_usd")
+        if context.cost_usd is not None and c is not None and w is not None and float(w) < float(c):
+            context.cost_usd = float(context.cost_usd) + float(c)
         context.metadata = {**(context.metadata or {}), "a_cut_turns": cut.get("num_turns"),
                             "a_cut_cost_usd": cut.get("total_cost_usd"), "a_wrapup_turns": wrap.get("num_turns"),
                             "a_wrapup_cost_usd": wrap.get("total_cost_usd")}

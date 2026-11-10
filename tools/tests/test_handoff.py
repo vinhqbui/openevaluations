@@ -552,8 +552,14 @@ def test_handoff_a_adds_the_cut_cost_to_the_wrapup_cost(tmp_path, monkeypatch):
     ctx.cost_usd = 0.03
     monkeypatch.setattr(ClaudeCodeAv, "populate_context_post_run", lambda self, context: None)
     a.populate_context_post_run(ctx)
-    assert ctx.cost_usd == pytest.approx(0.13)
+    assert ctx.cost_usd == pytest.approx(0.13)  # the wrap-up reported its own part only
     assert ctx.metadata["a_cut_turns"] == 4 and ctx.metadata["a_wrapup_turns"] == 2
+    # what Claude Code does: the resumed session's total includes the cut, so nothing is added
+    (tmp_path / "claude-code.txt").write_text('{"type":"result","num_turns":2,"total_cost_usd":0.13}\n')
+    ctx = AgentContext()
+    ctx.cost_usd = 0.13
+    a.populate_context_post_run(ctx)
+    assert ctx.cost_usd == pytest.approx(0.13)
 
 
 def test_handoff_b_adopts_a_before_the_swap_and_deletes_the_handoff_dir(tmp_path, monkeypatch):

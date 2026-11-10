@@ -171,3 +171,21 @@ From a review of the committed design; no trial of this comparison had run.
   validity rules. The wrap-up (4 turns) is unchanged.
 - **The pilot** is kept and reported as a pilot at cut 4; it is not `compound-discounts`' A, and
   that task gets its one A (and, if invalid, its one re-run) at cut 6 like every other task.
+
+## Amendment 3 (2026-11-10, while the A's ran, before reading any A result other than `compound-discounts`'s, and before any B)
+
+- **What was seen:** at cut 6, `compound-discounts`' A solved the task in both directions (hidden
+  test passing, so invalid by the unchanged rules). Its one re-run per the rules above is still
+  owed. No other A result had been read when this amendment was written.
+- **Task floor:** a direction needs at least **4 valid A's** (after re-runs) for its B results to
+  be called anything but descriptive. Thirty sessions over one or two A's repeat the same handoff;
+  they are not 30 independent handoffs. Below the floor, that direction's B results are counts
+  only, whatever the session count, and no B is launched for it until the director has seen the
+  A table (B is not run on an arm known in advance to be uninformative without that check).
+- **Wrap-up that changed code:** unchanged from "Predecessor A": B starts from the tree after the
+  wrap-up and `wrapup_changed_files` is reported; such an A is valid if that tree still fails the
+  hidden test.
+- **Cost of a wrapped A:** Claude Code's `total_cost_usd` after `--continue` covers the whole
+  session, so the harness (`HandoffA.populate_context_post_run`) no longer adds the cut's cost to
+  it. The Sonnet A's that ran before that fix carry the cut's cost twice in `result.json`; the
+  gate is only more cautious for it, and reported Claude spend for them uses the wrap-up's total.
