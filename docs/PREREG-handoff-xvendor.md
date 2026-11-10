@@ -24,8 +24,10 @@ is labelled exploratory. Run on one Windows host with Harbor and Docker, driven 
   `release/0.0.2`, the tracker's `av` arm, asked to keep `NOTES.md` as it goes;
   `docs/PREREG-handoff-interrupt.md`) with one addition, the **wrap-up**.
 - **Why a wrap-up:** in Scholion 0.0.2 an agent writes its records when the av Stop hook asks,
-  after its work: in the 2026-11-04 tracker `av` sessions (12, DeepSeek Flash) the first record
-  was written at agent step 5 to 14, and never before the Stop hook fired. A cut by `--max-turns`
+  after its work: in all 12 of the 2026-11-04 tracker `av` sessions (DeepSeek Flash) the Stop
+  hook's feedback came first (after agent step 4 to 13); in 10 the first `av record` call is the
+  step right after it, and in the other 2 the trajectory shows no `av record` call although their
+  records exist (wording corrected in Amendment 1). A cut by `--max-turns`
   ends the session with no Stop, so a hard-cut A would leave Scholion its intent and nothing else;
   the records channel would carry no reasoning by construction. Cross-vendor handoffs in practice
   happen when a person ends one tool's session to switch to another. So after the cut, A's session
@@ -128,3 +130,28 @@ is labelled exploratory. Run on one Windows host with Harbor and Docker, driven 
   daemon's changed list was A's one file (no `.git`), `git diff` in the workspace showed it, the
   SessionStart pack (719/800 tokens) listed both records under "Decisions & dead ends", and the av
   session was valid by the tracker's rules.
+
+## Amendment 1 (2026-11-10, before any paid trial)
+
+From a review of the committed design; no trial of this comparison had run.
+
+- **If the wrap-up leaves only the intent.** The design does not change. Every frozen A's record
+  count is reported per task, and a records cell whose A's left nothing beyond the intent on most
+  tasks is described as "Scholion handoff without A's records" (B still has av's pack and hooks).
+- **Secondary metric added: agent steps before the first av Stop-hook feedback** (all agent steps
+  when there is none), per channel. The av Stop hook asks B in the records channel to record its
+  changes after it has solved the task, which repo-only and notes B are never asked; turns and cost
+  include that, this metric does not. Computed from each trajectory (`oe.xvendor report`).
+- **Counted sessions, precisely:** a B session counts when Claude Code answered (its stream-json
+  result event exists, so turns are known) and the av session is not invalid. A session whose agent
+  was started but whose Claude Code never answered (for example `adopt` or the daemon failing, which
+  only the records channel can do) is not counted and is reported; two such sessions in a row stop
+  all launches (a harness stop).
+- **Setup failures cost $0** in the gate (no model call was made) instead of counting as unpriced,
+  and their one re-run is queued in the same invocation.
+- **Environment:** every variable whose name starts with `ANTHROPIC_`, `CLAUDE` or `DEEPSEEK_`, and
+  `AWS_BEARER_TOKEN_BEDROCK`, is removed before a leg's own endpoint and key are set.
+- **Order:** the first paid trial is one DeepSeek A on one task (`compound-discounts`), to check
+  the wrap-up on a real session (the session resumed, the Stop hook fired, the records, the session
+  files and token counts) before the other A's. It is that task's one A if valid, as for any A.
+- Claude Code version for every leg: 2.1.322, written to the driver's version file by hand.

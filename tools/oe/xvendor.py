@@ -30,7 +30,7 @@ import time
 from pathlib import Path
 
 from . import REPO
-from .budget import spent as priced_spend
+from .budget import estimate, trial_cost
 
 CUT_TURNS = 4
 WRAPUP_TURNS = 4
@@ -53,13 +53,15 @@ DIRECTIONS = {  # named by A -> B; the family is named by A's model
     "flash-to-sonnet": {"family": "xv-flash", "a": "deepseek", "b": "claude"},
 }
 AGENTS = {"repo-only": "claude-code", "notes": "claude-code", "records": "oe_agents.handoff_b:HandoffBAv"}
-KEY_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "CLAUDE_API_KEY", "DEEPSEEK_API_KEY")
+# Everything Harbor's Claude Code adapter or Claude Code itself could take a credential, endpoint or
+# session from (ANTHROPIC_*, CLAUDE_* incl. the host's own Claude Code session, Bedrock), and both keys.
+KEY_PREFIXES = ("ANTHROPIC_", "CLAUDE", "AWS_BEARER_TOKEN_BEDROCK", "DEEPSEEK_")
 
 
 def leg_env(vendor, base=None):
     """The environment for one vendor's Harbor run: only that vendor's endpoint and key."""
     src = dict(os.environ if base is None else base)
-    env = {k: v for k, v in src.items() if k not in KEY_VARS}
+    env = {k: v for k, v in src.items() if not k.upper().startswith(KEY_PREFIXES)}
     if vendor == "claude":
         env["ANTHROPIC_API_KEY"] = src["CLAUDE_API_KEY"]
     elif vendor == "deepseek":
@@ -125,9 +127,29 @@ def unfinished(root):
 
 
 def vendor_spend(vendor, root=None):
-    """(priced spend, unpriced trials, unfinished jobs) of one vendor's jobs root."""
+    """(priced spend, unpriced trials, unfinished jobs) of one vendor's jobs root.
+
+    Priced as `oe budget` prices (oe.budget.trial_cost, else prices.toml), except that a setup
+    failure (the agent never started, so no model call) costs 0 rather than counting as unpriced.
+    """
     root = Path(root or ROOT / vendor)
-    total, unpriced = priced_spend(root) if root.exists() else (0.0, 0)
+    total, unpriced = 0.0, 0
+    for res in root.rglob("result.json") if root.exists() else []:
+        try:
+            r = json.loads(res.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        if "trial_name" not in r or setup_failure(r):
+            continue
+        ar = r.get("agent_result") or {}
+        cost, _ = trial_cost(r)
+        if cost is None:
+            model = ((r.get("agent_info") or {}).get("model_info") or {}).get("name")
+            cost = estimate(model, ar.get("n_input_tokens"), ar.get("n_cache_tokens"), ar.get("n_output_tokens"))
+        if cost is None:
+            unpriced += 1
+        else:
+            total += cost
     return total, unpriced, len(unfinished(root))
 
 
@@ -196,29 +218,60 @@ def _log(msg):
     print(time.strftime("%H:%M:%S"), msg, flush=True)
 
 
+def claude_answered(job_dir):
+    """Whether a finished trial's Claude Code wrote its stream-json result event (the agent really ran)."""
+    for p in Path(job_dir).glob("*/agent/claude-code.txt"):
+        if '"type":"result"' in p.read_text(encoding="utf-8", errors="replace").replace(" ", ""):
+            return True
+    return False
+
+
+def _queue(root, family, arms, rounds, tasks):
+    out = []
+    for rnd, task, arm in plan(arms, rounds, tasks):
+        state, job = cell_state(root, family, arm, task, rnd)
+        if state != "done":
+            out.append((rnd, task, arm, job))
+    return out
+
+
 def run_b(direction, arms, rounds, parallel=1, dry_run=False, tasks=TASKS):
+    """Launch the planned trials; a setup failure's one re-run is queued as soon as it shows."""
     d = DIRECTIONS[direction]
     vendor, root = d["b"], ROOT / d["b"]
     root.mkdir(parents=True, exist_ok=True)
     present = [t for t in tasks if (REPO / "datasets" / f"handoff-{d['family']}" / f"{t}--{arms[0]}").exists()]
-    queue = []
-    for rnd, task, arm in plan(arms, rounds, present):
-        state, job = cell_state(root, d["family"], arm, task, rnd)
-        if state != "done":
-            queue.append((rnd, task, arm, job))
+    queue = _queue(root, d["family"], arms, rounds, present)
     _log(f"{direction}: {len(queue)} trial(s) to run ({len(present)} tasks x {arms} x {rounds} rounds)")
-    running = []
+    running, launched, silent, stopped = [], set(), 0, False
     while queue or running:
-        running = [(p, j) for p, j in running if p.poll() is None]
-        if queue and len(running) < parallel:
+        still = []
+        for proc, job in running:
+            if proc.poll() is None:
+                still.append((proc, job))
+                continue
+            r = trial_result(job)
+            if r is not None and not setup_failure(r) and not claude_answered(job):
+                silent += 1  # the agent was started but Claude Code never answered (adopt, daemon, ...)
+                _log(f"{job.name}: no Claude result event ({silent} in a row)")
+            elif r is not None and not setup_failure(r):
+                silent = 0
+            if silent >= 2:
+                _log("stop launching: two sessions in a row without a Claude result (harness stop, PREREG)")
+                stopped = True
+        running = still
+        if not stopped and not dry_run and not queue and not running:
+            queue = [q for q in _queue(root, d["family"], arms, rounds, present) if q[3].name not in launched]
+        if queue and not stopped and len(running) < parallel:
             ok, why = may_launch(vendor, in_flight=len(running), root=root)
             if not ok:
                 _log(f"stop launching ({vendor}): {why}")
-                queue = []
+                stopped = True
                 continue
             rnd, task, arm, job = queue.pop(0)
             cmd = b_command(direction, arm, task, job.name)
             _log(f"launch r{rnd} {task}--{arm} -> {job.name} ({why})")
+            launched.add(job.name)
             if dry_run:
                 print("  " + " ".join(cmd))
                 continue
@@ -227,12 +280,27 @@ def run_b(direction, arms, rounds, parallel=1, dry_run=False, tasks=TASKS):
             running.append((subprocess.Popen(cmd, cwd=REPO, env=leg_env(vendor), stdout=log,
                                              stderr=subprocess.STDOUT), job))
             continue
-        time.sleep(5)
+        if stopped:
+            queue = []
+        if running:
+            time.sleep(5)
     total, unpriced, open_jobs = vendor_spend(vendor, root)
     _log(f"{direction} done: {vendor} spent {total:.4f} (unpriced {unpriced}, unfinished {open_jobs})")
 
 
-def run_a(direction, dry_run=False, suffix=""):
+def standing_jobs(direction, arms, rounds, tasks=TASKS):
+    """The one job that stands per planned cell (the re-run if there was one), for `oe import-harbor`."""
+    d = DIRECTIONS[direction]
+    root = ROOT / d["b"]
+    out = []
+    for rnd, task, arm in plan(arms, rounds, tasks):
+        state, job = cell_state(root, d["family"], arm, task, rnd)
+        if state == "done" and trial_result(job) is not None and not setup_failure(trial_result(job)):
+            out.append(job)
+    return out
+
+
+def run_a(direction, dry_run=False, suffix="", only=None):
     d = DIRECTIONS[direction]
     vendor, root = d["a"], ROOT / d["a"]
     v = VENDORS[vendor]
@@ -240,7 +308,8 @@ def run_a(direction, dry_run=False, suffix=""):
     frozen = REPO / "datasets" / "_shared" / "handoff" / d["family"]
     done = {p.name for p in frozen.iterdir() if p.is_dir()} if frozen.exists() else set()
     for ds in A_DATASETS:
-        todo = [t for t in TASKS if (REPO / "datasets" / ds / t).exists() and t not in done]
+        todo = [t for t in TASKS if (REPO / "datasets" / ds / t).exists() and t not in done
+                and (not only or t in only)]
         if not todo:
             continue
         total, unpriced, open_jobs = vendor_spend(vendor, root)
@@ -286,29 +355,54 @@ def freeze(direction, jobs):
                 shutil.copytree(src, dest / a["task"])
 
 
-def _agent_ran(s):
-    return s["status"] == "ok" or (s["status"] == "error" and s.get("error_class") in (
-        "NonZeroAgentExitCodeError", "AgentTimeoutError"))
+def counted(s):
+    """A session that counts (PREREG): Claude Code answered (a result event, so `turns` is known) and
+    the av session is not invalid. Hitting the turn or budget cap counts, as unsolved."""
+    return s["status"] != "invalid" and s.get("turns") is not None
 
 
-def report(runfile_path):
-    """Per arm: n (sessions whose agent ran and that are valid), solved, rate, cost per solved, median turns."""
+STOP_FEEDBACK = "Stop hook feedback"
+
+
+def steps_before_stop_feedback(traj):
+    """Agent steps before the first av Stop-hook feedback (all agent steps when there is none):
+    the work before post-solve recording, which only the av (records) channel is asked for."""
+    n = 0
+    for st in (traj or {}).get("steps", []):
+        msg = st.get("message")
+        text = msg if isinstance(msg, str) else " ".join(
+            x.get("text") or "" for x in (msg or []) if isinstance(x, dict))
+        if st.get("source") == "user" and STOP_FEEDBACK in text:
+            return n
+        if st.get("source") == "agent":
+            n += 1
+    return n
+
+
+def report(runfile_path, jobs_root=None):
+    """Per arm: n counted, solved, rate, cost per solved, median turns, median steps before Stop feedback."""
     from . import runfile
 
     run, sessions = runfile.read(runfile_path)
     rows = []
     for arm in run["config"]["arms"]:
         ss = [s for s in sessions if s["arm"] == arm]
-        valid = [s for s in ss if _agent_ran(s)]
+        valid = [s for s in ss if counted(s)]
         solved = [s for s in valid if (s.get("reward") or 0) >= 1.0]
         costs = [s["cost_usd"] for s in valid if s.get("cost_usd") is not None]
-        turns = [s["turns"] for s in valid if s.get("turns") is not None]
+        turns = [s["turns"] for s in valid]
+        work = []
+        for s in valid:
+            path = (s.get("trajectory") or {}).get("path")
+            if jobs_root and path and (Path(jobs_root) / path).exists():
+                work.append(steps_before_stop_feedback(json.loads((Path(jobs_root) / path).read_text(encoding="utf-8"))))
         rows.append({
             "arm": arm, "n": len(valid), "invalid": sum(s["status"] == "invalid" for s in ss),
-            "other_errors": sum(s["status"] == "error" and not _agent_ran(s) for s in ss),
+            "no_result": sum(s["status"] != "invalid" and s.get("turns") is None for s in ss),
             "solved": len(solved), "rate": len(solved) / len(valid) if valid else None,
             "cost_total": sum(costs), "cost_per_solved": sum(costs) / len(solved) if solved else None,
             "median_turns": statistics.median(turns) if turns else None,
+            "median_steps_before_stop_feedback": statistics.median(work) if work else None,
             "cost_sources": sorted({s["cost_source"] for s in valid}),
         })
     return rows
@@ -321,6 +415,7 @@ def main(argv=None):
     a.add_argument("direction", choices=DIRECTIONS)
     a.add_argument("--dry-run", action="store_true")
     a.add_argument("--suffix", default="", help="job name suffix (the one re-run of invalid A's)")
+    a.add_argument("--only", default="", help="comma-separated tasks (default: all not yet frozen)")
     f = sub.add_parser("freeze")
     f.add_argument("direction", choices=DIRECTIONS)
     f.add_argument("jobs", nargs="+")
@@ -333,9 +428,14 @@ def main(argv=None):
     sub.add_parser("spent")
     r = sub.add_parser("report")
     r.add_argument("runfile")
+    r.add_argument("--jobs-root", help="where the trajectories are (D:/oex/<vendor>)")
+    j = sub.add_parser("jobs", help="print the standing B job dirs of a direction (for oe import-harbor)")
+    j.add_argument("direction", choices=DIRECTIONS)
+    j.add_argument("--arms", default="repo-only,records,notes")
+    j.add_argument("--rounds", type=int, default=5)
     args = p.parse_args(argv)
     if args.cmd == "a":
-        run_a(args.direction, args.dry_run, args.suffix)
+        run_a(args.direction, args.dry_run, args.suffix, [t for t in args.only.split(",") if t])
     elif args.cmd == "freeze":
         freeze(args.direction, args.jobs)
     elif args.cmd == "b":
@@ -345,8 +445,11 @@ def main(argv=None):
             total, unpriced, open_jobs = vendor_spend(vendor)
             print(f"{vendor}: spent {total:.4f} of {VENDORS[vendor]['cap']:.2f}; unpriced {unpriced}; "
                   f"unfinished jobs {open_jobs}")
+    elif args.cmd == "jobs":
+        for job in standing_jobs(args.direction, args.arms.split(","), args.rounds):
+            print(job)
     elif args.cmd == "report":
-        print(json.dumps(report(args.runfile), indent=1))
+        print(json.dumps(report(args.runfile, args.jobs_root), indent=1))
     return 0
 
 

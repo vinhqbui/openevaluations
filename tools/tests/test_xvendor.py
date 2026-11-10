@@ -8,7 +8,9 @@ from oe import runfile, xvendor
 from oe.import_harbor import import_job
 
 ENV = {"PATH": "/bin", "ANTHROPIC_API_KEY": "stale", "ANTHROPIC_BASE_URL": "http://old",
-       "ANTHROPIC_AUTH_TOKEN": "stale-token", "CLAUDE_API_KEY": "ck", "DEEPSEEK_API_KEY": "dk"}
+       "ANTHROPIC_AUTH_TOKEN": "stale-token", "CLAUDE_API_KEY": "ck", "DEEPSEEK_API_KEY": "dk",
+       "CLAUDE_CODE_OAUTH_TOKEN": "oauth", "CLAUDE_CODE_SESSION_ID": "s", "CLAUDECODE": "1",
+       "AWS_BEARER_TOKEN_BEDROCK": "aws", "ANTHROPIC_MODEL": "m"}
 
 
 def test_each_leg_gets_only_its_own_endpoint_and_key():
@@ -16,6 +18,9 @@ def test_each_leg_gets_only_its_own_endpoint_and_key():
     assert c["ANTHROPIC_API_KEY"] == "ck"
     assert "dk" not in c.values() and "stale" not in c.values() and "stale-token" not in c.values()
     assert not {"ANTHROPIC_BASE_URL", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_API_KEY", "DEEPSEEK_API_KEY"} & set(c)
+    for e in (c, xvendor.leg_env("deepseek", ENV)):
+        assert not {"CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CODE_SESSION_ID", "CLAUDECODE", "AWS_BEARER_TOKEN_BEDROCK",
+                    "ANTHROPIC_MODEL"} & set(e)
     d = xvendor.leg_env("deepseek", ENV)
     assert d["ANTHROPIC_AUTH_TOKEN"] == "dk" and d["ANTHROPIC_BASE_URL"] == "https://api.deepseek.com/anthropic"
     assert "ck" not in d.values() and not {"ANTHROPIC_API_KEY", "CLAUDE_API_KEY", "DEEPSEEK_API_KEY"} & set(d)
@@ -74,6 +79,17 @@ def test_budget_gate_reserves_a_ceiling_per_unfinished_job_and_one_more(tmp_path
     assert xvendor.vendor_spend("claude", tmp_path) == (pytest.approx(0.3), 0, 2)
 
 
+def test_a_setup_failure_costs_nothing_and_does_not_stop_the_gate(tmp_path):
+    t = tmp_path / "j1" / "t__x"
+    t.mkdir(parents=True)
+    (t / "result.json").write_text(json.dumps({"trial_name": "t__x", "agent_info": {"name": "claude-code",
+                                               "model_info": {"name": "claude-sonnet-5-5"}}, "agent_result": None,
+                                               "exception_info": {"exception_type": "AgentSetupTimeoutError"},
+                                               "agent_execution": None}))
+    assert xvendor.vendor_spend("claude", tmp_path) == (0.0, 0, 0)
+    assert xvendor.may_launch("claude", root=tmp_path)[0] is True
+
+
 def test_budget_gate_stops_on_an_unpriced_trial(tmp_path):
     t = tmp_path / "j1" / "t__x"
     t.mkdir(parents=True)
@@ -96,6 +112,14 @@ def test_b_command_uses_the_successor_vendor_and_the_records_agent(tmp_path, mon
     assert "CLAUDE_CODE_SUBAGENT_MODEL=deepseek-flash" in s and "-k 1" in s and "-r 0" in s
 
 
+def test_steps_before_stop_feedback():
+    traj = {"steps": [{"source": "user", "message": "goal"}, {"source": "agent"}, {"source": "agent"},
+                      {"source": "user", "message": "Stop hook feedback: av: no record explains your changes"},
+                      {"source": "agent"}]}
+    assert xvendor.steps_before_stop_feedback(traj) == 2
+    assert xvendor.steps_before_stop_feedback({"steps": [{"source": "agent"}] * 3}) == 3
+
+
 def test_report_counts_sessions_whose_agent_ran(tmp_path):
     from test_handoff import fake_b_job
 
@@ -107,9 +131,14 @@ def test_report_counts_sessions_whose_agent_ran(tmp_path):
     r = json.loads((job / "compound-discounts--records__1" / "result.json").read_text())
     r["agent_result"]["metadata"] = {"oe_invalid": "the av hooks never fired"}
     (job / "compound-discounts--records__1" / "result.json").write_text(json.dumps(r))
+    r = json.loads((job / "compound-discounts--repo-only__2" / "result.json").read_text())
+    r["exception_info"] = {"exception_type": "NonZeroAgentExitCodeError"}  # e.g. adopt failed: Claude never ran
+    (job / "compound-discounts--repo-only__2" / "result.json").write_text(json.dumps(r))
+    (job / "compound-discounts--repo-only__2" / "agent" / "claude-code.txt").unlink()
     p = import_job(job, tmp_path / "runs", channels=True)
     rows = {row["arm"]: row for row in xvendor.report(p)}
-    assert rows["repo-only"]["n"] == 3 and rows["repo-only"]["solved"] == 3 and rows["repo-only"]["rate"] == 1.0
+    assert rows["repo-only"]["n"] == 2 and rows["repo-only"]["solved"] == 2 and rows["repo-only"]["rate"] == 1.0
+    assert rows["repo-only"]["no_result"] == 1
     assert rows["records"]["n"] == 2 and rows["records"]["solved"] == 1 and rows["records"]["invalid"] == 1
     assert rows["records"]["median_turns"] == 5
     assert rows["records"]["cost_per_solved"] == pytest.approx(rows["records"]["cost_total"])
