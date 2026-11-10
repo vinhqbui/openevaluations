@@ -101,3 +101,9 @@ labelled exploratory.
   - The guard skipped three batches because spend plus reserve would pass the cap: hard-pro's
     third trial (reserve $0.93) and easy-pro's second and third trials (reserve $0.61 each).
   - The hard tier is therefore a pilot: Pro has 2 trials per task, Flash has 3.
+
+## Erratum 2026-11-10 (a factual correction; no design change)
+
+"Existing data reused" says run `5febae` ran in GitHub Actions on Linux. Its run record says
+`machine: local, os: windows`, Harbor 0.25.0 and openevaluations `3366e65`. Its Claude Code
+version (2.1.318) and its 12 sessions are as stated.

@@ -25,13 +25,37 @@
     "codex",
     "opencode"
    ],
-   "runs": 19,
-   "sessions": 492,
+   "runs": 20,
+   "sessions": 496,
    "tasks": [
     "compound-discounts",
     "csv-escaping",
     "paginated-scan",
     "summarize-abbrev"
+   ]
+  },
+  "tallyho-hard": {
+   "agents": [
+    "claude-code"
+   ],
+   "runs": 2,
+   "sessions": 21,
+   "tasks": [
+    "export-tax-drift",
+    "line-tax-allocation",
+    "refund-orders",
+    "store-paging-refactor"
+   ]
+  },
+  "tallyho-more": {
+   "agents": [
+    "claude-code"
+   ],
+   "runs": 2,
+   "sessions": 5,
+   "tasks": [
+    "config-literal-values",
+    "order-price-snapshot"
    ]
   }
  }
