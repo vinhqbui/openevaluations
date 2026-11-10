@@ -75,3 +75,16 @@ labelled exploratory.
   tier's ceiling, it becomes a candidate tracker dataset, and a full run (30 valid sessions per
   cell) gets its own PREREG and budget. If both arms solve every hard task, the tier is too easy
   and gets harder tasks before any further spend.
+
+## Amendment 2026-11-10 (after the first batch started; one trial result seen)
+
+- The first attempt at batch 1 (hard-pro) was cut off by a host power loss at about 04:29 UTC.
+  All four trials were still installing Node in agent setup, so no Claude Code process ran and
+  no model was called. That job is set aside, its containers and images are removed, and it is
+  not counted as any session. Batch 1 was started again at 12:06 UTC.
+- In the rerun, `refund-orders` failed in agent setup: Claude Code's installer refused its
+  download ("Staged binary no longer matches the verified checksum"). No tokens were used and
+  the agent never started. **Rule from here on:** a trial that fails before Claude Code starts
+  (zero tokens, no `claude-code.txt`) is an infrastructure failure, not a session. It is rerun
+  once for the same task in a separate job, and both are reported. A failure after Claude Code
+  has started is an error session, as above.
