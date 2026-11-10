@@ -25,7 +25,8 @@ Reproduce the tables:
 | Claude Code on DeepSeek Flash | 14 | 13 | 93% [69%, 99%] | $0.0115 | 14.5 |
 | Claude Code on DeepSeek Pro | 6 | 4 | 67% [30%, 90%] | $0.1044 | 18.5 |
 
-By dataset:
+The two rows are not like for like. Flash's 14 sessions are 12 on `tallyho-cold` and 2 on
+`tallyho-more`; Pro's 6 are 4 and 2. Compare by dataset:
 
 | arm | dataset | n | solved |
 |---|---|---|---|
@@ -68,9 +69,11 @@ By dataset:
   list prices.
 - **The hard tier is harder than the easy one by effort, not by outcome.** Flash's median turns
   went from 14.5 (easy) to 24 (hard), and cost per solved task from $0.0115 to $0.0167.
-- **On the easy tier, Pro solved fewer than Flash** (4/6 against 13/14). The cells are small and
-  the intervals overlap widely. This is an observation for a pre-registered follow-up, not a
-  finding.
+- **On the easy tier, Pro missed tasks Flash did not.** On `tallyho-cold`, Pro solved 3 of 4 and
+  Flash 12 of 12. On `tallyho-more` both solved 1 of 2. Pro has one trial per task, so this is an
+  observation for a pre-registered follow-up, not a finding.
+- **Turn cap:** Pro reached 39 and 41 turns on two hard trials, against `max_turns=40`. A harder
+  follow-up tier should revisit the cap.
 
 ## Spend
 
@@ -102,8 +105,9 @@ These figures use the mean cost per valid session observed here.
 ## Notes
 
 - **Erratum to the PREREG:** it says the reused run `5febae` ran in GitHub Actions on Linux. Its
-  run record says `machine: local, os: windows`, Harbor 0.25.0, openevaluations `3366e65`. The
-  other differences it lists are unchanged.
+  run record says `machine: local, os: windows`, Harbor 0.25.0, openevaluations `3366e65`. Its
+  `-r` and `max_turns` are not recorded (`agent_kwargs` is `{}`). Its highest turn count is 20, so
+  a 40-turn cap would not have bound.
 - On this host, Docker Desktop's BuildKit could not run `RUN` steps on 2026-11-10. Every image
   here was built with the classic builder (`DOCKER_BUILDKIT=0 COMPOSE_BAKE=false`).
 - Run files:

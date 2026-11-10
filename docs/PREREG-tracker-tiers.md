@@ -105,5 +105,7 @@ labelled exploratory.
 ## Erratum 2026-11-10 (a factual correction; no design change)
 
 "Existing data reused" says run `5febae` ran in GitHub Actions on Linux. Its run record says
-`machine: local, os: windows`, Harbor 0.25.0 and openevaluations `3366e65`. Its Claude Code
-version (2.1.318) and its 12 sessions are as stated.
+`machine: local, os: windows`, Harbor 0.25.0 and openevaluations `3366e65`. Its `-r 1` and
+`max_turns=40` are not recorded either (its `agent_kwargs` is `{}`); its highest turn count is 20,
+so a 40-turn cap would not have bound. Its Claude Code version (2.1.318) and its 12 sessions are
+as stated.
