@@ -82,7 +82,7 @@ tasks, so far only Scholion's own runs) and interrupt (a real A cut at a pre-reg
   `<task>--<channel>` becomes task and arm, so `/handoff` pairs channels against repo-only by task.
 - **Cross-vendor family** (`docs/PREREG-handoff-xvendor.md`). A on one vendor's model, B on the
   other's, both Claude Code: `xv-sonnet` (A on Sonnet 5.5) and `xv-flash` (A on DeepSeek Flash).
-  A is cut at 4 turns, then its session is resumed once with a fixed wrap-up message (at most 4
+  A is cut at 6 turns, then its session is resumed once with a fixed wrap-up message (at most 4
   turns, `handoff_a.py --ak wrapup_turns=4`), so the av Stop hook gets its chance to ask for
   records, as when a person ends a session to switch tools. Channels: repo-only, records and notes.
   The records channel's B is `oe_agents.handoff_b:HandoffBAv`: the `av` arm with A's patch and

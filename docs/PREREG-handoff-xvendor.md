@@ -40,7 +40,7 @@ is labelled exploratory. Run on one Windows host with Harbor and Docker, driven 
 
   It names no channel: `NOTES.md` (from the instruction) and the av records (from the Stop hook)
   get the same chance. A hard-cut A is not measured here.
-- **Cut:** `--ak max_turns=4`, both directions. The interrupt family's 6 was set from cold-run
+- **Cut:** `--ak max_turns=4`, both directions (6 from Amendment 2). The interrupt family's 6 was set from cold-run
   medians, but the `av` sessions solved `summarize-abbrev` in 4-5 agent steps, and A must not have
   solved the task when it hands over.
 - **Models:** `anthropic/claude-sonnet-5-5` through the Anthropic API (haiku, small-fast and
@@ -155,3 +155,19 @@ From a review of the committed design; no trial of this comparison had run.
   the wrap-up on a real session (the session resumed, the Stop hook fired, the records, the session
   files and token counts) before the other A's. It is that task's one A if valid, as for any A.
 - Claude Code version for every leg: 2.1.322, written to the driver's version file by hand.
+
+## Amendment 2 (2026-11-10, after the first A pilot, before any other A and before any B)
+
+- **What happened:** the first paid trial (Amendment 1's pilot: DeepSeek Flash A on
+  `compound-discounts`, cut at 4, job `xv-a-xv-flash-tallyho-cold-pilot`) read the code, wrote
+  `NOTES.md` and was cut before changing any code (Claude Code `num_turns` 5 at the cut). The
+  wrap-up worked as designed: the same session was resumed (one session file, same id), the av
+  Stop hook fired, the agent updated only `NOTES.md` (2 turns) and stopped. With no code change,
+  the Stop hook had nothing to ask about, so A left only its intent; `oe freeze` judged it invalid
+  ("A changed no file besides NOTES.md"). Spend: DeepSeek $0.0116 (estimated), Claude $0.
+- **Change:** the cut becomes **6 turns** for both directions, the value
+  `docs/PREREG-handoff-interrupt.md` pre-registered for the same A and tasks, because at 4 the
+  NOTES.md discipline leaves no turn for code and every A would be invalid by the unchanged
+  validity rules. The wrap-up (4 turns) is unchanged.
+- **The pilot** is kept and reported as a pilot at cut 4; it is not `compound-discounts`' A, and
+  that task gets its one A (and, if invalid, its one re-run) at cut 6 like every other task.

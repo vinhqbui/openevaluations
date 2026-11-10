@@ -32,7 +32,7 @@ from pathlib import Path
 from . import REPO
 from .budget import estimate, trial_cost
 
-CUT_TURNS = 4
+CUT_TURNS = 6
 WRAPUP_TURNS = 4
 B_TURNS = 40
 AV_RELEASE = "release/0.0.2"
