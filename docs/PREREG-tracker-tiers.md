@@ -88,3 +88,16 @@ labelled exploratory.
   (zero tokens, no `claude-code.txt`) is an infrastructure failure, not a session. It is rerun
   once for the same task in a separate job, and both are reported. A failure after Claude Code
   has started is an error session, as above.
+
+## Amendment 2026-11-10, second (planned host restart)
+
+- Planned host restart at about 13:00 UTC. The 2 trials in flight (`tallyho-more`:
+  `config-literal-values` and `order-price-snapshot` on Flash, order step 5) were discarded and
+  are re-run. No other change.
+  - Both were still in agent setup, installing Node. No Claude Code process ran, no tokens were
+    used, and `oe budget` counts $0 for them.
+  - Their job is set aside and not imported.
+- Spend by the harness's accounting before the restart: $1.2518 of the $1.75 cap.
+  - The guard skipped three batches because spend plus reserve would pass the cap: hard-pro's
+    third trial (reserve $0.93) and easy-pro's second and third trials (reserve $0.61 each).
+  - The hard tier is therefore a pilot: Pro has 2 trials per task, Flash has 3.
