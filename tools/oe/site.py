@@ -20,7 +20,8 @@ RELAY_CHANNELS = {
     "av": "records (Scholion)",
     "records": "records (Scholion)",
 }
-HANDOFF_FAMILIES = {"scholion-relay": "relay", "handoff-relay": "relay", "handoff-interrupt": "interrupt"}
+HANDOFF_FAMILIES = {"scholion-relay": "relay", "handoff-relay": "relay", "handoff-interrupt": "interrupt",
+                    "handoff-xv-sonnet": "xv-sonnet", "handoff-xv-flash": "xv-flash"}
 
 
 def _round(x):

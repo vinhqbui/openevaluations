@@ -21,8 +21,16 @@ import tarfile
 from pathlib import Path
 
 CHANNELS = ("repo-only", "trace", "notes", "records")
-# The records channel needs B's daemon seeded with A's records; until that lands it is not generated.
+# interrupt and relay: the records channel is not generated for them (docs/PREREG-handoff-interrupt.md).
 BUILT_CHANNELS = ("repo-only", "trace", "notes")
+# The cross-vendor families (docs/PREREG-handoff-xvendor.md), named by A's model: A is cut, wraps
+# up, and B (another vendor's model) gets repo-only, records (oe_agents.handoff_b) or notes.
+XVENDOR_FAMILIES = ("xv-sonnet", "xv-flash")
+XVENDOR_CHANNELS = ("repo-only", "records", "notes")
+
+
+def family_channels(family):
+    return XVENDOR_CHANNELS if family in XVENDOR_FAMILIES else BUILT_CHANNELS
 SKIP_DIRS = {".git", ".jj", "__pycache__", ".pytest_cache"}
 SKIP_FILES = {".av-task"}
 NOTES = "NOTES.md"
@@ -166,8 +174,8 @@ def _untar(data):
     return tree
 
 
-def _cli_result(agent_dir):
-    p = agent_dir / "claude-code.txt"
+def _cli_result(agent_dir, name="claude-code.txt"):
+    p = agent_dir / name
     res = {}
     if p.exists():
         for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -239,7 +247,18 @@ def freeze(trial_dir, out_dir, cut_turns, base_src=None):
         problems.append(f"A's trial raised {result['exception_info'].get('exception_type')}")
 
     info = result.get("agent_info") or {}
-    cli = _cli_result(agent_dir)
+    # With a wrap-up (handoff_a.py), the cut's stream is claude-code-cut.txt and the wrap-up's the usual file.
+    wrapped = (agent_dir / "claude-code-cut.txt").exists()
+    cli = _cli_result(agent_dir, "claude-code-cut.txt" if wrapped else "claude-code.txt")
+    wrapup = {}
+    if wrapped:
+        wcli = _cli_result(agent_dir)
+        cut_tar = agent_dir / "freeze" / "workspace-cut.tar.gz"
+        cut_tree = {k: v for k, v in _untar(cut_tar.read_bytes()).items() if not _skipped(k)} if cut_tar.exists() else None
+        final = {k: v for k, v in ws.items() if not _skipped(k)}
+        wrapup = {"wrapup_turns": wcli.get("num_turns"), "wrapup_stop": wcli.get("subtype"),
+                  "wrapup_changed_files": None if cut_tree is None else sorted(
+                      k for k in set(cut_tree) | set(final) if cut_tree.get(k) != final.get(k))}
     files = {"workspace.patch": patch.encode("utf-8"), NOTES: notes, "trajectory.json": traj, "records.json": recs}
     a = {
         "task": task, "cut_turns": cut_turns, "a_turns": cli.get("num_turns"), "a_stop": cli.get("subtype"),
@@ -249,6 +268,7 @@ def freeze(trial_dir, out_dir, cut_turns, base_src=None):
         "trial_name": result.get("trial_name"), "started_at": result.get("started_at"),
         "files_changed": patch_files(patch), "binary_files_left_out": binary, "records": _records(recs),
         "sha256": {k: _sha(v) for k, v in sorted(files.items())},
+        **wrapup,
         "valid": not problems, "problems": problems,
     }
     d = Path(out_dir) / task

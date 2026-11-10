@@ -60,9 +60,9 @@ def test_import_harbor_job_is_valid_and_maps_fields(tmp_path):
 
 def test_budget_sums_costs_and_estimates_missing_ones(tmp_path):
     total, unpriced = spent(fake_job(tmp_path))
-    # two measured 0.01 + one estimate: 4000*1 + 8000*0.1 + 900*5 = 9300 -> 0.0093
+    # two measured 0.01 + one estimate at Haiku 5.5 prices: 4000*0.1 + 8000*0.01 + 900*0.5 = 930 -> 0.00093
     assert unpriced == 0
-    assert abs(total - 0.0293) < 1e-9
+    assert abs(total - 0.02093) < 1e-9
     assert main(["budget", str(tmp_path / "jobs"), "--cap", "0.03", "--reserve", "0.01"]) == 1
     assert main(["budget", str(tmp_path / "jobs"), "--cap", "1"]) == 0
 

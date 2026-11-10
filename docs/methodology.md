@@ -80,3 +80,13 @@ tasks, so far only Scholion's own runs) and interrupt (a real A cut at a pre-reg
   resets A's work and applies the fix, scores 1 on every generated task (`oe rewards`).
 - **Import.** `oe import-harbor <jobs...> --channels --merge` makes one run per successor:
   `<task>--<channel>` becomes task and arm, so `/handoff` pairs channels against repo-only by task.
+- **Cross-vendor family** (`docs/PREREG-handoff-xvendor.md`). A on one vendor's model, B on the
+  other's, both Claude Code: `xv-sonnet` (A on Sonnet 5.5) and `xv-flash` (A on DeepSeek Flash).
+  A is cut at 4 turns, then its session is resumed once with a fixed wrap-up message (at most 4
+  turns, `handoff_a.py --ak wrapup_turns=4`), so the av Stop hook gets its chance to ask for
+  records, as when a person ends a session to switch tools. Channels: repo-only, records and notes.
+  The records channel's B is `oe_agents.handoff_b:HandoffBAv`: the `av` arm with A's patch and
+  `.git` put into its task's workspace and A's records (but its intent) posted to the task as
+  `agent-a`'s before Claude starts; `/handoff` is then deleted, so the records reach B only through
+  av's pack and hooks. `python -m oe.xvendor` runs it: one Harbor job per trial in rounds, each
+  vendor's spend gated before every launch against its own cap.

@@ -45,6 +45,7 @@ class ClaudeCodeAv(ClaudeCode):
     options: ClaudeCodeAvOptions
     # Claude Code's own install takes 3-6 minutes (apt nodejs); av adds the upload and `av up`.
     DEFAULT_SETUP_TIMEOUT_SEC: ClassVar[float] = 900.0
+    START_ARGS: ClassVar[str] = ""  # extra `oe_av.py start` flags (the handoff successor's --base-rev)
 
     def __init__(self, logs_dir: Path, *args, **kwargs):
         user = kwargs.pop("config", None)
@@ -96,17 +97,25 @@ class ClaudeCodeAv(ClaudeCode):
         title = (instruction.strip().splitlines() or ["task"])[0][:80]
         started = await self.exec_as_agent(environment, timeout_sec=180, env={"OE_AV_GOAL": instruction}, command=(
             f"python3 {HELPER} start --title {shlex.quote(title)} --goal-env OE_AV_GOAL "
-            f"--base /app --repo app --out {LOG}"))
+            f"--base /app --repo app --out {LOG}{self.START_ARGS}"))
         ws = (started.stdout or "").strip().splitlines()[-1]
         if not ws.startswith("/"):
             raise RuntimeError(f"av task start printed no workspace path: {started.stdout!r}")
+        await self._prepare_workspace(environment, ws)
         # The agent and the verifier both work in /app; make it the task's jj workspace.
         await self.exec_as_root(environment, command=f"mv /app /app.base && ln -s {shlex.quote(ws)} /app")
         try:
-            await super().run(instruction, environment, context)
+            await self._run_claude(instruction, environment, context)
         finally:
             await self._quiet(environment, f"python3 {HELPER} finish --out {LOG}; "
                               f"cp ~/.scholion/daemon.log {LOG}/ 2>/dev/null; true", timeout_sec=120)
+
+    async def _prepare_workspace(self, environment: BaseEnvironment, ws: str) -> None:
+        """Between the task start and the swap of /app: nothing here (the handoff successor fills it)."""
+
+    async def _run_claude(self, instruction: str, environment: BaseEnvironment, context: AgentContext) -> None:
+        """Claude Code exactly as the cold arm runs it (the handoff predecessor adds a wrap-up)."""
+        await ClaudeCode.run(self, instruction, environment, context)
 
     async def _quiet(self, environment, command, timeout_sec=60):
         """Best effort, as the agent user: never raises (it runs in finally/except paths)."""
