@@ -72,7 +72,8 @@ def test_diff_trees_roundtrips_through_git_apply(tmp_path):
         (work / rel).write_bytes(data)
     subprocess.run(["git", "init", "-q"], cwd=work, check=True)
     (tmp_path / "a.patch").write_text(patch, encoding="utf-8", newline="\n")
-    subprocess.run(["git", "apply", "--whitespace=nowarn", str(tmp_path / "a.patch")], cwd=work, check=True)
+    subprocess.run(["git", "-c", "core.autocrlf=false", "apply", "--whitespace=nowarn", str(tmp_path / "a.patch")],
+                   cwd=work, check=True)  # a Windows git with autocrlf=true would write CRLF
     assert handoff.read_tree(work) == new
     assert handoff.diff_trees(base, base) == ""
 
@@ -406,3 +407,193 @@ def test_channel_jobs_of_one_successor_merge_into_one_run(tmp_path):
     assert run["config"]["arms"] == ["repo-only", "trace"] and len(ss) == 4
     assert {s["trajectory"]["kind"] for s in ss} == {"none"}
     assert schema.validate_file(p) == []
+
+
+# --- the cross-vendor family (docs/PREREG-handoff-xvendor.md) ------------------------------------
+
+def test_wrapup_message_names_no_channel():
+    msg = handoff_settings.WRAPUP_MESSAGE
+    assert "Do not change any code" in msg and "another engineer" in msg
+    for word in ("NOTES", "notes", "av ", "Scholion", "record"):
+        assert word not in msg
+
+
+def test_freeze_command_can_name_the_cut_tree():
+    cmd = handoff_settings.freeze_command("workspace-cut")
+    assert f"{handoff_settings.FREEZE_DIR}/workspace-cut.tar.gz" in cmd
+    assert "workspace.tar.gz" not in cmd
+
+
+def test_freeze_of_a_wrapped_up_a_takes_turns_from_the_cut_and_reports_the_wrapup(tmp_path):
+    t = fake_a_trial(tmp_path)
+    (t / "agent" / "claude-code-cut.txt").write_text('{"type":"result","subtype":"error_max_turns","num_turns":4}\n')
+    (t / "agent" / "claude-code.txt").write_text('{"type":"result","subtype":"success","num_turns":2}\n')
+    base = _base()
+    cut = dict(base)
+    cut[DISCOUNTS] = base[DISCOUNTS].replace(b"percent_total = Decimal(0)", b"percent_total = Decimal(0)  # wip")
+    cut["NOTES.md"] = b"older notes\n"
+    (t / "agent" / "freeze" / "workspace-cut.tar.gz").write_bytes(_tar(cut))
+    a = handoff.freeze(t, tmp_path / "frozen", cut_turns=4)
+    assert a["valid"] is True and a["a_turns"] == 4 and a["a_stop"] == "error_max_turns"
+    assert a["wrapup_turns"] == 2 and a["wrapup_stop"] == "success"
+    assert a["wrapup_changed_files"] == []  # only NOTES.md changed in the wrap-up
+    cut[DISCOUNTS] = base[DISCOUNTS]
+    (t / "agent" / "freeze" / "workspace-cut.tar.gz").write_bytes(_tar(cut))
+    a = handoff.freeze(t, tmp_path / "frozen2", cut_turns=4)
+    assert a["wrapup_changed_files"] == [DISCOUNTS]
+
+
+def test_an_unwrapped_freeze_has_no_wrapup_fields(tmp_path):
+    a = handoff.freeze(fake_a_trial(tmp_path), tmp_path / "frozen", cut_turns=6)
+    assert not any(k.startswith("wrapup") for k in a)
+
+
+def test_xvendor_families_build_repo_only_records_and_notes(tmp_path):
+    gen = _gen()
+    src = tmp_path / "shared" / "xv-sonnet"
+    handoff.freeze(fake_a_trial(tmp_path), src, cut_turns=4)
+    names = gen.generate(src, tmp_path / "ds", family="xv-sonnet")
+    assert names == [f"compound-discounts--{c}" for c in ("repo-only", "records", "notes")]
+    t = tmp_path / "ds" / "compound-discounts--records"
+    env = sorted(p.relative_to(t / "environment").as_posix() for p in (t / "environment").rglob("*")
+                 if p.is_file() and "src/" not in p.as_posix())
+    assert env == ["Dockerfile", "a.patch", "handoff/a.patch", "handoff/records.json"]
+    frozen = src / "compound-discounts"
+    assert (t / "environment" / "handoff" / "a.patch").read_bytes() == (frozen / "workspace.patch").read_bytes()
+    assert (t / "environment" / "handoff" / "records.json").read_bytes() == (frozen / "records.json").read_bytes()
+    dockerfile = (t / "environment" / "Dockerfile").read_text()
+    assert "COPY handoff/ /handoff/" in dockerfile and "chown -R agent:agent /app /handoff" in dockerfile
+    ins = (t / "instruction.md").read_text()
+    assert "git diff" in ins and "av" in ins and "context pack" in ins
+    assert "NOTES" not in ins
+    assert 'family = "xv-sonnet"' in (t / "task.toml").read_text()
+    assert "PREREG-handoff-xvendor.md" in (tmp_path / "ds" / "README.md").read_text()
+    for c in ("repo-only", "notes"):
+        df = (tmp_path / "ds" / f"compound-discounts--{c}" / "environment" / "Dockerfile").read_text()
+        assert "records" not in df
+
+
+def test_handoff_a_wraps_up_after_the_cut_with_continue_and_its_own_turns(tmp_path, monkeypatch):
+    pytest.importorskip("harbor")
+    import asyncio
+
+    from harbor.agents.installed.claude_code import ClaudeCode
+
+    from oe_agents.handoff_a import HandoffA
+
+    a = HandoffA(logs_dir=tmp_path, model_name="anthropic/claude-sonnet-5-5", max_turns=4, wrapup_turns=3)
+    calls = []
+
+    async def fake_claude(self, instruction, environment, context):
+        calls.append(("claude", instruction, self.options.max_turns, self._resume))
+
+    async def fake_quiet(self, environment, command, timeout_sec=60):
+        calls.append(("quiet", command))
+
+    async def fake_exec(self, environment, command, **kw):
+        calls.append(("exec", command))
+
+    monkeypatch.setattr(ClaudeCode, "run", fake_claude)
+    monkeypatch.setattr(HandoffA, "_quiet", fake_quiet)
+    monkeypatch.setattr(HandoffA, "exec_as_agent", fake_exec)
+    asyncio.run(a._run_claude("goal", None, None))
+    assert calls[0] == ("claude", "goal", 4, False)
+    assert calls[1] == ("quiet", handoff_settings.freeze_command("workspace-cut"))
+    assert calls[2][0] == "exec" and "claude-code-cut.txt" in calls[2][1]
+    assert calls[3] == ("claude", handoff_settings.WRAPUP_MESSAGE, 3, True)
+    assert a.options.max_turns == 4 and a._resume is False
+    calls.clear()
+    plain = HandoffA(logs_dir=tmp_path, model_name="anthropic/deepseek-flash", max_turns=6)
+    asyncio.run(plain._run_claude("goal", None, None))
+    assert calls == [("claude", "goal", 6, False)]
+
+
+def test_handoff_a_treats_the_turn_cap_as_the_cut_but_reraises_other_failures(tmp_path, monkeypatch):
+    pytest.importorskip("harbor")
+    import asyncio
+    from types import SimpleNamespace
+
+    from harbor.agents.installed.claude_code import ClaudeCode
+
+    from oe_agents.handoff_a import HandoffA
+
+    a = HandoffA(logs_dir=tmp_path, model_name="anthropic/deepseek-flash", max_turns=4)
+
+    async def failing(self, instruction, environment, context):
+        raise RuntimeError("claude exited 1")
+
+    class Env:
+        def __init__(self, rc):
+            self.rc, self.cmds = rc, []
+
+        async def exec(self, command, **kw):
+            self.cmds.append(command)
+            return SimpleNamespace(return_code=self.rc, stdout="", stderr="")
+
+    monkeypatch.setattr(ClaudeCode, "run", failing)
+    env = Env(0)
+    asyncio.run(a._run_claude("goal", env, None))  # the turn cap: no raise
+    assert "error_max_turns" in env.cmds[0]
+    with pytest.raises(RuntimeError, match="exited"):
+        asyncio.run(a._run_claude("goal", Env(1), None))
+
+
+def test_handoff_a_adds_the_cut_cost_to_the_wrapup_cost(tmp_path, monkeypatch):
+    pytest.importorskip("harbor")
+    from harbor.models.agent.context import AgentContext
+
+    from oe_agents.claude_code_av import ClaudeCodeAv
+    from oe_agents.handoff_a import HandoffA
+
+    a = HandoffA(logs_dir=tmp_path, model_name="anthropic/claude-sonnet-5-5", max_turns=4, wrapup_turns=3)
+    (tmp_path / "claude-code-cut.txt").write_text('{"type":"result","num_turns":4,"total_cost_usd":0.10}\n')
+    (tmp_path / "claude-code.txt").write_text('{"type":"result","num_turns":2,"total_cost_usd":0.03}\n')
+    ctx = AgentContext()
+    ctx.cost_usd = 0.03
+    monkeypatch.setattr(ClaudeCodeAv, "populate_context_post_run", lambda self, context: None)
+    a.populate_context_post_run(ctx)
+    assert ctx.cost_usd == pytest.approx(0.13)  # the wrap-up reported its own part only
+    assert ctx.metadata["a_cut_turns"] == 4 and ctx.metadata["a_wrapup_turns"] == 2
+    # what Claude Code does: the resumed session's total includes the cut, so nothing is added
+    (tmp_path / "claude-code.txt").write_text('{"type":"result","num_turns":2,"total_cost_usd":0.13}\n')
+    ctx = AgentContext()
+    ctx.cost_usd = 0.13
+    a.populate_context_post_run(ctx)
+    assert ctx.cost_usd == pytest.approx(0.13)
+
+
+def test_handoff_b_adopts_a_before_the_swap_and_deletes_the_handoff_dir(tmp_path, monkeypatch):
+    pytest.importorskip("harbor")
+    import asyncio
+    from types import SimpleNamespace
+
+    from oe_agents.claude_code_av import ClaudeCodeAv
+    from oe_agents.handoff_b import HandoffBAv, adopt_command
+
+    b = HandoffBAv(logs_dir=tmp_path, model_name="anthropic/claude-sonnet-5-5", max_turns=40)
+    assert isinstance(b, ClaudeCodeAv) and HandoffBAv.name() == "claude-code"
+    assert HandoffBAv.START_ARGS == " --base-rev HEAD" and ClaudeCodeAv.START_ARGS == ""
+    calls = []
+
+    class Env:
+        def __init__(self, rc):
+            self.rc = rc
+
+        async def exec(self, command, **kw):
+            calls.append(("probe", command))
+            return SimpleNamespace(return_code=self.rc, stdout="", stderr="")
+
+    async def as_agent(self, environment, command, **kw):
+        calls.append(("agent", command))
+
+    async def as_root(self, environment, command, **kw):
+        calls.append(("root", command))
+
+    monkeypatch.setattr(HandoffBAv, "exec_as_agent", as_agent)
+    monkeypatch.setattr(HandoffBAv, "exec_as_root", as_root)
+    asyncio.run(b._prepare_workspace(Env(0), "/home/agent/ws/app/t"))
+    assert [c[0] for c in calls] == ["probe", "agent", "root"]
+    assert calls[1][1] == adopt_command("/home/agent/ws/app/t") and "adopt --ws /home/agent/ws/app/t" in calls[1][1]
+    assert calls[2][1] == "rm -rf /handoff"
+    with pytest.raises(RuntimeError, match="records channel"):
+        asyncio.run(b._prepare_workspace(Env(1), "/ws"))
