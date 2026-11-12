@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Our hard tier did not separate a cheap model from a costly one · openevaluations</title>
+<meta name="description" content="Pilot, 40 trials: Claude Code on DeepSeek Flash and on DeepSeek Pro both solved every task of our new hard tier. Pro cost about six times as much per solved task. The tier is too easy, and here is the data.">
+<link rel="canonical" href="https://openevaluations.si/notes/tiers-pilot/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://openevaluations.si/notes/tiers-pilot/">
+<meta property="og:title" content="Our hard tier did not separate a cheap model from a costly one">
+<meta property="og:description" content="A 40-trial pilot: both models solved every hard task, at about a sixfold difference in cost per solved task. What that does and does not show.">
+<meta property="og:image" content="https://openevaluations.si/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<div class="nav"><div class="wrap">
+  <a class="brand" href="/"><b>o</b> openevaluations</a>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+</div></div>
+<main class="wrap" style="max-width:860px">
+<header class="page">
+  <h1><em>Our hard tier did not separate a cheap model from a costly one</em></h1>
+  <p class="lede">Pilot note, 10 November 2026. 40 trials, fewer than 30 per cell, so nothing here is a significance claim.</p>
+</header>
+
+<p>We built a harder set of repository tasks to tell coding models apart, and ran Claude Code on two DeepSeek models against it. Both models solved every hard task. The costlier model cost about six times as much per solved task. So the result is about our tasks: they are still too easy to rank these two models.</p>
+
+<h2>What we ran</h2>
+<ul>
+  <li><b>Agent:</b> Claude Code 2.1.318, at most 40 turns, through DeepSeek's Anthropic-compatible API.</li>
+  <li><b>Models:</b> <code>deepseek-flash</code> (the cheap one) and <code>deepseek-v4-pro</code>.</li>
+  <li><b>Tasks:</b> an easy tier (<code>tallyho-cold</code>, <code>tallyho-more</code>) and a new hard tier (<code>tallyho-hard</code>, 4 tasks), all on one small Python repository. A task counts as solved when its hidden tests pass.</li>
+  <li><b>Plan:</b> the question, arms, budget and decision rule were written down before the paid runs, in <a href="https://github.com/vinhqbui/openevaluations/blob/main/docs/PREREG-tracker-tiers.md">PREREG-tracker-tiers.md</a>.</li>
+</ul>
+
+<h2>Hard tier</h2>
+<div class="table-wrap"><table>
+<tr><th>Model</th><th class="num">Trials</th><th class="num">Solved</th><th class="num">Cost per solved task</th><th class="num">Median turns</th><th class="num">Median time</th></tr>
+<tr><td>DeepSeek Flash</td><td class="num">12</td><td class="num">12</td><td class="num">$0.0167</td><td class="num">24</td><td class="num">50 s</td></tr>
+<tr><td>DeepSeek Pro</td><td class="num">8</td><td class="num">8</td><td class="num">$0.0998</td><td class="num">29</td><td class="num">187 s</td></tr>
+</table></div>
+<p>Bootstrap 95% intervals for cost per solved task: Flash $0.014 to $0.019, Pro $0.079 to $0.121. Flash had 3 trials per task and Pro 2, because the budget cap stopped Pro's third pass.</p>
+
+<h2>Easy tier</h2>
+<div class="table-wrap"><table>
+<tr><th>Model</th><th>Task set</th><th class="num">Trials</th><th class="num">Solved</th></tr>
+<tr><td>DeepSeek Flash</td><td><code>tallyho-cold</code></td><td class="num">12</td><td class="num">12</td></tr>
+<tr><td>DeepSeek Flash</td><td><code>tallyho-more</code></td><td class="num">2</td><td class="num">1</td></tr>
+<tr><td>DeepSeek Pro</td><td><code>tallyho-cold</code></td><td class="num">4</td><td class="num">3</td></tr>
+<tr><td>DeepSeek Pro</td><td><code>tallyho-more</code></td><td class="num">2</td><td class="num">1</td></tr>
+</table></div>
+<p>Cost per solved task over the easy tier was $0.0115 on Flash and $0.1044 on Pro. The two models did not run the same mix of tasks, and Flash's <code>tallyho-cold</code> trials are an earlier published run that we reused, so compare the rows by task set and not the totals.</p>
+
+<h2>What this shows</h2>
+<ul>
+  <li><b>The hard tier is too easy.</b> Our plan said in advance that if both models solved everything, the tier needs harder tasks before more money is spent on it. That is what happened.</li>
+  <li><b>It is harder by effort, not by outcome.</b> On Flash, median turns rose from 14.5 on the easy tier to 24 on the hard tier, and cost per solved task from $0.0115 to $0.0167.</li>
+  <li><b>On these tasks, the costlier model bought nothing we could measure.</b> It used more turns, took nearly four times as long, and cost about six times as much per solved task.</li>
+</ul>
+
+<h2>What it does not show</h2>
+<ul>
+  <li><b>It does not show the two models are equally capable.</b> When every trial passes, a test cannot rank what it tests. A harder task could separate them in either direction.</li>
+  <li><b>The samples are small:</b> 12 and 8 trials on the hard tier, 14 and 6 on the easy tier. With 8 of 8 solved, the 95% interval for Pro's true solved rate still runs from 68% to 100%.</li>
+  <li><b>Pro's misses on the easy tier are observations, not findings.</b> It had one trial per task there.</li>
+  <li><b>Costs are upper bounds.</b> They are priced from token counts at DeepSeek's peak list rates. Most trials ran off-peak, which DeepSeek bills at half. The ratio between the models holds at either rate.</li>
+  <li><b>One repository, one agent CLI, one vendor's models.</b></li>
+</ul>
+
+<h2>What we do next</h2>
+<ul>
+  <li>Build tasks that the cheap model fails about half the time: a larger codebase, longer chains of changes, and a turn cap that is looked at again (Pro reached 39 and 41 turns on two hard trials).</li>
+  <li>Run 30 trials per cell under a new written plan. At this pilot's cost per session, that is about $5.90 for both tiers and both models.</li>
+</ul>
+
+<h2>Data</h2>
+<ul>
+  <li>Full results and spend: <a href="https://github.com/vinhqbui/openevaluations/blob/main/docs/results/2026-11-10-tracker-tiers.md">docs/results/2026-11-10-tracker-tiers.md</a>.</li>
+  <li>Every session, in the <a href="/methodology/#schema">oe/1 format</a>: the five run files dated 2026-11-10 under <a href="/runs/">Runs</a>, and the reused run <code>2026-11-04-tallyho-cold-claude-code-cold-5febae</code>.</li>
+  <li>To rebuild the tables: <code>uv run oe tiers --prereg docs/PREREG-tracker-tiers.md --also runs/2026-11-04-tallyho-cold-claude-code-cold-5febae.jsonl</code>.</li>
+  <li>The whole pilot cost $1.45 by the harness's count.</li>
+</ul>
+</main>
+<footer><div class="wrap">Code Apache-2.0, data CC BY 4.0 · <a href="https://github.com/vinhqbui/openevaluations">source</a> · <a href="/ledger/">Ledger</a> · <a href="https://scholion.openevaluations.si">Scholion</a></div></footer>
+</body>
+</html>
