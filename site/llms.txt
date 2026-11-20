@@ -3,20 +3,20 @@
 > Open, longitudinal evaluations of coding-agent CLIs (Claude Code, Codex and others). The same small task sets are run on a schedule against each new CLI version. Every session's raw row is published in an open JSON Lines format (oe/1). There is also a runnable benchmark for handing a task from one agent to another. Code Apache-2.0, data CC BY 4.0.
 
 Source: https://github.com/vinhqbui/openevaluations
-Status: early. The data so far is 18 runs of Claude Code recorded by Scholion's benchmark harness, and Harbor runs of the tracker on tallyho-cold (3 attempts at each of 4 tasks per leg) in two series, one per model. Runs are started by hand; the weekly schedule is off.
+Status: early. The data so far is 18 runs of Claude Code recorded by Scholion's benchmark harness, and Harbor runs of the tracker on tallyho-cold (3 attempts at each of 4 tasks per leg) in two series, one per model, plus a pilot of easy and hard tiers on DeepSeek Flash and Pro (2026-11-10, a separate pre-registered test). Runs are started by hand; the weekly schedule is off.
 
 ## Tracker series
 
 - DeepSeek Flash (deepseek-flash), 2026-11-02 and 2026-11-04: Claude Code cold, Claude Code on Scholion (av), OpenCode, Codex.
 - Claude Haiku 5.5 (claude-haiku-5-5, Anthropic's API), from 2026-11-20: Claude Code cold, Claude Code on Scholion release/0.0.2 (av), OpenCode, goose. Codex is not in it: it speaks only OpenAI's Responses API.
 - Tracker rows of different models are never compared, pooled or ranked (the tiers pilot under Pages is a separate, pre-registered test of two models). Within one series the paired comparison is av against cold on Claude Code, same day (descriptive). Across CLIs the rows are a tracker, not a ranking: 12 sessions per cell, below the 30 needed for any claim.
-- A tracker series is one dataset, agent, model and harness (runner); the site draws Scholion's own harness and Harbor apart.
+- A tracker chart is one dataset, agent, model and harness (runner); the site draws Scholion's own harness and Harbor apart. Change flags compare runs of the same dataset, agent, model and arm.
 
 ## What is measured
 
 - Acceptance: hidden tests pass after the session (reward 1). Reported with a Wilson 95% interval.
 - Cost per accepted task, with a cost source per session: measured, estimated, capped or unavailable.
-- Billed tokens (input + cache writes + output, without cache reads), LLM calls, turns, tool calls, wall time. Output includes reasoning tokens, except in OpenCode's 2026-11-04 rows, which leave them out.
+- Billed tokens (input + cache writes + output, without cache reads), LLM calls, turns, tool calls, wall time. In Harbor rows, input includes cache writes and output includes reasoning tokens, except in OpenCode's 2026-11-04 rows, whose output leaves reasoning out.
 - Repeated dead ends: the agent's edits match a known wrong approach.
 - The agent CLI's own version string on every run, so changes can be tied to releases.
 
