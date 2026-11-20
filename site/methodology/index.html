@@ -24,14 +24,28 @@
 </header>
 
 <h2>Running</h2>
-<p>Agents run through <a href="https://harborframework.com">Harbor</a>, the Terminal-Bench team's open harness. Each trial gets a fresh Docker container. The task's repository is collapsed to a single commit, so the fix cannot be read from history. The agent's own CLI runs headless with the goal as its prompt. When it stops, hidden tests are copied in and decide the reward. The weekly tracker does not pin the CLI version, because measuring version drift is the point. Each run records the version the CLI reports for itself.</p>
-<p>Scholion is evaluated as an arm, through a Harbor agent that wraps Claude Code with Scholion's daemon and hooks. Plain Claude Code, Codex and other CLIs run through Harbor's own adapters.</p>
+<p>Agents run through <a href="https://harborframework.com">Harbor</a>, the Terminal-Bench team's open harness. Each trial gets a fresh Docker container. The task's repository is collapsed to a single commit, so the fix cannot be read from history. The agent's own CLI runs headless with the goal as its prompt. When it stops, hidden tests are copied in and decide the reward. The tracker takes each CLI's newest release on the day it runs, because measuring version drift is the point; the run of 2026-11-20 read those versions once before its first leg and pinned them for every leg of that day. Each run records the CLI's version.</p>
+<p>Scholion is evaluated as an arm, through a Harbor agent that wraps Claude Code with Scholion's daemon and hooks. Plain Claude Code, OpenCode and goose run through Harbor's own adapters; Codex on DeepSeek ran through a small Harbor agent of this repository that writes its provider settings.</p>
+
+<h2 id="tracker">The tracker</h2>
+<p><code>tallyho-cold</code>, 3 attempts at each of its 4 tasks per leg, so 12 sessions per leg. Runs are started by hand; the weekly schedule is off. A series includes the model, and the tracker has two:</p>
+<ul>
+  <li><b>DeepSeek Flash</b> (<code>deepseek-flash</code>), 2026-11-02 and 2026-11-04: Claude Code cold, Claude Code on Scholion (<code>av</code>), OpenCode and Codex.</li>
+  <li><b>Claude Haiku 5.5</b> (<code>claude-haiku-5-5</code>, Anthropic's first-party API), from 2026-11-20, pre-registered as an amendment in <a href="https://github.com/vinhqbui/openevaluations/blob/main/docs/PREREG-tracker-av.md">PREREG-tracker-av.md</a>: Claude Code cold, Claude Code on Scholion <code>release/0.0.2</code> (<code>av</code>), OpenCode and goose. Codex is not in this series: it speaks only OpenAI's Responses API, so it cannot run on an Anthropic key. On Claude Code, the small-model and subagent aliases are set to the same model, so every call in a session goes to one model.</li>
+</ul>
+<p>What may be compared:</p>
+<ul>
+  <li><b>av against cold</b> on Claude Code, same day, same model: paired by task. With 12 sessions per arm this is descriptive and no claim is made.</li>
+  <li><b>Across CLIs</b> (Claude Code, OpenCode, goose; on DeepSeek Flash, Codex) the rows are a tracker: solved rate, cost, tokens, turns, tool calls and wall time per leg, with no significance claim and no ranking (12 sessions per cell, under 30).</li>
+  <li><b>Across models</b>, never on the tracker. The two series are never pooled, compared or drawn as one line; the site may show them side by side, each labelled with its model.</li>
+</ul>
+<p>A chart on the tracker is also one harness: Scholion's own benchmark runs of October on Claude Haiku 5.5 are a separate series from the Harbor runs of 2026-11-20.</p>
 
 <h2>What a session records</h2>
 <ul>
   <li><b>Acceptance.</b> The hidden tests pass, which is a reward of 1.</li>
   <li><b>Cost.</b> Every cost has a source: <code>measured</code> by the CLI, <code>estimated</code> from token counts, <code>capped</code> when a session hit its spending cap, or <code>unavailable</code>.</li>
-  <li><b>Tokens.</b> Billed tokens are input plus cache writes plus output, with cache reads excluded.</li>
+  <li><b>Tokens.</b> Billed tokens are input plus cache writes plus output, with cache reads excluded. Input counts cache writes and output counts reasoning tokens, for every CLI. The published OpenCode rows of 2026-11-04 were imported before OpenCode's reasoning tokens were counted, so their output and billed tokens leave them out; their cost is complete.</li>
   <li><b>Effort.</b> LLM calls, turns and tool calls, taken from the trajectory.</li>
   <li><b>Repeated dead ends.</b> For handoff tasks, a pattern matches the known wrong edit in the agent's writes.</li>
   <li><b>Wall time</b> for the agent's own execution.</li>
