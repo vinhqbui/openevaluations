@@ -18,6 +18,26 @@
   OE.num = function (x) { return x == null ? "–" : (Math.round(x * 10) / 10).toLocaleString("en-US"); };
   OE.date = function (s) { return s ? s.slice(0, 10) : "–"; };
   OE.ci = function (lo, hi, f) { return lo == null || hi == null ? "" : "[" + f(lo) + ", " + f(hi) + "]"; };
+  // A CLI version as a label: "v2.1.329". Some rows hold a release tag that already starts with "v".
+  OE.version = function (v) { return v ? (/^v\d/.test(v) ? v : "v" + v) : "v?"; };
+
+  // A tracker series is one dataset, agent CLI, model and harness; the model leads its title so
+  // two models' charts never carry the same name.
+  OE.seriesTitle = function (s, arm) { return s.model + " · " + s.dataset + " · " + s.agent + " " + arm + " · " + s.runner; };
+
+  // Items grouped by model: [{model, items}], the model with the most recent run first.
+  OE.byModel = function (items, model, date) {
+    var groups = {}, order = [];
+    items.forEach(function (x) {
+      var m = model(x);
+      if (!groups[m]) { groups[m] = { model: m, items: [], latest: "" }; order.push(m); }
+      groups[m].items.push(x);
+      if (date(x) > groups[m].latest) groups[m].latest = date(x);
+    });
+    return order.map(function (m) { return groups[m]; }).sort(function (a, b) {
+      return a.latest === b.latest ? (a.model < b.model ? -1 : 1) : (a.latest < b.latest ? 1 : -1);
+    });
+  };
 
   OE.el = function (tag, attrs, text) {
     var e = document.createElement(tag);
