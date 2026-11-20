@@ -61,7 +61,7 @@
      "dead_ends": 0,
      "invalid": 0,
      "median_llm_calls": 6.5,
-     "median_tokens_billed": 2279.5,
+     "median_tokens_billed": 10811.5,
      "median_tool_calls": 7.5,
      "median_turns": null,
      "median_wall_secs": 42.913331,
