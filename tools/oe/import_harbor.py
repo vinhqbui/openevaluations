@@ -79,6 +79,19 @@ def _task_dir(trial_cfg):
     return path if path and Path(path).exists() else None
 
 
+def _opencode_unsummed(traj):
+    """(cache writes, reasoning tokens) that Harbor's OpenCode totals leave out but the provider
+    bills: its n_input_tokens is input + cache reads and its n_output_tokens excludes reasoning,
+    while Claude Code's, goose's and Codex's input holds cache writes and their output reasoning.
+    Harbor keeps both only in each step's metrics.extra."""
+    writes = reasoning = 0
+    for s in (traj or {}).get("steps", []):
+        extra = (s.get("metrics") or {}).get("extra") or {}
+        writes += extra.get("cache_write_tokens") or 0
+        reasoning += extra.get("reasoning_tokens") or 0
+    return writes, reasoning
+
+
 def _model_provider(mi):
     """The model's real provider: Harbor says "anthropic" for any model behind ANTHROPIC_BASE_URL."""
     name, prov = mi.get("name") or "", mi.get("provider") or "unknown"
@@ -161,6 +174,10 @@ def import_job(job_dir, out_dir, machine="local", dataset=None, arm=None, task_r
             cost, cs = trial_cost(r)
             traj_path = d / "agent" / "trajectory.json"
             traj = atif.load(traj_path)
+            if (r.get("agent_info") or {}).get("name") == "opencode":
+                writes, reasoning = _opencode_unsummed(traj)
+                inp = None if inp is None else inp + writes
+                n_out = None if n_out is None else n_out + reasoning
             ae = r.get("agent_execution") or {}
             t0, t1 = _ts(ae.get("started_at")), _ts(ae.get("finished_at"))
             task_dir = Path(task_root) / r["task_name"].split("/")[-1] if task_root else _task_dir(json.loads((d / "config.json").read_text(encoding="utf-8")) if (d / "config.json").exists() else None)
