@@ -23,10 +23,11 @@
    "agents": [
     "claude-code",
     "codex",
+    "goose",
     "opencode"
    ],
-   "runs": 20,
-   "sessions": 496,
+   "runs": 24,
+   "sessions": 544,
    "tasks": [
     "compound-discounts",
     "csv-escaping",
