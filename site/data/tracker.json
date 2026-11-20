@@ -409,8 +409,94 @@
     ]
    },
    "dataset": "scholion-relay",
-   "key": "scholion-relay|claude-code|deepseek-flash",
-   "model": "deepseek-flash"
+   "key": "scholion-relay|claude-code|deepseek-flash|scholion-bench",
+   "model": "deepseek-flash",
+   "runner": "scholion-bench"
+  },
+  {
+   "agent": "claude-code",
+   "arms": {
+    "av": [
+     {
+      "accepted": 12,
+      "agent_version": "2.1.329",
+      "cost_estimated": false,
+      "cost_per_accepted": 0.005662,
+      "cost_per_accepted_ci": [
+       0.004997,
+       0.006334
+      ],
+      "date": "2026-11-20T19:56:06Z",
+      "dead_ends": 0,
+      "flags": [],
+      "invalid": 0,
+      "median_llm_calls": 10.0,
+      "median_tokens_billed": 17312.5,
+      "median_tool_calls": 9.0,
+      "median_turns": 11.0,
+      "median_wall_secs": 35.966636,
+      "n": 12,
+      "rate": 1.0,
+      "run_id": "2026-11-20-tallyho-cold-claude-code-av-e793c5",
+      "skipped": 0,
+      "vs_cold": {
+       "cold_run_id": "2026-11-20-tallyho-cold-claude-code-cold-313ad6",
+       "cost": [
+        0.314452,
+        0.210571,
+        0.441232
+       ],
+       "tokens": [
+        0.229125,
+        0.033519,
+        0.486839
+       ],
+       "turns": [
+        0.255407,
+        0.164209,
+        0.378272
+       ]
+      },
+      "wilson": [
+       0.757499,
+       1.0
+      ]
+     }
+    ],
+    "cold": [
+     {
+      "accepted": 12,
+      "agent_version": "2.1.329",
+      "cost_estimated": false,
+      "cost_per_accepted": 0.004499,
+      "cost_per_accepted_ci": [
+       0.003763,
+       0.00522
+      ],
+      "date": "2026-11-20T19:38:36Z",
+      "dead_ends": 0,
+      "flags": [],
+      "invalid": 0,
+      "median_llm_calls": 6.5,
+      "median_tokens_billed": 14684.0,
+      "median_tool_calls": 7.0,
+      "median_turns": 8.0,
+      "median_wall_secs": 21.00011,
+      "n": 12,
+      "rate": 1.0,
+      "run_id": "2026-11-20-tallyho-cold-claude-code-cold-313ad6",
+      "skipped": 0,
+      "wilson": [
+       0.757499,
+       1.0
+      ]
+     }
+    ]
+   },
+   "dataset": "tallyho-cold",
+   "key": "tallyho-cold|claude-code|claude-haiku-5-5|harbor",
+   "model": "claude-haiku-5-5",
+   "runner": "harbor"
   },
   {
    "agent": "claude-code",
@@ -712,51 +798,6 @@
        0.912375,
        1.0
       ]
-     },
-     {
-      "accepted": 12,
-      "agent_version": "2.1.329",
-      "cost_estimated": false,
-      "cost_per_accepted": 0.005662,
-      "cost_per_accepted_ci": [
-       0.004997,
-       0.006334
-      ],
-      "date": "2026-11-20T19:56:06Z",
-      "dead_ends": 0,
-      "flags": [],
-      "invalid": 0,
-      "median_llm_calls": 10.0,
-      "median_tokens_billed": 17312.5,
-      "median_tool_calls": 9.0,
-      "median_turns": 11.0,
-      "median_wall_secs": 35.966636,
-      "n": 12,
-      "rate": 1.0,
-      "run_id": "2026-11-20-tallyho-cold-claude-code-av-e793c5",
-      "skipped": 0,
-      "vs_cold": {
-       "cold_run_id": "2026-11-20-tallyho-cold-claude-code-cold-313ad6",
-       "cost": [
-        0.314452,
-        0.210571,
-        0.441232
-       ],
-       "tokens": [
-        0.229125,
-        0.033519,
-        0.486839
-       ],
-       "turns": [
-        0.255407,
-        0.164209,
-        0.378272
-       ]
-      },
-      "wilson": [
-       0.757499,
-       1.0
-      ]
      }
     ],
     "av_no_packs": [
@@ -951,40 +992,12 @@
        1.0
       ]
      }
-    ],
-    "cold": [
-     {
-      "accepted": 12,
-      "agent_version": "2.1.329",
-      "cost_estimated": false,
-      "cost_per_accepted": 0.004499,
-      "cost_per_accepted_ci": [
-       0.003763,
-       0.00522
-      ],
-      "date": "2026-11-20T19:38:36Z",
-      "dead_ends": 0,
-      "flags": [],
-      "invalid": 0,
-      "median_llm_calls": 6.5,
-      "median_tokens_billed": 14684.0,
-      "median_tool_calls": 7.0,
-      "median_turns": 8.0,
-      "median_wall_secs": 21.00011,
-      "n": 12,
-      "rate": 1.0,
-      "run_id": "2026-11-20-tallyho-cold-claude-code-cold-313ad6",
-      "skipped": 0,
-      "wilson": [
-       0.757499,
-       1.0
-      ]
-     }
     ]
    },
    "dataset": "tallyho-cold",
-   "key": "tallyho-cold|claude-code|claude-haiku-5-5",
-   "model": "claude-haiku-5-5"
+   "key": "tallyho-cold|claude-code|claude-haiku-5-5|scholion-bench",
+   "model": "claude-haiku-5-5",
+   "runner": "scholion-bench"
   },
   {
    "agent": "claude-code",
@@ -1094,8 +1107,9 @@
     ]
    },
    "dataset": "tallyho-cold",
-   "key": "tallyho-cold|claude-code|deepseek-flash",
-   "model": "deepseek-flash"
+   "key": "tallyho-cold|claude-code|deepseek-flash|harbor",
+   "model": "deepseek-flash",
+   "runner": "harbor"
   },
   {
    "agent": "claude-code",
@@ -1133,8 +1147,9 @@
     ]
    },
    "dataset": "tallyho-cold",
-   "key": "tallyho-cold|claude-code|deepseek-v4-pro",
-   "model": "deepseek-v4-pro"
+   "key": "tallyho-cold|claude-code|deepseek-v4-pro|harbor",
+   "model": "deepseek-v4-pro",
+   "runner": "harbor"
   },
   {
    "agent": "codex",
@@ -1170,8 +1185,9 @@
     ]
    },
    "dataset": "tallyho-cold",
-   "key": "tallyho-cold|codex|deepseek-flash",
-   "model": "deepseek-flash"
+   "key": "tallyho-cold|codex|deepseek-flash|harbor",
+   "model": "deepseek-flash",
+   "runner": "harbor"
   },
   {
    "agent": "goose",
@@ -1207,8 +1223,9 @@
     ]
    },
    "dataset": "tallyho-cold",
-   "key": "tallyho-cold|goose|claude-haiku-5-5",
-   "model": "claude-haiku-5-5"
+   "key": "tallyho-cold|goose|claude-haiku-5-5|harbor",
+   "model": "claude-haiku-5-5",
+   "runner": "harbor"
   },
   {
    "agent": "opencode",
@@ -1244,8 +1261,9 @@
     ]
    },
    "dataset": "tallyho-cold",
-   "key": "tallyho-cold|opencode|claude-haiku-5-5",
-   "model": "claude-haiku-5-5"
+   "key": "tallyho-cold|opencode|claude-haiku-5-5|harbor",
+   "model": "claude-haiku-5-5",
+   "runner": "harbor"
   },
   {
    "agent": "opencode",
@@ -1281,8 +1299,9 @@
     ]
    },
    "dataset": "tallyho-cold",
-   "key": "tallyho-cold|opencode|deepseek-flash",
-   "model": "deepseek-flash"
+   "key": "tallyho-cold|opencode|deepseek-flash|harbor",
+   "model": "deepseek-flash",
+   "runner": "harbor"
   },
   {
    "agent": "claude-code",
@@ -1318,8 +1337,9 @@
     ]
    },
    "dataset": "tallyho-hard",
-   "key": "tallyho-hard|claude-code|deepseek-flash",
-   "model": "deepseek-flash"
+   "key": "tallyho-hard|claude-code|deepseek-flash|harbor",
+   "model": "deepseek-flash",
+   "runner": "harbor"
   },
   {
    "agent": "claude-code",
@@ -1357,8 +1377,9 @@
     ]
    },
    "dataset": "tallyho-hard",
-   "key": "tallyho-hard|claude-code|deepseek-v4-pro",
-   "model": "deepseek-v4-pro"
+   "key": "tallyho-hard|claude-code|deepseek-v4-pro|harbor",
+   "model": "deepseek-v4-pro",
+   "runner": "harbor"
   },
   {
    "agent": "claude-code",
@@ -1396,8 +1417,9 @@
     ]
    },
    "dataset": "tallyho-more",
-   "key": "tallyho-more|claude-code|deepseek-flash",
-   "model": "deepseek-flash"
+   "key": "tallyho-more|claude-code|deepseek-flash|harbor",
+   "model": "deepseek-flash",
+   "runner": "harbor"
   },
   {
    "agent": "claude-code",
@@ -1435,8 +1457,9 @@
     ]
    },
    "dataset": "tallyho-more",
-   "key": "tallyho-more|claude-code|deepseek-v4-pro",
-   "model": "deepseek-v4-pro"
+   "key": "tallyho-more|claude-code|deepseek-v4-pro|harbor",
+   "model": "deepseek-v4-pro",
+   "runner": "harbor"
   }
  ]
 }
