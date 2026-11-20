@@ -264,3 +264,18 @@ def test_cache_writes_are_not_added_again_for_clis_that_already_count_them(tmp_p
                     final_extra={"total_tokens": 129596, "cache_write_tokens": 17456})
     _, (s,) = runfile.read(import_job(job, tmp_path / "runs"))
     assert s["tokens"]["input"] == 122969 - 105487 and s["tokens"]["output"] == 6627
+
+
+def test_tracker_series_never_join_runs_of_different_harnesses(tmp_path):
+    # Scholion's own benchmark harness and Harbor ran Claude Code on the same model and dataset;
+    # their runs are separate series, so one is never drawn as the other's continuation.
+    runs = tmp_path / "runs"
+    run, ss = runfile.read(import_job(fake_job(tmp_path / "a"), runs, arm="av"))
+    old = dict(run, id="scholion-2026-10-27-haiku", date="2026-10-27T00:00:00Z",
+               harness=dict(run["harness"], runner="scholion-bench"))
+    runfile.write(runs / f"{old['id']}.jsonl", old, [dict(s, run_id=old["id"]) for s in ss])
+    site.build(runs, tmp_path / "data")
+    series = json.loads((tmp_path / "data" / "tracker.json").read_text())["series"]
+    assert sorted(s["runner"] for s in series) == ["harbor", "scholion-bench"]
+    assert all(len(s["arms"]["av"]) == 1 for s in series)
+    assert len({s["key"] for s in series}) == 2

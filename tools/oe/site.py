@@ -48,7 +48,8 @@ def _arms(sessions):
 
 
 def _series_key(run):
-    return f"{run['dataset']['name']}|{run['agent']['name']}|{run['model']['name']}"
+    # The harness is part of a series: results are never pooled across harnesses.
+    return f"{run['dataset']['name']}|{run['agent']['name']}|{run['model']['name']}|{run['harness']['runner']}"
 
 
 def _cold_for(run, points, day):
@@ -147,7 +148,7 @@ def build(runs_dir, out_dir):
 
         key = _series_key(run)
         sr = series.setdefault(key, {"key": key, "dataset": run["dataset"]["name"], "agent": run["agent"]["name"],
-                                     "model": run["model"]["name"], "arms": {}})
+                                     "model": run["model"]["name"], "runner": run["harness"]["runner"], "arms": {}})
         arms_ss, points = _arms(ss), {}
         for arm, summ in per_arm.items():
             point = {"run_id": run["id"], "date": run["date"], "agent_version": run["agent"]["version"],
