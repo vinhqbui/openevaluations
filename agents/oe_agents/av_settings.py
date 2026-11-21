@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import urllib.request
 import uuid
 from pathlib import Path
@@ -27,6 +28,9 @@ AV_URL = "http://127.0.0.1:7420"
 AGENT = "claude-code"  # margincode-bench's agent name; the task owner, so the hooks may write
 LOG = "/logs/agent/scholion"  # inside /logs/agent, which Harbor copies back to <trial>/agent
 AV_BIN = '"$HOME/.local/bin/av"'
+PATH = 'export PATH="$HOME/.local/bin:$PATH"'
+HELPER = "/installed-agent/oe_av.py"
+UPLOAD = "/tmp/margincode.tar.gz"
 # Set on every hook command and on Claude's own environment (its Bash tool can run `av record`).
 # AV_HOOK_WAIT_SECS=0: the Stop hook would otherwise wait 600 s for backlog work that never comes.
 AV_ENV = {"AV_URL": AV_URL, "AV_AGENT": AGENT, "AV_HOOK_WAIT_SECS": "0"}
@@ -70,6 +74,33 @@ def install_command(tarball):
 def daemon_log_copy():
     """Keep the daemon log: `av up` writes it into its home, ~/.margincode on a fresh machine."""
     return f"cp ~/.margincode/daemon.log {LOG}/ 2>/dev/null; true"
+
+
+def finish_command():
+    """After Claude: the final checkpoint and the records into finish.json and records.json, then the log."""
+    return f"python3 {HELPER} finish --out {LOG}; {daemon_log_copy()}"
+
+
+def setup_command():
+    """The daemon with its bundled Postgres, and /app imported as repo `app` (as the agent user)."""
+    return (f"{PATH}; mkdir -p {LOG} && : > {LOG}/hook-count && : > {LOG}/hooks.err && "
+            f"av --version > {LOG}/av-version.txt && T0=$(date +%s) && "
+            f"av up && av repo add app /app && echo $(( $(date +%s) - T0 )) > {LOG}/up-secs")
+
+
+def task_title(instruction):
+    return (instruction.strip().splitlines() or ["task"])[0][:80]
+
+
+def swap_command(ws):
+    """The agent and the verifier both work in /app: make it the task's jj workspace (as root)."""
+    return f"mv /app /app.base && ln -s {shlex.quote(ws)} /app"
+
+
+def start_command(title, start_args=""):
+    """The task start (av_container.py start); the goal comes in through $OE_AV_GOAL."""
+    return (f"python3 {HELPER} start --title {shlex.quote(title)} --goal-env OE_AV_GOAL "
+            f"--base /app --repo app --out {LOG}{start_args}")
 
 
 def merge_settings(user, ours):

@@ -249,6 +249,21 @@ def test_install_takes_the_release_binaries_from_the_archive_directory():
     assert "scholion" not in av_settings.install_command("/tmp/margincode.tar.gz")
 
 
+def test_setup_and_start_commands_are_those_a_trial_runs():
+    assert av_settings.setup_command() == (
+        f'export PATH="$HOME/.local/bin:$PATH"; mkdir -p {LOG} && : > {LOG}/hook-count && : > {LOG}/hooks.err && '
+        f"av --version > {LOG}/av-version.txt && T0=$(date +%s) && "
+        f"av up && av repo add app /app && echo $(( $(date +%s) - T0 )) > {LOG}/up-secs")
+    assert av_settings.start_command("Fix it's bug") == (
+        "python3 /installed-agent/oe_av.py start --title 'Fix it'\"'\"'s bug' --goal-env OE_AV_GOAL "
+        f"--base /app --repo app --out {LOG}")
+    assert av_settings.start_command("t", " --base-rev HEAD").endswith(f"--out {LOG} --base-rev HEAD")
+    assert av_settings.task_title("\n  Fix the sum.\nMore.") == "Fix the sum."
+    assert av_settings.swap_command("/home/agent/ws/app/fix") == "mv /app /app.base && ln -s /home/agent/ws/app/fix /app"
+    assert av_settings.finish_command() == (f"python3 /installed-agent/oe_av.py finish --out {LOG}; "
+                                            f"cp ~/.margincode/daemon.log {LOG}/ 2>/dev/null; true")
+
+
 def test_the_daemon_log_is_copied_from_the_fresh_install_home():
     assert av_settings.daemon_log_copy() == f"cp ~/.margincode/daemon.log {LOG}/ 2>/dev/null; true"
     assert LOG == "/logs/agent/scholion"  # a stored name: tools/oe/handoff.py reads agent/scholion/records.json
