@@ -4,7 +4,7 @@
     python3 oe_av.py adopt --ws WS --app /app --patch /handoff/a.patch --records /handoff/records.json --out DIR
     python3 oe_av.py finish --out DIR
 
-`start` follows scholion-bench's `start_av_task`: the task is started over HTTP under a session
+`start` follows margincode-bench's `start_av_task`: the task is started over HTTP under a session
 of its own (the start pack is kept only for the record), the workspace must hold the base tree
 byte for byte, and `.av-task` gets a fresh session, so the agent's first SessionStart pack is a
 full pack rather than back-references to the start pack.

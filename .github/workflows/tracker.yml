@@ -12,7 +12,7 @@ name: tracker
 #
 # Legs (one runner each), all on claude-haiku-5-5:
 #   claude-code-cold  Claude Code as shipped
-#   claude-code-av    Claude Code on the Scholion framework (agents/oe_agents/claude_code_av.py):
+#   claude-code-av    Claude Code on the Margincode framework (agents/oe_agents/claude_code_av.py):
 #                     av hooks, a daemon and a jj workspace per task; paired against the cold leg
 #   opencode-cold     OpenCode, the second agent
 #   goose-cold        Block's goose CLI, the third agent (Harbor's goose agent)
@@ -79,7 +79,7 @@ jobs:
             agent: oe_agents.claude_code_av:ClaudeCodeAv
             arm: av
             model: anthropic/claude-haiku-5-5
-            extra: "--ak max_turns=40 --ak av_version=release/0.0.2"
+            extra: "--ak max_turns=40 --ak av_version=release/0.0.4"
           - leg: opencode-cold
             family: opencode
             agent: opencode
@@ -107,7 +107,7 @@ jobs:
         env:
           # Every CLI reads the Anthropic key as ANTHROPIC_API_KEY and calls api.anthropic.com.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          OE_CACHE: ${{ runner.temp }}/oe-cache   # the Scholion release tarball (runner is a step-level context)
+          OE_CACHE: ${{ runner.temp }}/oe-cache   # the Margincode release tarball (runner is a step-level context)
         run: |
           uv sync --frozen --extra run
           unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN DEEPSEEK_API_KEY
@@ -131,7 +131,7 @@ jobs:
             extra="$extra --ak version=$GOOSE_VERSION --ae GOOSE_VERSION=$GOOSE_VERSION"
           fi
           if [ "${{ matrix.arm }}" = av ]; then
-            scholion_rev='"release/0.0.2"'
+            scholion_rev='"release/0.0.4"'
             uv run python -m oe_agents.av_settings fetch   # the pinned release, checked once before any trial
           fi
           kwargs=$(python3 -c 'import json,sys; a=sys.argv[1:]; print(json.dumps({k: int(v) if v.isdigit() else v for k, _, v in (a[i+1].partition("=") for i in range(len(a)) if a[i] == "--ak")}))' $extra)

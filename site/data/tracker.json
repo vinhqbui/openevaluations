@@ -420,6 +420,7 @@
      {
       "accepted": 12,
       "agent_version": "2.1.329",
+      "av_release": "0.0.2",
       "cost_estimated": false,
       "cost_per_accepted": 0.005662,
       "cost_per_accepted_ci": [
@@ -461,6 +462,52 @@
        0.757499,
        1.0
       ]
+     },
+     {
+      "accepted": 12,
+      "agent_version": "2.1.330",
+      "av_release": "0.0.4",
+      "cost_estimated": false,
+      "cost_per_accepted": 0.004832,
+      "cost_per_accepted_ci": [
+       0.004141,
+       0.005466
+      ],
+      "date": "2026-11-21T07:10:02Z",
+      "dead_ends": 0,
+      "flags": [],
+      "invalid": 0,
+      "median_llm_calls": 7.0,
+      "median_tokens_billed": 18782.5,
+      "median_tool_calls": 6.0,
+      "median_turns": 7.0,
+      "median_wall_secs": 30.526342,
+      "n": 12,
+      "rate": 1.0,
+      "run_id": "2026-11-21-tallyho-cold-claude-code-av-663941",
+      "skipped": 0,
+      "vs_cold": {
+       "cold_run_id": "2026-11-21-tallyho-cold-claude-code-cold-3b7053",
+       "cost": [
+        0.072836,
+        0.008818,
+        0.143428
+       ],
+       "tokens": [
+        0.202864,
+        0.141048,
+        0.278502
+       ],
+       "turns": [
+        -0.095073,
+        -0.167558,
+        -0.003758
+       ]
+      },
+      "wilson": [
+       0.757499,
+       1.0
+      ]
      }
     ],
     "cold": [
@@ -485,6 +532,33 @@
       "n": 12,
       "rate": 1.0,
       "run_id": "2026-11-20-tallyho-cold-claude-code-cold-313ad6",
+      "skipped": 0,
+      "wilson": [
+       0.757499,
+       1.0
+      ]
+     },
+     {
+      "accepted": 12,
+      "agent_version": "2.1.330",
+      "cost_estimated": false,
+      "cost_per_accepted": 0.004541,
+      "cost_per_accepted_ci": [
+       0.003854,
+       0.005203
+      ],
+      "date": "2026-11-21T06:52:13Z",
+      "dead_ends": 0,
+      "flags": [],
+      "invalid": 0,
+      "median_llm_calls": 7.0,
+      "median_tokens_billed": 15407.5,
+      "median_tool_calls": 7.0,
+      "median_turns": 8.0,
+      "median_wall_secs": 20.862806,
+      "n": 12,
+      "rate": 1.0,
+      "run_id": "2026-11-21-tallyho-cold-claude-code-cold-3b7053",
       "skipped": 0,
       "wilson": [
        0.757499,
@@ -1006,6 +1080,7 @@
      {
       "accepted": 12,
       "agent_version": "2.1.318",
+      "av_release": "0.0.2",
       "cost_estimated": true,
       "cost_per_accepted": 0.010783,
       "cost_per_accepted_ci": [
@@ -1219,6 +1294,33 @@
        0.757499,
        1.0
       ]
+     },
+     {
+      "accepted": 12,
+      "agent_version": "v1.60.2",
+      "cost_estimated": false,
+      "cost_per_accepted": 0.00512,
+      "cost_per_accepted_ci": [
+       0.004431,
+       0.005748
+      ],
+      "date": "2026-11-21T07:52:15Z",
+      "dead_ends": 0,
+      "flags": [],
+      "invalid": 0,
+      "median_llm_calls": 10.0,
+      "median_tokens_billed": 18433.0,
+      "median_tool_calls": 9.5,
+      "median_turns": null,
+      "median_wall_secs": 30.774622,
+      "n": 12,
+      "rate": 1.0,
+      "run_id": "2026-11-21-tallyho-cold-goose-cold-db8e3b",
+      "skipped": 0,
+      "wilson": [
+       0.757499,
+       1.0
+      ]
      }
     ]
    },
@@ -1252,6 +1354,33 @@
       "n": 12,
       "rate": 1.0,
       "run_id": "2026-11-20-tallyho-cold-opencode-cold-fd7b5d",
+      "skipped": 0,
+      "wilson": [
+       0.757499,
+       1.0
+      ]
+     },
+     {
+      "accepted": 12,
+      "agent_version": "1.19.6",
+      "cost_estimated": false,
+      "cost_per_accepted": 0.003746,
+      "cost_per_accepted_ci": [
+       0.003049,
+       0.004391
+      ],
+      "date": "2026-11-21T07:32:02Z",
+      "dead_ends": 0,
+      "flags": [],
+      "invalid": 0,
+      "median_llm_calls": 7.0,
+      "median_tokens_billed": 13675.5,
+      "median_tool_calls": 8.0,
+      "median_turns": null,
+      "median_wall_secs": 53.717709,
+      "n": 12,
+      "rate": 1.0,
+      "run_id": "2026-11-21-tallyho-cold-opencode-cold-3d2f84",
       "skipped": 0,
       "wilson": [
        0.757499,

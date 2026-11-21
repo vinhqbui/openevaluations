@@ -1,4 +1,4 @@
-"""The Scholion arm: Claude Code with av hooks, a daemon and a jj workspace, as a Harbor agent."""
+"""The Margincode arm: Claude Code with av hooks, a daemon and a jj workspace, as a Harbor agent."""
 
 import hashlib
 import json
@@ -51,7 +51,7 @@ def _logdir(tmp_path, count="session-start\npost-edit\nstop\n", pack="# Task\nst
     (d / "hooks.err").write_text(err)
     fin = {"checkpoint_ok": True, "healthz": "ok", "record_count": 2} if finish is None else finish
     (d / "finish.json").write_text(json.dumps(fin))
-    (d / "av-version.txt").write_text("scholion 0.0.2\n")
+    (d / "av-version.txt").write_text("margincode 0.0.4\n")
     return d
 
 
@@ -59,8 +59,8 @@ def test_evaluate_valid_session_reports_counts(tmp_path):
     m = evaluate(_logdir(tmp_path))
     assert "oe_invalid" not in m
     assert m["av_hook_counts"] == {"session-start": 1, "post-edit": 1, "stop": 1}
-    assert m["av_pack_chars"] == len("# Task\nstuff") and m["av_records"] == 2
-    assert m["av_checkpoint_ok"] is True and m["av_version"] == "scholion 0.0.2"
+    assert m["av_pack_chars"] == m["av_hook_chars"] == len("# Task\nstuff") and m["av_records"] == 2
+    assert m["av_checkpoint_ok"] is True and m["av_version"] == "margincode 0.0.4"
 
 
 @pytest.mark.parametrize("kw, reason", [
@@ -74,6 +74,33 @@ def test_evaluate_valid_session_reports_counts(tmp_path):
 ])
 def test_evaluate_marks_invalid_sessions(tmp_path, kw, reason):
     assert evaluate(_logdir(tmp_path, **kw))["oe_invalid"] == reason
+
+
+# What the release's SessionStart hook prints after the pack (margincode-cli hook.rs print_pack:
+# the pack's markdown, then record_first() on its own line; then announce_scratch).
+RECORD_FIRST = ("av: before your final message, record why you changed code in one call: `av record --json -` "
+                "with [...]. Otherwise your stop is blocked to ask for it.\n")
+SCRATCH = "Temporary files: $AV_SCRATCH (removed with the task).\n"
+
+
+def test_evaluate_judges_the_pack_on_the_output_before_the_first_av_line(tmp_path):
+    pack = "# Task\nstuff\n**av: recorded about `a.py`** (by other tasks)\n  av: indented\n"
+    m = evaluate(_logdir(tmp_path, pack=pack + RECORD_FIRST + SCRATCH))
+    assert "oe_invalid" not in m
+    assert m["av_pack_chars"] == len(pack)
+    assert m["av_hook_chars"] == len(pack + RECORD_FIRST + SCRATCH)
+
+
+def test_evaluate_an_empty_pack_followed_by_the_releases_lines_is_invalid(tmp_path):
+    m = evaluate(_logdir(tmp_path, pack="\n" + RECORD_FIRST + SCRATCH))
+    assert m["oe_invalid"] == "empty session-start pack"
+    assert m["av_pack_chars"] == 1 and m["av_hook_chars"] == len("\n" + RECORD_FIRST + SCRATCH)
+
+
+def test_evaluate_output_without_an_av_line_is_all_pack_as_before(tmp_path):
+    out = "# Task\nstuff\nTemporary files: /x (removed with the task).\n"
+    m = evaluate(_logdir(tmp_path, pack=out))
+    assert m["av_pack_chars"] == m["av_hook_chars"] == len(out) and "oe_invalid" not in m
 
 
 def test_evaluate_without_log_dir_is_invalid(tmp_path):
@@ -119,8 +146,45 @@ def test_start_body_matches_the_bench_request():
                     "session": "oe-start-1", "pack_mode": "full"}
 
 
+def test_the_pin_names_the_margincode_release_archive():
+    assert av_settings.AV_RELEASE == "release/0.0.4"
+    assert av_settings.TARBALL == "margincode-v0.0.4-x86_64-unknown-linux-gnu"
+    assert av_settings.URL == ("https://github.com/margincode-dev/open-margincode/releases/download/"
+                               "release/0.0.4/margincode-v0.0.4-x86_64-unknown-linux-gnu.tar.gz")
+
+
+def test_the_tracker_workflow_runs_the_pinned_release():
+    wf = (Path(__file__).resolve().parents[2] / ".github" / "workflows" / "tracker.yml").read_text(encoding="utf-8")
+    assert f"--ak av_version={av_settings.AV_RELEASE}" in wf
+    assert f"scholion_rev='\"{av_settings.AV_RELEASE}\"'" in wf
+    assert "release/0.0.2" not in wf
+
+
+def test_the_unset_sha256_can_never_match():
+    assert len(av_settings.SHA256_UNSET) == 64 and set(av_settings.SHA256_UNSET) == {"0"}
+
+
+def test_fetch_refuses_an_unset_sha256_before_any_download(tmp_path, monkeypatch, capsys):
+    def no_download(url, dest):
+        raise AssertionError("downloaded with no sha256 pinned")
+    monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "SHA256", av_settings.SHA256_UNSET)
+    monkeypatch.setattr(av_settings, "_urlretrieve", no_download)
+    assert av_settings.main(["fetch"]) == 1
+    err = capsys.readouterr().err
+    assert "::error::" in err and av_settings.AV_RELEASE in err and f"{av_settings.TARBALL}.tar.gz.sha256" in err
+    assert "no sha256 is pinned" in err and "does not match" not in err
+    with pytest.raises(av_settings.NotPinned):
+        av_settings.release_tarball(download=no_download)
+    assert not list(tmp_path.iterdir())
+
+
+PINNED_SHA = hashlib.sha256(b"the release").hexdigest()
+
+
 def test_release_tarball_is_checked_against_the_pinned_sha(tmp_path, monkeypatch):
     monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "SHA256", PINNED_SHA)
     bad = tmp_path / f"{av_settings.TARBALL}.tar.gz"
     bad.write_bytes(b"not the release")
     with pytest.raises(RuntimeError, match="sha256"):
@@ -131,10 +195,12 @@ def test_release_tarball_is_checked_against_the_pinned_sha(tmp_path, monkeypatch
 def test_fetch_preflight_fails_once_and_clearly_on_a_changed_release(tmp_path, monkeypatch, capsys):
     """Run before `harbor run` in CI, so a changed release stops the leg before any trial installs."""
     monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "SHA256", PINNED_SHA)
     monkeypatch.setattr(av_settings, "_urlretrieve", lambda url, dest: Path(dest).write_bytes(b"re-uploaded"))
     assert av_settings.main(["fetch"]) == 1
     err = capsys.readouterr().err
-    assert "::error::" in err and av_settings.SHA256 in err and av_settings.AV_RELEASE in err
+    assert "::error::" in err and PINNED_SHA in err and av_settings.AV_RELEASE in err
+    assert "does not match" in err and "Margincode" in err
 
 
 def test_fetch_preflight_passes_with_the_pinned_bytes(tmp_path, monkeypatch, capsys):
@@ -160,6 +226,7 @@ def test_fetch_preflight_reports_a_failed_download_and_leaves_no_part_file(tmp_p
         Path(dest).write_bytes(b"half")
         raise OSError("connection reset")
     monkeypatch.setenv("OE_CACHE", str(tmp_path))
+    monkeypatch.setattr(av_settings, "SHA256", PINNED_SHA)
     monkeypatch.setattr(av_settings, "_urlretrieve", offline)
     assert av_settings.main(["fetch"]) == 1
     err = capsys.readouterr().err
@@ -184,6 +251,58 @@ def test_glibc_check():
     assert not av_settings.glibc_ok("musl libc (x86_64)")
 
 
+# The four hook commands as the 2026-11-20 run had them: the arm is pre-registered, so a release
+# bump must leave them byte for byte as they are.
+PINNED = {
+    "SessionStart": 'echo session-start >> /logs/agent/scholion/hook-count; AV_URL=http://127.0.0.1:7420 '
+                    'AV_AGENT=claude-code AV_HOOK_WAIT_SECS=0 "$HOME/.local/bin/av" hook session-start --budget 800 '
+                    '2>>/logs/agent/scholion/hooks.err | tee -a /logs/agent/scholion/session-start.md; exit 0',
+    "PostToolUse": 'echo post-edit >> /logs/agent/scholion/hook-count; AV_URL=http://127.0.0.1:7420 AV_AGENT=claude-code '
+                   'AV_HOOK_WAIT_SECS=0 "$HOME/.local/bin/av" hook post-edit 2>>/logs/agent/scholion/hooks.err; exit 0',
+    "PreToolUse": 'echo pre-read >> /logs/agent/scholion/hook-count; AV_URL=http://127.0.0.1:7420 AV_AGENT=claude-code '
+                  'AV_HOOK_WAIT_SECS=0 "$HOME/.local/bin/av" hook pre-read 2>>/logs/agent/scholion/hooks.err; exit 0',
+    "Stop": 'echo stop >> /logs/agent/scholion/hook-count; AV_URL=http://127.0.0.1:7420 AV_AGENT=claude-code '
+            'AV_HOOK_WAIT_SECS=0 "$HOME/.local/bin/av" hook stop 2>>/logs/agent/scholion/hooks.err; exit 0',
+}
+
+
+def _commands(settings):
+    return {e: v[0]["hooks"][0]["command"] for e, v in settings["hooks"].items()}
+
+
+def test_hook_commands_are_byte_for_byte_those_of_the_pre_registered_arm():
+    assert _commands(hook_settings()) == PINNED
+
+
+def test_install_takes_the_release_binaries_from_the_archive_directory():
+    t = av_settings.TARBALL
+    assert av_settings.install_command("/tmp/margincode.tar.gz") == (
+        "set -euo pipefail; mkdir -p ~/.local/bin /tmp/mc && tar -xzf /tmp/margincode.tar.gz -C /tmp/mc && "
+        f"install -m 0755 /tmp/mc/{t}/av /tmp/mc/{t}/margincode /tmp/mc/{t}/margincode-daemon ~/.local/bin/ "
+        "&& rm -rf /tmp/mc && ~/.local/bin/av --version")
+    assert "scholion" not in av_settings.install_command("/tmp/margincode.tar.gz")
+
+
+def test_setup_and_start_commands_are_those_a_trial_runs():
+    assert av_settings.setup_command() == (
+        f'export PATH="$HOME/.local/bin:$PATH"; mkdir -p {LOG} && : > {LOG}/hook-count && : > {LOG}/hooks.err && '
+        f"av --version > {LOG}/av-version.txt && T0=$(date +%s) && "
+        f"av up && av repo add app /app && echo $(( $(date +%s) - T0 )) > {LOG}/up-secs")
+    assert av_settings.start_command("Fix it's bug") == (
+        "python3 /installed-agent/oe_av.py start --title 'Fix it'\"'\"'s bug' --goal-env OE_AV_GOAL "
+        f"--base /app --repo app --out {LOG}")
+    assert av_settings.start_command("t", " --base-rev HEAD").endswith(f"--out {LOG} --base-rev HEAD")
+    assert av_settings.task_title("\n  Fix the sum.\nMore.") == "Fix the sum."
+    assert av_settings.swap_command("/home/agent/ws/app/fix") == "mv /app /app.base && ln -s /home/agent/ws/app/fix /app"
+    assert av_settings.finish_command() == (f"python3 /installed-agent/oe_av.py finish --out {LOG}; "
+                                            f"cp ~/.margincode/daemon.log {LOG}/ 2>/dev/null; true")
+
+
+def test_the_daemon_log_is_copied_from_the_fresh_install_home():
+    assert av_settings.daemon_log_copy() == f"cp ~/.margincode/daemon.log {LOG}/ 2>/dev/null; true"
+    assert LOG == "/logs/agent/scholion"  # a stored name: tools/oe/handoff.py reads agent/scholion/records.json
+
+
 # --- the Harbor subclass (only where Harbor is installed: `uv sync --extra run`) ---------------
 
 def test_harbor_agent_options_and_settings(tmp_path):
@@ -199,6 +318,10 @@ def test_harbor_agent_options_and_settings(tmp_path):
     assert set(a.config_source["hooks"]) == {"SessionStart", "PostToolUse", "PreToolUse", "Stop"}
     with pytest.raises(ValueError, match="av_version"):
         ClaudeCodeAv(logs_dir=tmp_path, model_name="anthropic/deepseek-flash", av_version="release/9.9.9")
+    assert a.options.av_version == "release/0.0.4"
+    with pytest.raises(ValueError, match="only release/0.0.4"):  # a 0.0.2 command line is refused, not run on 0.0.4
+        ClaudeCodeAv(logs_dir=tmp_path, model_name="anthropic/claude-haiku-5-5", av_version="release/0.0.2")
+    assert _commands(a.config_source)["PostToolUse"] == PINNED["PostToolUse"]
 
 
 def test_finish_against_a_stub_daemon(tmp_path, monkeypatch):

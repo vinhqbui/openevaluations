@@ -24,12 +24,14 @@ Claude Haiku 5.5 (`claude-haiku-5-5`, Anthropic's API) since 2026-11-20, each CL
 | Leg | CLI | Harbor agent |
 |---|---|---|
 | `claude-code-cold` | Claude Code | `claude-code` |
-| `claude-code-av` | Claude Code on Scholion `av` (the av hooks and daemon) | `oe_agents.claude_code_av:ClaudeCodeAv` |
+| `claude-code-av` | Claude Code on Margincode `av` (the av hooks and daemon) | `oe_agents.claude_code_av:ClaudeCodeAv` |
 | `opencode-cold` | OpenCode | `opencode` |
 | `goose-cold` | Block's goose | `goose` |
 
 The Haiku 5.5 rows are a new series (amendment of 2026-11-20 in `docs/PREREG-tracker-av.md`);
-the report of its first run is `docs/results/2026-11-20-tracker-haiku.md`.
+the report of its first run is `docs/results/2026-11-20-tracker-haiku.md`, and that of the
+second, with the av arm on Margincode 0.0.4, is
+`docs/results/2026-11-21-tracker-haiku-margincode-0.0.4.md`.
 Until then the tracker ran on DeepSeek Flash, with Codex CLI as the fourth leg
 (`oe_agents.codex_deepseek:CodexDeepSeek`); those rows are a different model and are never pooled
 with the new ones. Codex is not a leg on Haiku: it speaks only OpenAI's Responses API. Gemini CLI

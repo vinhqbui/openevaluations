@@ -279,3 +279,68 @@ def test_tracker_series_never_join_runs_of_different_harnesses(tmp_path):
     assert sorted(s["runner"] for s in series) == ["harbor", "scholion-bench"]
     assert all(len(s["arms"]["av"]) == 1 for s in series)
     assert len({s["key"] for s in series}) == 2
+
+
+def leg(tmp_path, name, day, arm, release=None, kwarg=None, n=3, reward=None):
+    """One imported leg on UTC day `day`, its trial names unique to `name`."""
+    job = fake_job(tmp_path / name, n=n)
+    for i, res in enumerate(sorted(job.glob("*/result.json"))):
+        r = json.loads(res.read_text())
+        r["trial_name"] += f"-{name}"
+        r["started_at"] = f"{day}T05:0{i % 10}:00Z"
+        r["agent_execution"] = {"started_at": f"{day}T05:0{i % 10}:00Z", "finished_at": f"{day}T05:0{i % 10}:30Z"}
+        if reward is not None:
+            r["verifier_result"] = {"rewards": {"reward": reward}}
+        res.write_text(json.dumps(r))
+    env = json.loads((job / "oe-env.json").read_text())
+    env.update(scholion_rev=release, agent_kwargs={"av_version": kwarg} if kwarg else {})
+    (job / "oe-env.json").write_text(json.dumps(env))
+    return import_job(job, tmp_path / "runs", arm=arm)
+
+
+def _tracker(tmp_path):
+    site.build(tmp_path / "runs", tmp_path / "data")
+    (sr,) = json.loads((tmp_path / "data" / "tracker.json").read_text())["series"]
+    return sr
+
+
+def test_an_av_point_names_its_margincode_release_and_a_cold_point_names_none(tmp_path):
+    leg(tmp_path, "c", "2026-11-20", "cold")
+    leg(tmp_path, "a", "2026-11-20", "av", release="release/0.0.2")
+    leg(tmp_path, "b", "2026-11-28", "av", kwarg="release/0.0.4")  # no scholion_rev: the agent's kwarg
+    sr = _tracker(tmp_path)
+    assert [p.get("av_release") for p in sr["arms"]["av"]] == ["0.0.2", "0.0.4"]
+    assert "av_release" not in sr["arms"]["cold"][0]
+
+
+def test_an_av_revision_that_is_not_a_release_names_no_release(tmp_path):
+    leg(tmp_path, "a", "2026-10-27", "av", release="0a08e6e")  # scholion-bench rows carry a commit
+    assert "av_release" not in _tracker(tmp_path)["arms"]["av"][0]
+
+
+def test_each_av_leg_pairs_with_its_own_days_cold_leg(tmp_path):
+    c1 = runfile.read(leg(tmp_path, "c1", "2026-11-20", "cold"))[0]["id"]
+    leg(tmp_path, "a1", "2026-11-20", "av", release="release/0.0.2")
+    c2 = runfile.read(leg(tmp_path, "c2", "2026-11-28", "cold"))[0]["id"]
+    leg(tmp_path, "a2", "2026-11-28", "av", release="release/0.0.4")
+    sr = _tracker(tmp_path)
+    assert [(p["av_release"], p["vs_cold"]["cold_run_id"]) for p in sr["arms"]["av"]] == [("0.0.2", c1), ("0.0.4", c2)]
+
+
+def test_detect_pools_av_runs_per_release_and_says_when_a_release_has_no_baseline(tmp_path, capsys):
+    runs = tmp_path / "runs"
+    for i, day in enumerate(("2026-11-04", "2026-11-11")):
+        leg(tmp_path, f"old{i}", day, "av", release="release/0.0.2", n=12, reward=1)
+    first = leg(tmp_path, "new0", "2026-11-20", "av", release="release/0.0.4", n=12, reward=0)
+    second = leg(tmp_path, "new1", "2026-11-27", "av", release="release/0.0.4", n=12, reward=0)
+    cold = [leg(tmp_path, f"cold{i}", day, "cold", n=12, reward=r)
+            for i, (day, r) in enumerate((("2026-11-04", 1), ("2026-11-20", 0)))]
+    assert main(["detect", str(runs)]) == 0
+    out = capsys.readouterr().out
+    first_id = runfile.read(first)[0]["id"]
+    # against the 0.0.2 runs it would read as degraded; on its own release it has no baseline
+    assert runfile.read(first)[0]["flags"] == []
+    assert f"{first_id}: first run of Margincode release 0.0.4 in its series, no baseline" in out
+    assert runfile.read(second)[0]["flags"] == []  # its baseline is the first 0.0.4 run, as bad as it
+    assert runfile.read(cold[1])[0]["flags"] == ["degraded"]  # the cold arm pools as before
+    assert out.count("no baseline") == 1

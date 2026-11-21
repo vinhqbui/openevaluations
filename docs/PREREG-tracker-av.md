@@ -101,3 +101,59 @@ otherwise.
     ranking (n = 12 < 30 per cell).
   - Nothing is compared with the DeepSeek Flash rows of 2026-11-04 or 2026-11-10. They may be
     shown side by side in the report, labelled as a different model.
+
+## Amendment 2026-11-21: the av arm on Margincode release 0.0.4
+
+Written and pushed before any trial with release 0.0.4. Scholion was renamed Margincode on
+2026-11-12, and release 0.0.4, the first under the new name, was published on 2026-11-21 from
+`margincode-dev/open-margincode`. From this amendment on the av arm runs that release. Everything
+in the amendment of 2026-11-20 that is not named here stays as it is: the model, the four legs,
+their flags, `-k 3 -n 4 -r 1`, the smoke trial before each leg, the budget and its caps, the rule
+on failures, and what is compared.
+
+- **Release:** `release/0.0.4`, archive `margincode-v0.0.4-x86_64-unknown-linux-gnu.tar.gz`,
+  sha256 `f59a2da7f75384530fc6d59312b2de284b4afc2e281a9b5ad624f252f65bfe0f`, pinned in
+  `agents/oe_agents/av_settings.py`; the av leg passes `--ak av_version=release/0.0.4`. The
+  archive was downloaded fresh and matched that sum on 2026-11-21, before this was pushed.
+- **The arm is set up as before.** A daemon with its bundled Postgres per trial as the agent
+  user, `/app` imported as repo `app`, the task started over HTTP, `/app` made the task's
+  workspace after the byte-for-byte check, and Claude Code run with the same four hooks and
+  `AV_HOOK_WAIT_SECS=0`; no MCP server, no semantic index. The hook commands are the same strings
+  as on 2026-11-20 (a test pins them). What changed in the harness is names only: the binaries
+  are `av`, `margincode` and `margincode-daemon`, and the daemon's directory is `~/.margincode`.
+- **What the release changes in what the agent is told.** This is the product being measured,
+  not the harness:
+  - after the pack, the SessionStart hook prints one line that asks for the records before the
+    final message ("av: before your final message, record why you changed code in one call:
+    ...");
+  - `av record` cuts a summary over 200 characters to a headline, keeps the whole text in the
+    body and stores the record, where 0.0.2 refused it;
+  - the Stop hook's request names the changed symbols that no record explains, gives the
+    200-character limit and asks the agent to end its turn in a line without a recap. It still
+    blocks one stop when a changed symbol has no record, and that turn still counts.
+- **Validity.** The four conditions stay. Because the SessionStart hook now prints lines after
+  the pack, its output is never empty, so "its pack was empty" is judged on the part of that
+  output before those lines (before the first line that starts with `av: `). A 0.0.2 log
+  evaluates as it did.
+- **Checked before the first trial, with no model call.** On 2026-11-21 the arm's install,
+  setup, task start and the four hook commands were run on this archive in the
+  `compound-discounts` task image, with Claude Code's stdin written by hand. The log
+  directory it left evaluates as valid. The smoke trial is the first run with Claude Code's
+  own stdin.
+- **Pools.** Sessions on release 0.0.4 are a new cell. They are never pooled with, or tested
+  against, sessions on release 0.0.2, as the decision rule already says. `oe detect` now keys the
+  av arm on the release, and the tracker page names the release on each av row.
+- **CLI versions** are the latest when the run starts, as the base text says, read once at
+  06:26 UTC before the first leg and pinned with `--ak version=`: Claude Code `2.1.330` (npm,
+  both Claude Code legs), OpenCode `1.19.6` (npm `opencode-ai`), goose `v1.60.2` (its latest
+  GitHub release). Harbor `0.25.0`. Claude Code was `2.1.329` on 2026-11-20, so a row of this run
+  and a row of that day differ in the CLI's version as well as in the release.
+- **Order.** Cold, av, OpenCode, goose, one at a time, all on one UTC day. The av leg starts only
+  if its smoke session is valid under the four conditions; if it is not, no av leg runs and the
+  report says why.
+- **Publication.** The rows of this run are imported and published whatever they show. That is
+  decided here, before the first trial.
+- **What is compared.** `av` on release 0.0.4 against `cold` on the same day (`vs_cold`), 12
+  sessions per arm: descriptive, no claim. The rows of 2026-11-20 (release 0.0.2) and of this run
+  may be shown side by side, each labelled with its release. A difference between the two runs is
+  not a tested effect: they are different days, 12 sessions each.

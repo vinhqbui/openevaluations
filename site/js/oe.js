@@ -24,6 +24,13 @@
   // A tracker series is one dataset, agent CLI, model and harness; the model leads its title so
   // two models' charts never carry the same name.
   OE.seriesTitle = function (s, arm) { return s.model + " · " + s.dataset + " · " + s.agent + " " + arm + " · " + s.runner; };
+  // An av row names the Margincode release it was measured with; a pool never spans two releases.
+  OE.armLabel = function (arm, p) { return p && p.av_release ? arm + " · Margincode " + p.av_release : arm; };
+  OE.releases = function (pts) {
+    var seen = [];
+    pts.forEach(function (p) { if (p.av_release && seen.indexOf(p.av_release) < 0) seen.push(p.av_release); });
+    return seen.length ? "Margincode " + seen.join(", ") : "";
+  };
 
   // Items grouped by model: [{model, items}], the model with the most recent run first.
   OE.byModel = function (items, model, date) {
