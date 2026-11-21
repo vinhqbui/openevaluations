@@ -1,6 +1,6 @@
 # openevaluations
 
-> Open, longitudinal evaluations of coding-agent CLIs (Claude Code, Codex and others). The same small task sets are run on a schedule against each new CLI version. Every session's raw row is published in an open JSON Lines format (oe/1). There is also a runnable benchmark for handing a task from one agent to another. Code Apache-2.0, data CC BY 4.0.
+> Open, longitudinal evaluations of coding-agent CLIs (Claude Code, OpenCode and goose; Codex in the earlier DeepSeek series). The same small task sets are run by hand against new CLI versions. Every session's raw row is published in an open JSON Lines format (oe/1). There is also a runnable benchmark for handing a task from one agent to another. Code Apache-2.0, data CC BY 4.0.
 
 Source: https://github.com/vinhqbui/openevaluations
 Status: early. The data so far is 18 runs of Claude Code recorded by Scholion's benchmark harness, and Harbor runs of the tracker on tallyho-cold (3 attempts at each of 4 tasks per leg) in two series, one per model, plus a pilot of easy and hard tiers on DeepSeek Flash and Pro (2026-11-10, a separate pre-registered test). Runs are started by hand; the weekly schedule is off.
@@ -38,7 +38,7 @@ Status: early. The data so far is 18 runs of Claude Code recorded by Scholion's 
 
 ## Datasets
 
-- tallyho-cold: 4 one-file bugs in a 25-file Python library; the weekly tracker set.
+- tallyho-cold: 4 one-file bugs in a 25-file Python library; the tracker set.
 - handoff: relay family (10 tasks, a curated predecessor) and interrupt family (6 tasks, a real predecessor cut off halfway); channels repo-only, trace, notes, records.
 - scholion-relay: the relay family as recorded by Scholion's harness before the Harbor port (arms cold, baseline, notes, av).
 - scholion-cold: 4 injected bugs in a 20k-line Rust codebase; manual runs only.
