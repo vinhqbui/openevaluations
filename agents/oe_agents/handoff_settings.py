@@ -1,7 +1,7 @@
 """Predecessor A of the handoff benchmark: its instruction and the freeze step. No Harbor import.
 
-A is the Scholion arm (ClaudeCodeAv), so one run leaves all four channels: the working tree, its
-trajectory (Harbor writes it), its NOTES.md and its Scholion records (av_container.py finish). It
+A is the Margincode arm (ClaudeCodeAv), so one run leaves all four channels: the working tree, its
+trajectory (Harbor writes it), its NOTES.md and its Margincode records (av_container.py finish). It
 is cut by Claude Code's own `--max-turns`, the turn count pre-registered in
 docs/PREREG-handoff-interrupt.md, and the tree is tarred whatever state it was cut in.
 """

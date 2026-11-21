@@ -1,10 +1,10 @@
-"""Claude Code on the Scholion framework, as a Harbor agent: the `av` arm of the tracker.
+"""Claude Code on the Margincode framework, as a Harbor agent: the `av` arm of the tracker.
 
     PYTHONPATH=agents harbor run -a oe_agents.claude_code_av:ClaudeCodeAv -m anthropic/<model> ...
 
 Per trial, after Harbor's own Claude Code install:
-1. install: the pinned Scholion release (av, scholion, scholion-daemon), downloaded once on the
-   host, sha256-checked and uploaded, so trials neither hit GitHub nor drift.
+1. install: the pinned Margincode release (av, margincode, margincode-daemon), downloaded once on
+   the host, sha256-checked and uploaded, so trials neither hit GitHub nor drift.
 2. setup: `av up` (the daemon with its bundled Postgres, as the non-root agent user, which
    Postgres requires) and `av repo add app /app`.
 3. run: start the task over HTTP (av_container.py start), check the jj workspace holds /app byte
@@ -27,15 +27,17 @@ from harbor.models.agent.context import AgentContext
 from pydantic import Field
 
 from oe_agents.av_settings import (
-    AV_ENV, AV_RELEASE, LOG, TARBALL, evaluate, glibc_ok, hook_settings, merge_settings, release_tarball,
+    AV_ENV, AV_RELEASE, LOG, daemon_log_copy, evaluate, glibc_ok, hook_settings, install_command, merge_settings,
+    release_tarball,
 )
 
 HELPER = "/installed-agent/oe_av.py"
+UPLOAD = "/tmp/margincode.tar.gz"
 PATH = 'export PATH="$HOME/.local/bin:$PATH"'
 
 
 class ClaudeCodeAvOptions(ClaudeCodeOptions):
-    av_version: str = Field(default=AV_RELEASE, description="Scholion release; only the pinned one is accepted.")
+    av_version: str = Field(default=AV_RELEASE, description="Margincode release; only the pinned one is accepted.")
     av_hook_budget: int = Field(default=800, description="Token budget of the SessionStart pack.")
     av_jit_hooks: bool = Field(default=True, description="Also the PreToolUse and Stop hooks.")
 
@@ -66,14 +68,11 @@ class ClaudeCodeAv(ClaudeCode):
         if uid.strip() == "0":
             raise RuntimeError("the av arm needs a non-root agent user ([agent] user in task.toml): Postgres refuses root")
         if not glibc_ok(ldd):
-            raise RuntimeError(f"the Scholion release needs glibc >= 2.39; the image has: {ldd!r}")
-        await environment.upload_file(release_tarball(), "/tmp/scholion.tar.gz")
+            raise RuntimeError(f"the Margincode release needs glibc >= 2.39; the image has: {ldd!r}")
+        await environment.upload_file(release_tarball(), UPLOAD)
         await environment.upload_file(Path(__file__).with_name("av_container.py"), HELPER)
-        await self.exec_as_root(environment, command=f"chmod a+r /tmp/scholion.tar.gz {HELPER}")
-        out = await self.exec_as_agent(environment, command=(
-            "set -euo pipefail; mkdir -p ~/.local/bin /tmp/sch && tar -xzf /tmp/scholion.tar.gz -C /tmp/sch && "
-            f"install -m 0755 /tmp/sch/{TARBALL}/av /tmp/sch/{TARBALL}/scholion /tmp/sch/{TARBALL}/scholion-daemon "
-            "~/.local/bin/ && rm -rf /tmp/sch && ~/.local/bin/av --version"))
+        await self.exec_as_root(environment, command=f"chmod a+r {UPLOAD} {HELPER}")
+        out = await self.exec_as_agent(environment, command=install_command(UPLOAD))
         self._av_version = (out.stdout or "").strip().splitlines()[-1] if out.stdout else None
 
     @override
@@ -85,7 +84,7 @@ class ClaudeCodeAv(ClaudeCode):
                 f"av --version > {LOG}/av-version.txt && T0=$(date +%s) && "
                 f"av up && av repo add app /app && echo $(( $(date +%s) - T0 )) > {LOG}/up-secs"))
         except Exception:
-            await self._quiet(environment, f"cp ~/.scholion/daemon.log {LOG}/ 2>/dev/null; true")
+            await self._quiet(environment, daemon_log_copy())
             raise
 
     @override
@@ -107,8 +106,8 @@ class ClaudeCodeAv(ClaudeCode):
         try:
             await self._run_claude(instruction, environment, context)
         finally:
-            await self._quiet(environment, f"python3 {HELPER} finish --out {LOG}; "
-                              f"cp ~/.scholion/daemon.log {LOG}/ 2>/dev/null; true", timeout_sec=120)
+            await self._quiet(environment, f"python3 {HELPER} finish --out {LOG}; {daemon_log_copy()}",
+                              timeout_sec=120)
 
     async def _prepare_workspace(self, environment: BaseEnvironment, ws: str) -> None:
         """Between the task start and the swap of /app: nothing here (the handoff successor fills it)."""
@@ -127,7 +126,7 @@ class ClaudeCodeAv(ClaudeCode):
     @override
     def populate_context_post_run(self, context: AgentContext) -> None:
         super().populate_context_post_run(context)
-        meta = evaluate(self.logs_dir / "scholion")
+        meta = evaluate(self.logs_dir / Path(LOG).name)
         meta["av_version"] = meta.get("av_version") or self._av_version
         context.metadata = {**(context.metadata or {}), **meta}
 

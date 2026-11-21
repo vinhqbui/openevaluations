@@ -1,8 +1,9 @@
-"""The Scholion arm's fixed pieces: the pinned release, the Claude Code hooks, and session validity.
+"""The Margincode arm's fixed pieces: the pinned release, the Claude Code hooks, and session validity.
 
-No Harbor import here, so CI tests this without `--extra run`. The hooks mirror scholion-bench's
-`settings()` (crates/scholion-bench/src/runner.rs) with `--jit-hooks`, the setup Scholion's E4
-relay runs used: SessionStart, PostToolUse, PreToolUse and Stop.
+No Harbor import here, so CI tests this without `--extra run`. The hooks mirror margincode-bench's
+`settings()` (crates/margincode-bench/src/runner.rs) with `--jit-hooks`, the setup the E4 relay
+runs used: SessionStart, PostToolUse, PreToolUse and Stop. Margincode was called Scholion until
+2026-11-12; the log directory keeps that name because published runs and tools/oe/handoff.py read it.
 """
 
 import copy
@@ -14,14 +15,16 @@ import urllib.request
 import uuid
 from pathlib import Path
 
-AV_RELEASE = "release/0.0.2"
-TARBALL = "scholion-v0.0.2-x86_64-unknown-linux-gnu"
-SHA256 = "68ab867aac926a37bc775e37645a4010a4b626d6c53465092c60ffbb5d36c2c0"
-URL = f"https://github.com/vinhqbui/scholion/releases/download/{AV_RELEASE}/{TARBALL}.tar.gz"
-MIN_GLIBC = (2, 39)  # what the release binaries link against
+AV_RELEASE = "release/0.0.4"
+TARBALL = "margincode-v0.0.4-x86_64-unknown-linux-gnu"
+SHA256_UNSET = "0" * 64
+SHA256 = SHA256_UNSET  # not pinned yet: set it from the release's published {TARBALL}.tar.gz.sha256
+URL = f"https://github.com/margincode-dev/open-margincode/releases/download/{AV_RELEASE}/{TARBALL}.tar.gz"
+MIN_GLIBC = (2, 39)  # what the release binaries link against (built on ubuntu-latest)
+BINS = ("av", "margincode", "margincode-daemon")  # `av up` looks for margincode-daemon next to av
 
 AV_URL = "http://127.0.0.1:7420"
-AGENT = "claude-code"  # scholion-bench's agent name; the task owner, so the hooks may write
+AGENT = "claude-code"  # margincode-bench's agent name; the task owner, so the hooks may write
 LOG = "/logs/agent/scholion"  # inside /logs/agent, which Harbor copies back to <trial>/agent
 AV_BIN = '"$HOME/.local/bin/av"'
 # Set on every hook command and on Claude's own environment (its Bash tool can run `av record`).
@@ -35,7 +38,7 @@ def _cmd(name, args=""):
     run = f"{prefix} {AV_BIN} hook {name}{args} 2>>{LOG}/hooks.err"
     if name == "session-start":
         run += f" | tee -a {LOG}/session-start.md"
-    # The count is written before av runs, as scholion-bench does; `exit 0` because a failing hook
+    # The count is written before av runs, as margincode-bench does; `exit 0` because a failing hook
     # must not change what the agent does. Failures are judged afterwards from hooks.err.
     return f"echo {name} >> {LOG}/hook-count; {run}; exit 0"
 
@@ -57,6 +60,18 @@ def hook_settings(budget=800, jit=True):
     return {"hooks": hooks}
 
 
+def install_command(tarball):
+    """Unpack the uploaded release archive and install its binaries into ~/.local/bin."""
+    bins = " ".join(f"/tmp/mc/{TARBALL}/{b}" for b in BINS)
+    return (f"set -euo pipefail; mkdir -p ~/.local/bin /tmp/mc && tar -xzf {tarball} -C /tmp/mc && "
+            f"install -m 0755 {bins} ~/.local/bin/ && rm -rf /tmp/mc && ~/.local/bin/av --version")
+
+
+def daemon_log_copy():
+    """Keep the daemon log: `av up` writes it into its home, ~/.margincode on a fresh machine."""
+    return f"cp ~/.margincode/daemon.log {LOG}/ 2>/dev/null; true"
+
+
 def merge_settings(user, ours):
     """User settings with our hooks appended per event; neither input is changed."""
     merged = copy.deepcopy(user or {})
@@ -73,14 +88,14 @@ def _read(p):
         return None
 
 
-def evaluate(scholion_dir):
+def evaluate(log_dir):
     """Per-session av metadata, plus `oe_invalid` when the arm did not really run.
 
     A session is invalid when no SessionStart hook fired (no pack reached the agent), the pack was
-    empty, any hook wrote an error, or the final checkpoint failed. scholion-bench only checks the
+    empty, any hook wrote an error, or the final checkpoint failed. margincode-bench only checks the
     first; the count alone is written before `av` runs, so it cannot show that av answered.
     """
-    d = Path(scholion_dir)
+    d = Path(log_dir)
     counts = {}
     for line in (_read(d / "hook-count") or "").splitlines():
         if line.strip():
@@ -126,8 +141,15 @@ def _urlretrieve(url, dest):
             f.write(chunk)
 
 
+class NotPinned(RuntimeError):
+    pass
+
+
 def release_tarball(download=None):
     """The pinned release tarball on the host, downloaded once into $OE_CACHE and sha256-checked."""
+    if SHA256 == SHA256_UNSET:
+        raise NotPinned(f"no sha256 is pinned for {AV_RELEASE}: set SHA256 in agents/oe_agents/av_settings.py "
+                        f"from the release's published {TARBALL}.tar.gz.sha256")
     cache = Path(os.environ.get("OE_CACHE") or Path.home() / ".cache" / "openevaluations")
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / f"{TARBALL}.tar.gz"
@@ -156,13 +178,17 @@ def main(argv=None):
         return 2
     try:
         print(release_tarball())
+    except NotPinned as e:
+        print(f"::error::Margincode {AV_RELEASE}: {e}. Nothing was downloaded and no trial was started.",
+              file=sys.stderr)
+        return 1
     except RuntimeError as e:
-        print(f"::error::Scholion {AV_RELEASE} ({URL}) does not match the sha256 pinned in "
+        print(f"::error::Margincode {AV_RELEASE} ({URL}) does not match the sha256 pinned in "
               f"agents/oe_agents/av_settings.py ({SHA256}). The release asset changed or the pin is "
               f"wrong; no trial was started. {e}", file=sys.stderr)
         return 1
     except OSError as e:  # URLError, HTTPError and timeouts are OSErrors
-        print(f"::error::could not download Scholion {AV_RELEASE} ({URL}); no trial was started. {e}",
+        print(f"::error::could not download Margincode {AV_RELEASE} ({URL}); no trial was started. {e}",
               file=sys.stderr)
         return 1
     return 0

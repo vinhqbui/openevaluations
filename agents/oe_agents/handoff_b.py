@@ -1,4 +1,4 @@
-"""Successor B of the handoff benchmark's records channel: Claude Code on Scholion, given A's task.
+"""Successor B of the handoff benchmark's records channel: Claude Code on Margincode, given A's task.
 
     PYTHONPATH=agents harbor run -p datasets/handoff-<family> -i "*--records" \
         -a oe_agents.handoff_b:HandoffBAv -m anthropic/<model> --ak max_turns=40 ...
@@ -9,7 +9,7 @@ uncommitted) plus /handoff/a.patch and /handoff/records.json. This is the tracke
 (av_container.py adopt): the task's workspace gets /app's .git and A's patch, so it equals /app
 and `git diff` shows A's work as in every channel; A's records (all but its intent) are posted to
 the task as agent-a's; and the task is checkpointed. /handoff is then deleted, so B reaches A's
-records only through Scholion: the SessionStart pack and the pre-read hook.
+records only through Margincode: the SessionStart pack and the pre-read hook.
 """
 
 import shlex

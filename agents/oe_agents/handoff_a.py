@@ -3,7 +3,7 @@
     PYTHONPATH=agents harbor run -p datasets/tallyho-cold -a oe_agents.handoff_a:HandoffA \
         -m anthropic/deepseek-flash -k 1 --ak max_turns=<cut> [--ak wrapup_turns=<n>] ...
 
-Claude Code on the Scholion framework (ClaudeCodeAv) with these changes: the instruction asks it
+Claude Code on the Margincode framework (ClaudeCodeAv) with these changes: the instruction asks it
 to keep NOTES.md as it goes, and after the run, cut or not, /app is tarred into
 /logs/agent/freeze/workspace.tar.gz. `oe freeze <job> --cut-turns <cut>` then writes one frozen A
 per task, and tools/gen/handoff.py builds the channel tasks from it. The cut is Claude Code's own
