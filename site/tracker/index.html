@@ -20,8 +20,9 @@
 <main class="wrap">
 <header class="page">
   <h1>The <em>tracker</em></h1>
-  <p class="lede">One chart per dataset, agent, model and arm. Each point is one run, in date order, labelled with the agent CLI's own version. Hover or focus a chart and use the arrow keys for the numbers.</p>
+  <p class="lede">One chart per series: a dataset, agent CLI, model and harness, and an arm. Each point is one run, in date order, labelled with the agent CLI's own version. Hover or focus a chart and use the arrow keys for the numbers.</p>
 </header>
+<div class="honest"><b>Each model is its own series.</b> Tracker rows of different models are not comparable: a lower cost or a higher pass rate under another model says nothing about a CLI release. Charts and tables are grouped by model, the model leads every chart title, and nothing on this page pools, ranks or draws two models as one line. Since 2026-11-20 the tracker's legs (started by hand; the weekly schedule is off) run on <b>claude-haiku-5-5</b>: Claude Code cold, Claude Code on Scholion (<b>av</b>), OpenCode and goose. Before that it ran on <b>deepseek-flash</b>, with Codex in place of goose. The 2026-11-10 runs on deepseek-flash and deepseek-v4-pro (<code>tallyho-cold</code>, <code>-more</code>, <code>-hard</code>) are the tiers pilot below, not tracker legs. Within one model, the paired comparison is <b>av</b> against <b>cold</b> on Claude Code, same day; across CLIs the rows are a tracker, not a ranking (12 sessions a cell, below the 30 needed for any claim).</div>
 <div class="filters" role="group" aria-label="Chart controls">
   <label for="metric">Metric</label>
   <select id="metric">
@@ -34,10 +35,12 @@
   <label for="dataset">Dataset</label>
   <select id="dataset"><option value="">All</option></select>
 </div>
-<div class="grid-charts" id="charts" aria-live="polite"></div>
-<details class="tableview" open><summary>Table view</summary><div id="table"></div></details>
+<div id="charts" aria-live="polite"></div>
+<details class="tableview" open><summary>Table view, one table per model</summary><div id="table"></div></details>
+<p class="small">Note on OpenCode's tokens: Harbor's OpenCode adapter leaves cache writes out of input and reasoning tokens out of output, though both are billed. Since 2026-11-20 the importer adds them back, so OpenCode's token columns count what the other CLIs' count. The published 2026-11-04 OpenCode rows (deepseek-flash) were imported before that and are not rewritten: their output and tokens billed leave out 21,053 reasoning tokens over 12 sessions (114 to 8,075 a session; median tokens billed 7,267.5 instead of 8,413.5). They had no cache writes to leave out. Their cost is OpenCode's own figure and is complete.</p>
+<p class="small">Note, 21 November 2026, added after seeing the results (exploratory, not pre-registered): in the 2026-11-20 <b>av</b> run on claude-haiku-5-5, every session was stopped once by Scholion's Stop hook after its final answer and asked to record what it had changed, and its first <code>av record</code> was refused because the summary was longer than a limit that release's hook text does not state. The pre-registration counts that step, so it is in the row. Scholion (called Margincode since 2026-11-12) now asks for the record before the final answer and no longer refuses a long summary on its main branch (<a href="https://github.com/margincode-dev/open-margincode/pull/93">open-margincode #93</a>). No release has that change, and the tracker pins a release, so the row changes only when the pin does. <a href="https://github.com/vinhqbui/openevaluations/blob/main/docs/results/2026-11-20-tracker-haiku.md">Report of the run</a>.</p>
 <p class="small">Note, 10 November 2026: <a href="/notes/tiers-pilot/">our hard tier did not separate a cheap model from a costly one</a> (pilot, 40 trials).</p>
-<div class="honest small">Flags compare a run with the four before it in the same series: <b>degraded</b> when the run's Wilson upper bound is more than 15 points under the baseline rate, <b>tool calls up</b> when median tool calls exceed 1.5× the baseline's, <b>recovered</b> when a flagged series returns inside both. Runs with fewer than 12 valid sessions are marked <b>low n</b> and get no other flag. The <b>av</b> arm is Claude Code on the <a href="/scholion/">Scholion</a> framework (hooks, a daemon and a workspace per task); its Δ columns are paired by task against the same day's <b>cold</b> run, with task-stratified 95% bootstrap intervals. No cell below 30 sessions carries a significance claim.</div>
+<div class="honest small">Flags compare a run with the four before it of the same dataset, agent, model and arm: <b>degraded</b> when the run's Wilson upper bound is more than 15 points under the baseline rate, <b>tool calls up</b> when median tool calls exceed 1.5× the baseline's, <b>recovered</b> when a flagged series returns inside both. Runs with fewer than 12 valid sessions are marked <b>low n</b> and get no other flag. The <b>av</b> arm is Claude Code on the <a href="/scholion/">Scholion</a> framework (hooks, a daemon and a workspace per task); its Δ columns are paired by task against the same day's <b>cold</b> run, with task-stratified 95% bootstrap intervals. No cell below 30 sessions carries a significance claim.</div>
 </main>
 <footer><div class="wrap">Data: <a href="/data/tracker.json">tracker.json</a> · raw rows on <a href="/runs/">Runs</a> · Code Apache-2.0, data CC BY 4.0 · <a href="/ledger/">Ledger</a> · <a href="https://scholion.openevaluations.si">Scholion</a></div></footer>
 <script src="/js/oe.js"></script>
@@ -63,44 +66,55 @@ OE.load("tracker").then(function (data) {
   function render() {
     var m = METRICS[ms.value], key = ms.value;
     var charts = document.getElementById("charts"); charts.textContent = "";
-    var rows = [];
-    data.series.forEach(function (s) {
-      if (ds.value && s.dataset !== ds.value) return;
-      Object.keys(s.arms).sort().forEach(function (arm) {
-        var pts = s.arms[arm];
-        charts.appendChild(OE.lineChart({
-          title: s.dataset + " · " + arm,
-          sub: s.agent + " · " + s.model + " · " + pts.length + " run" + (pts.length > 1 ? "s" : ""),
-          yMin: m.min, yMax: m.max, yFormat: m.f,
-          series: [{ name: arm, color: "var(--series-1)", points: pts.map(function (p) {
-            return { label: OE.date(p.date).slice(5) + " · v" + (p.agent_version || "?"), y: p[key],
-              lo: m.band ? p.wilson[0] : null, hi: m.band ? p.wilson[1] : null,
-              rows: [["run", p.run_id], ["accepted", p.accepted + "/" + p.n + " " + OE.ci(p.wilson[0], p.wilson[1], OE.pct)],
-                     ["cost/accepted", OE.usd(p.cost_per_accepted) + (p.cost_estimated ? " (estimated)" : "")],
-                     ["vs cold, cost", vs(p, "cost")], ["vs cold, turns", vs(p, "turns")],
-                     ["flags", (p.flags || []).join(", ") || "none"]].filter(function (r) { return r[1] !== null; }) };
-          }) }]
-        }));
-        pts.forEach(function (p) { rows.push({ s: s, arm: arm, p: p }); });
-      });
-    });
     var t = document.getElementById("table"); t.textContent = "";
-    t.appendChild(OE.table([
-      { label: "date", value: function (r) { return OE.date(r.p.date); } },
-      { label: "dataset", value: function (r) { return r.s.dataset; } },
-      { label: "agent", value: function (r) { return r.s.agent + " " + (r.p.agent_version || ""); } },
-      { label: "model", value: function (r) { return r.s.model; } },
-      { label: "arm", value: function (r) { return r.arm; } },
-      { label: "accepted", num: true, value: function (r) { return r.p.accepted + "/" + r.p.n; } },
-      { label: "Wilson 95%", num: true, value: function (r) { return OE.ci(r.p.wilson[0], r.p.wilson[1], OE.pct); } },
-      { label: "cost/accepted", num: true, value: function (r) { return OE.usd(r.p.cost_per_accepted); } },
-      { label: "turns", num: true, value: function (r) { return OE.num(r.p.median_turns); } },
-      { label: "tool calls", num: true, value: function (r) { return OE.num(r.p.median_tool_calls); } },
-      { label: "Δ cost vs cold", num: true, value: function (r) { return vs(r.p, "cost") || "–"; } },
-      { label: "Δ turns vs cold", num: true, value: function (r) { return vs(r.p, "turns") || "–"; } },
-      { label: "flags", value: function (r) { return OE.flags(r.p.flags); } },
-      { label: "run", value: function (r) { var a = OE.el("a", { href: "/data/runs/" + r.p.run_id + ".jsonl" }, r.p.run_id); return a; } }
-    ], rows.sort(function (a, b) { return a.p.date < b.p.date ? 1 : -1; })));
+    var shown = data.series.filter(function (s) { return !ds.value || s.dataset === ds.value; });
+    OE.byModel(shown, function (s) { return s.model; }, function (s) {
+      var last = "";
+      Object.keys(s.arms).forEach(function (a) { s.arms[a].forEach(function (p) { if (p.date > last) last = p.date; }); });
+      return last;
+    }).forEach(function (g) {
+      charts.appendChild(OE.el("h2", null, "Model: " + g.model));
+      var grid = OE.el("div", { class: "grid-charts" });
+      charts.appendChild(grid);
+      var rows = [];
+      g.items.sort(function (a, b) { return a.runner + "|" + a.key < b.runner + "|" + b.key ? -1 : 1; }).forEach(function (s) {
+        Object.keys(s.arms).sort().forEach(function (arm) {
+          var pts = s.arms[arm];
+          grid.appendChild(OE.lineChart({
+            title: OE.seriesTitle(s, arm),
+            sub: pts.length + " run" + (pts.length > 1 ? "s" : "") + " on the " + s.runner + " harness",
+            yMin: m.min, yMax: m.max, yFormat: m.f,
+            series: [{ name: arm, color: "var(--series-1)", points: pts.map(function (p) {
+              return { label: OE.date(p.date).slice(5) + " · " + OE.version(p.agent_version), y: p[key],
+                lo: m.band ? p.wilson[0] : null, hi: m.band ? p.wilson[1] : null,
+                rows: [["run", p.run_id], ["accepted", p.accepted + "/" + p.n + " " + OE.ci(p.wilson[0], p.wilson[1], OE.pct)],
+                       ["cost/accepted", OE.usd(p.cost_per_accepted) + (p.cost_estimated ? " (estimated)" : "")],
+                       ["vs cold, cost", vs(p, "cost")], ["vs cold, turns", vs(p, "turns")],
+                       ["flags", (p.flags || []).join(", ") || "none"]].filter(function (r) { return r[1] !== null; }) };
+            }) }]
+          }));
+          pts.forEach(function (p) { rows.push({ s: s, arm: arm, p: p }); });
+        });
+      });
+      t.appendChild(OE.el("h3", null, "Model: " + g.model));
+      t.appendChild(OE.table([
+        { label: "date", value: function (r) { return OE.date(r.p.date); } },
+        { label: "dataset", value: function (r) { return r.s.dataset; } },
+        { label: "agent", value: function (r) { return r.s.agent + " " + (r.p.agent_version ? OE.version(r.p.agent_version) : ""); } },
+        { label: "harness", value: function (r) { return r.s.runner; } },
+        { label: "arm", value: function (r) { return r.arm; } },
+        { label: "accepted", num: true, value: function (r) { return r.p.accepted + "/" + r.p.n; } },
+        { label: "Wilson 95%", num: true, value: function (r) { return OE.ci(r.p.wilson[0], r.p.wilson[1], OE.pct); } },
+        { label: "cost/accepted", num: true, value: function (r) { return OE.usd(r.p.cost_per_accepted); } },
+        { label: "tokens billed", num: true, value: function (r) { return METRICS.median_tokens_billed.f(r.p.median_tokens_billed); } },
+        { label: "turns", num: true, value: function (r) { return OE.num(r.p.median_turns); } },
+        { label: "tool calls", num: true, value: function (r) { return OE.num(r.p.median_tool_calls); } },
+        { label: "Δ cost vs cold", num: true, value: function (r) { return vs(r.p, "cost") || "–"; } },
+        { label: "Δ turns vs cold", num: true, value: function (r) { return vs(r.p, "turns") || "–"; } },
+        { label: "flags", value: function (r) { return OE.flags(r.p.flags); } },
+        { label: "run", value: function (r) { var a = OE.el("a", { href: "/data/runs/" + r.p.run_id + ".jsonl" }, r.p.run_id); return a; } }
+      ], rows.sort(function (a, b) { return a.p.date < b.p.date ? 1 : -1; })));
+    });
   }
   ms.addEventListener("change", render); ds.addEventListener("change", render);
   render();

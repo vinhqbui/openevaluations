@@ -29,11 +29,19 @@ On Windows also give `-o` a short root (e.g. `D:\oej`) for the av arm: its Claud
 `agent/sessions/projects/<jj-workspace slug>/`, which passes 260 characters below `jobs/` in a
 worktree, and Harbor then silently drops the trajectory and the token counts.
 
+The tracker runs on Claude Haiku 5.5 since 2026-11-20 (amendment in `docs/PREREG-tracker-av.md`,
+`.github/workflows/tracker.yml`): `ANTHROPIC_API_KEY` = the Anthropic key, `ANTHROPIC_BASE_URL`,
+`ANTHROPIC_AUTH_TOKEN` and `DEEPSEEK_API_KEY` unset, `-m anthropic/claude-haiku-5-5` for every leg
+(Claude Code cold and av, OpenCode, goose), and on Claude Code the haiku, small-fast and subagent
+aliases set to `claude-haiku-5-5`. goose's release installer installs the `stable` tag unless
+`GOOSE_VERSION` is set, so its leg passes `--ae GOOSE_VERSION=<tag>` next to `--ak version=<tag>`.
+
 The Scholion arm (`agents/oe_agents/`) needs `PYTHONPATH=<repo>/agents` for `harbor run -a
 oe_agents.claude_code_av:ClaudeCodeAv`, and `--agent-setup-timeout-multiplier 2`. Claude Code on
-DeepSeek: `ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic`, `ANTHROPIC_AUTH_TOKEN` = the
-DeepSeek key, `ANTHROPIC_API_KEY` unset, `-m anthropic/deepseek-flash`, and `--ae` the haiku,
-small-fast and subagent aliases to `deepseek-flash` (see `.github/workflows/tracker.yml`).
+DeepSeek (the tracker before 2026-11-20, and the tiers and xvendor runs):
+`ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic`, `ANTHROPIC_AUTH_TOKEN` = the DeepSeek key,
+`ANTHROPIC_API_KEY` unset, `-m anthropic/deepseek-flash`, and `--ae` the haiku, small-fast and
+subagent aliases to `deepseek-flash`.
 `agents/oe_agents/av_settings.py` pins the Scholion release by sha256; bump both together.
 Codex on DeepSeek: `-a oe_agents.codex_deepseek:CodexDeepSeek -m deepseek/deepseek-flash` (also
 `PYTHONPATH=agents`); `codex_settings.py` writes the custom provider (`wire_api = "responses"`, the

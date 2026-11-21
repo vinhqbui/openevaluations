@@ -16,16 +16,31 @@ The site's version is `site/methodology/index.html`; this file is the source of 
 
 The weekly schedule is off for now (2026-11-05); runs are started by hand.
 
-Three legs on DeepSeek Flash, `-k 3` on `tallyho-cold`: Claude Code (`cold`), Claude Code on the
-Scholion framework (`av`, `agents/oe_agents/claude_code_av.py`) and OpenCode (`cold`). Both Claude
-Code legs install the same Claude Code version, read from npm when the run starts. The `av` arm,
+Four legs on Claude Haiku 5.5 (`claude-haiku-5-5`, Anthropic's API) since 2026-11-20, `-k 3` on
+`tallyho-cold`: Claude Code (`cold`), Claude Code on the Scholion framework (`av`,
+`agents/oe_agents/claude_code_av.py`), OpenCode (`cold`) and goose (`cold`). Both Claude Code legs
+install the same Claude Code version, read from npm when the run starts. Before 2026-11-20 the
+legs ran on DeepSeek Flash, with Codex CLI in place of goose. The two models are separate series
+(a series includes the model) and are never pooled or compared. On `/tracker` a chart is also
+one harness (`harness.runner`): Scholion's own `scholion-bench` runs of 2026-10-27/28 on Claude
+Haiku 5.5 are drawn apart from the Harbor runs of 2026-11-20. `oe detect` still keys its series
+without the runner. The `av` arm,
 its validity rules and the analysis are pre-registered in `docs/PREREG-tracker-av.md`. An `av`
 point on `/tracker` carries `vs_cold`, paired by task against its own run's cold arm, else the
 one cold-only run of the same agent and model that day. With no such run, or more than one, the
 point stays unpaired.
 
 Claude Code reports DeepSeek sessions at a Claude list-price fallback. `oe import-harbor` and
-`oe budget` re-price them from `tools/oe/prices.toml` (`cost_source: estimated`).
+`oe budget` re-price them from `tools/oe/prices.toml` (`cost_source: estimated`). On a Claude model
+the CLI's own cost is kept (`measured`).
+
+Tokens: in Harbor rows, `tokens.input` is everything that is not a cache read (cache writes
+included, `cache_write` null) and `tokens.output` includes reasoning tokens, as Claude Code's,
+goose's and Codex's Harbor totals already do. Harbor's OpenCode adapter leaves cache writes and
+reasoning in each step's `metrics.extra`, so `oe import-harbor` adds them back (2026-11-20). The
+published OpenCode rows of 2026-11-04 (DeepSeek Flash, no cache writes) were imported before that:
+their output and `tokens_billed` leave out 21,053 reasoning tokens over 12 sessions. Their cost is
+OpenCode's own and complete.
 
 ## Tiers
 

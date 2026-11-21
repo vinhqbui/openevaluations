@@ -218,3 +218,64 @@ def test_deepseek_v4_pro_is_priced_at_its_peak_list_rate(tmp_path):
     # 17266 * 1.32 + 125056 * 0.044 + 3211 * 3.96, per million
     assert abs(s["cost_usd"] - 0.041009144) < 1e-9
     assert spent(job) == (s["cost_usd"], 0)
+
+
+def _retarget(job, agent, version, agent_result, steps, final_extra=None):
+    """Make fake_job's trials look like another CLI's: Harbor's totals and the per-step metrics."""
+    for res in job.glob("*/result.json"):
+        r = json.loads(res.read_text())
+        r["agent_info"].update(name=agent, version=version)
+        r["agent_result"].update(agent_result)
+        res.write_text(json.dumps(r))
+        traj = {"schema_version": "ATIF-v1.7", "agent": {"name": agent, "version": version},
+                "steps": [{"step_id": 1, "source": "user", "message": "goal"}] + steps,
+                "final_metrics": {"total_steps": len(steps) + 1, **({"extra": final_extra} if final_extra else {})}}
+        (res.parent / "agent" / "trajectory.json").write_text(json.dumps(traj))
+        (res.parent / "agent" / "claude-code.txt").unlink()
+    return job
+
+
+def test_opencode_input_counts_cache_writes_and_output_counts_reasoning(tmp_path):
+    # Harbor's OpenCode adapter: n_input_tokens = input + cache reads, so cache writes (billed at
+    # the write rate) sit only in each step's extra, and so do reasoning tokens (billed as output).
+    # The other CLIs' input already holds cache writes and their output holds reasoning.
+    steps = [
+        {"step_id": 2, "source": "agent", "message": "", "metrics": {
+            "prompt_tokens": 10384, "completion_tokens": 120, "cached_tokens": 10380,
+            "extra": {"reasoning_tokens": 17, "cache_write_tokens": 210}}},
+        {"step_id": 3, "source": "agent", "message": "done", "metrics": {
+            "prompt_tokens": 10592, "completion_tokens": 119, "cached_tokens": 10590,
+            "extra": {"cache_write_tokens": 1247}}},
+    ]
+    job = _retarget(fake_job(tmp_path, n=1), "opencode", "1.19.6",
+                    {"n_input_tokens": 20976, "n_cache_tokens": 20970, "n_output_tokens": 239, "cost_usd": 0.00052},
+                    steps)
+    run, (s,) = runfile.read(import_job(job, tmp_path / "runs"))
+    assert s["tokens"] == {"input": 6 + 210 + 1247, "output": 239 + 17, "cache_read": 20970, "cache_write": None}
+    assert s["tokens_billed"] == 6 + 210 + 1247 + 239 + 17
+    assert s["cost_usd"] == 0.00052 and s["cost_source"] == "measured"  # OpenCode's own figure, untouched
+
+
+def test_cache_writes_are_not_added_again_for_clis_that_already_count_them(tmp_path):
+    # goose's n_input_tokens already includes cache writes; its trajectory repeats them in extra.
+    job = _retarget(fake_job(tmp_path, n=1), "goose", "v1.60.2",
+                    {"n_input_tokens": 122969, "n_cache_tokens": 105487, "n_output_tokens": 6627, "cost_usd": 0.0066},
+                    [{"step_id": 2, "source": "agent", "message": "done"}],
+                    final_extra={"total_tokens": 129596, "cache_write_tokens": 17456})
+    _, (s,) = runfile.read(import_job(job, tmp_path / "runs"))
+    assert s["tokens"]["input"] == 122969 - 105487 and s["tokens"]["output"] == 6627
+
+
+def test_tracker_series_never_join_runs_of_different_harnesses(tmp_path):
+    # Scholion's own benchmark harness and Harbor ran Claude Code on the same model and dataset;
+    # their runs are separate series, so one is never drawn as the other's continuation.
+    runs = tmp_path / "runs"
+    run, ss = runfile.read(import_job(fake_job(tmp_path / "a"), runs, arm="av"))
+    old = dict(run, id="scholion-2026-10-27-haiku", date="2026-10-27T00:00:00Z",
+               harness=dict(run["harness"], runner="scholion-bench"))
+    runfile.write(runs / f"{old['id']}.jsonl", old, [dict(s, run_id=old["id"]) for s in ss])
+    site.build(runs, tmp_path / "data")
+    series = json.loads((tmp_path / "data" / "tracker.json").read_text())["series"]
+    assert sorted(s["runner"] for s in series) == ["harbor", "scholion-bench"]
+    assert all(len(s["arms"]["av"]) == 1 for s in series)
+    assert len({s["key"] for s in series}) == 2

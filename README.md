@@ -19,17 +19,21 @@ container per trial, with hidden tests deciding acceptance.
 ## Weekly tracker legs
 
 By hand for now (`gh workflow run tracker.yml`; the weekly schedule is off), `tallyho-cold`, 3 attempts per task, all on
-DeepSeek Flash, each CLI at its newest release that day:
+Claude Haiku 5.5 (`claude-haiku-5-5`, Anthropic's API) since 2026-11-20, each CLI at its newest release that day:
 
-| Leg | CLI | How it reaches DeepSeek | Harbor agent |
-|---|---|---|---|
-| `claude-code-cold` | Claude Code | Anthropic-compatible API (`ANTHROPIC_BASE_URL`) | `claude-code` |
-| `claude-code-av` | Claude Code on Scholion `av` | the same, plus the av hooks and daemon | `oe_agents.claude_code_av:ClaudeCodeAv` |
-| `opencode-cold` | OpenCode | its `deepseek` provider | `opencode` |
-| `codex-cold` | OpenAI Codex CLI | a custom model provider in `config.toml`, DeepSeek's Responses API | `oe_agents.codex_deepseek:CodexDeepSeek` |
+| Leg | CLI | Harbor agent |
+|---|---|---|
+| `claude-code-cold` | Claude Code | `claude-code` |
+| `claude-code-av` | Claude Code on Scholion `av` (the av hooks and daemon) | `oe_agents.claude_code_av:ClaudeCodeAv` |
+| `opencode-cold` | OpenCode | `opencode` |
+| `goose-cold` | Block's goose | `goose` |
 
-Gemini CLI is not a leg: it speaks only the Gemini API (`GOOGLE_GEMINI_BASE_URL` moves the
-endpoint, not the protocol), so on DeepSeek it would need a translating proxy in between.
+The Haiku 5.5 rows are a new series (amendment of 2026-11-20 in `docs/PREREG-tracker-av.md`);
+the report of its first run is `docs/results/2026-11-20-tracker-haiku.md`.
+Until then the tracker ran on DeepSeek Flash, with Codex CLI as the fourth leg
+(`oe_agents.codex_deepseek:CodexDeepSeek`); those rows are a different model and are never pooled
+with the new ones. Codex is not a leg on Haiku: it speaks only OpenAI's Responses API. Gemini CLI
+is not a leg either: it speaks only the Gemini API.
 
 ## Quick start
 
@@ -72,7 +76,7 @@ uv run oe import-reports reports.json && uv run oe site
 | P2: `ClaudeCodeAv` Harbor agent (Scholion arm), weekly against the cold arm (`docs/PREREG-tracker-av.md`) | done; pilot valid, first weekly run pending |
 | P3: handoff benchmark (freeze, four channels, PREREG) | interrupt family built (`oe freeze`, `tools/gen/handoff.py`, leak check, `docs/PREREG-handoff-interrupt.md`, `.github/workflows/handoff.yml`) with repo-only, trace and notes; first A and successor runs pending; the records channel and the Harbor relay family are not built yet |
 | Ledger (agentvcs Plan 15 Phase 3): `oe import-reports` (a Scholion Cloud reports export, one repo and one week, into `runs/<week>-ledger-<repo>.jsonl`), its validate rule, `site/ledger/`, `docs/PREREG-ledger.md` | built; no week published yet (the foundry has not merged its first week) |
-| P4: weekly tracker workflow and the openevaluations.si cutover | workflow written (four legs on DeepSeek: Claude Code cold and av, OpenCode, Codex; a one-trial Codex smoke run passed on 2026-11-04); the weekly schedule is off for now (owner, 2026-11-05); the `LLM_API_KEY` and `TRACKER_PUSH_TOKEN` secrets and the domain move are pending |
+| P4: weekly tracker workflow and the openevaluations.si cutover | workflow written, since 2026-11-20 four legs on Claude Haiku 5.5 (Claude Code cold and av, OpenCode, goose; first run local on 2026-11-20); the weekly schedule is off for now (owner, 2026-11-05); the `ANTHROPIC_API_KEY` and `TRACKER_PUSH_TOKEN` secrets and the domain move are pending |
 
 ## Contributing a run
 
