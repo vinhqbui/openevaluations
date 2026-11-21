@@ -20,7 +20,7 @@ def oe_js(expr):
         f"vm.runInContext(fs.readFileSync({json.dumps(str(REPO / 'site' / 'js' / 'oe.js'))}, 'utf8'), ctx);"
         f"ctx.OE = ctx.window.OE; process.stdout.write(JSON.stringify(vm.runInContext({json.dumps(expr)}, ctx)));"
     )
-    out = subprocess.run([NODE, "-e", script], capture_output=True, text=True, check=True)
+    out = subprocess.run([NODE, "-e", script], capture_output=True, text=True, encoding="utf-8", check=True)
     return json.loads(out.stdout)
 
 
