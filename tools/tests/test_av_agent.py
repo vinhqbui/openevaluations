@@ -126,6 +126,13 @@ def test_the_pin_names_the_margincode_release_archive():
                                "release/0.0.4/margincode-v0.0.4-x86_64-unknown-linux-gnu.tar.gz")
 
 
+def test_the_tracker_workflow_runs_the_pinned_release():
+    wf = (Path(__file__).resolve().parents[2] / ".github" / "workflows" / "tracker.yml").read_text(encoding="utf-8")
+    assert f"--ak av_version={av_settings.AV_RELEASE}" in wf
+    assert f"scholion_rev='\"{av_settings.AV_RELEASE}\"'" in wf
+    assert "release/0.0.2" not in wf
+
+
 def test_the_unset_sha256_can_never_match():
     assert len(av_settings.SHA256_UNSET) == 64 and set(av_settings.SHA256_UNSET) == {"0"}
 
