@@ -19,7 +19,7 @@ from pathlib import Path
 AV_RELEASE = "release/0.0.4"
 TARBALL = "margincode-v0.0.4-x86_64-unknown-linux-gnu"
 SHA256_UNSET = "0" * 64
-SHA256 = SHA256_UNSET  # not pinned yet: set it from the release's published {TARBALL}.tar.gz.sha256
+SHA256 = "f59a2da7f75384530fc6d59312b2de284b4afc2e281a9b5ad624f252f65bfe0f"  # the release's published {TARBALL}.tar.gz.sha256
 URL = f"https://github.com/margincode-dev/open-margincode/releases/download/{AV_RELEASE}/{TARBALL}.tar.gz"
 MIN_GLIBC = (2, 39)  # what the release binaries link against (built on ubuntu-latest)
 BINS = ("av", "margincode", "margincode-daemon")  # `av up` looks for margincode-daemon next to av
