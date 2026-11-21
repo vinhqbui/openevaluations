@@ -1,6 +1,6 @@
 # openevaluations
 
-> Open, longitudinal evaluations of coding-agent CLIs (Claude Code, Codex and others). The same small task sets are run on a schedule against each new CLI version. Every session's raw row is published in an open JSON Lines format (oe/1). There is also a runnable benchmark for handing a task from one agent to another. Code Apache-2.0, data CC BY 4.0.
+> Open, longitudinal evaluations of coding-agent CLIs (Claude Code, OpenCode and goose; Codex in the earlier DeepSeek series). The same small task sets are run by hand against new CLI versions. Every session's raw row is published in an open JSON Lines format (oe/1). There is also a runnable benchmark for handing a task from one agent to another. Code Apache-2.0, data CC BY 4.0.
 
 Source: https://github.com/vinhqbui/openevaluations
 Status: early. The data so far is 18 runs of Claude Code recorded by Scholion's benchmark harness, and Harbor runs of the tracker on tallyho-cold (3 attempts at each of 4 tasks per leg) in two series, one per model, plus a pilot of easy and hard tiers on DeepSeek Flash and Pro (2026-11-10, a separate pre-registered test). Runs are started by hand; the weekly schedule is off.
@@ -38,7 +38,7 @@ Status: early. The data so far is 18 runs of Claude Code recorded by Scholion's 
 
 ## Datasets
 
-- tallyho-cold: 4 one-file bugs in a 25-file Python library; the weekly tracker set.
+- tallyho-cold: 4 one-file bugs in a 25-file Python library; the tracker set.
 - handoff: relay family (10 tasks, a curated predecessor) and interrupt family (6 tasks, a real predecessor cut off halfway); channels repo-only, trace, notes, records.
 - scholion-relay: the relay family as recorded by Scholion's harness before the Harbor port (arms cold, baseline, notes, av).
 - scholion-cold: 4 injected bugs in a 20k-line Rust codebase; manual runs only.
@@ -53,12 +53,9 @@ Status: early. The data so far is 18 runs of Claude Code recorded by Scholion's 
 - Note, 2026-11-10 (pilot, 40 trials): a new hard tier did not separate Claude Code on DeepSeek Flash from DeepSeek Pro; both solved every hard task, at about six times the cost per solved task on Pro: https://openevaluations.si/notes/tiers-pilot/
 - Ledger (Scholion Cloud working its own backlog: cost per merged feature and human interventions per feature, by week; 2 to 10 features a week, reported, never claimed, not a tracker series): https://openevaluations.si/ledger/
 
-## Scholion
+## Margincode
 
-Scholion is open-source, context-first version control for coding agents. It is one of the evaluated arms here. Its project page and agent-readable description moved to:
+Margincode is open-source, context-first version control for coding agents. It was called Scholion until 2026-11-12 (the run data here keeps that name) and is one of the evaluated arms here. Its project page and agent-readable description:
 
-- https://openevaluations.si/scholion/
-- https://openevaluations.si/scholion/llms.txt
-- Guide, handing a task between agents: https://openevaluations.si/guides/handoff-between-ai-coding-agents
-- Guide, persistent memory for coding agents over MCP: https://openevaluations.si/guides/memory-for-coding-agents
-- Replay of a recorded run: https://openevaluations.si/demo
+- https://open.margincode.dev/
+- https://open.margincode.dev/llms.txt

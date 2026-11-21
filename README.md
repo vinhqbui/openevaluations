@@ -76,7 +76,7 @@ uv run oe import-reports reports.json && uv run oe site
 | P2: `ClaudeCodeAv` Harbor agent (Scholion arm), weekly against the cold arm (`docs/PREREG-tracker-av.md`) | done; pilot valid, first weekly run pending |
 | P3: handoff benchmark (freeze, four channels, PREREG) | interrupt family built (`oe freeze`, `tools/gen/handoff.py`, leak check, `docs/PREREG-handoff-interrupt.md`, `.github/workflows/handoff.yml`) with repo-only, trace and notes; first A and successor runs pending; the records channel and the Harbor relay family are not built yet |
 | Ledger (agentvcs Plan 15 Phase 3): `oe import-reports` (a Scholion Cloud reports export, one repo and one week, into `runs/<week>-ledger-<repo>.jsonl`), its validate rule, `site/ledger/`, `docs/PREREG-ledger.md` | built; no week published yet (the foundry has not merged its first week) |
-| P4: weekly tracker workflow and the openevaluations.si cutover | workflow written, since 2026-11-20 four legs on Claude Haiku 5.5 (Claude Code cold and av, OpenCode, goose; first run local on 2026-11-20); the weekly schedule is off for now (owner, 2026-11-05); the `ANTHROPIC_API_KEY` and `TRACKER_PUSH_TOKEN` secrets and the domain move are pending |
+| P4: weekly tracker workflow and the openevaluations.si cutover | workflow written, since 2026-11-20 four legs on Claude Haiku 5.5 (Claude Code cold and av, OpenCode, goose; first run local on 2026-11-20); the weekly schedule is off and runs are started by hand (owner, 2026-11-05 and 2026-11-21), so the repository has no `ANTHROPIC_API_KEY` or `TRACKER_PUSH_TOKEN` secret; the site is served at openevaluations.si since 2026-11-21, deployed by hand with `npx wrangler deploy` (`CLAUDE.md`) |
 
 ## Contributing a run
 

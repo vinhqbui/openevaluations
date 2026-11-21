@@ -15,18 +15,18 @@
 <body>
 <div class="nav"><div class="wrap">
   <a class="brand" href="/"><b>o</b> openevaluations</a>
-  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="https://open.margincode.dev/">Margincode</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
 </div></div>
 <main class="wrap">
 <header class="page">
   <h1><em>Datasets</em></h1>
-  <p class="lede">Small, fixed task sets with hidden tests, so a weekly run stays cheap and two runs are comparable. Tasks are Harbor task directories in <code>datasets/</code> of the repository.</p>
+  <p class="lede">Small, fixed task sets with hidden tests, so a run stays cheap and two runs are comparable. Tasks are Harbor task directories in <code>datasets/</code> of the repository.</p>
 </header>
 <div class="cards">
-  <div class="card"><h3>tallyho-cold</h3><p>Four one-file bugs in tallyho, a 25-file Python shop library written for benchmarking. One agent, cold start, hidden pytest files. The weekly tracker set.</p></div>
+  <div class="card"><h3>tallyho-cold</h3><p>Four one-file bugs in tallyho, a 25-file Python shop library written for benchmarking. One agent, cold start, hidden pytest files. The tracker set.</p></div>
   <div class="card"><h3>handoff</h3><p>The handoff benchmark. The relay family has 10 tasks on tallyho, each needing one lesson an earlier agent left. The interrupt family has 6 tasks with a real predecessor cut off halfway. Channels are repo-only, trace, notes and records.</p></div>
-  <div class="card"><h3>scholion-relay</h3><p>The relay family as Scholion's harness ran it before the Harbor port, with arms cold, baseline, notes and av. These runs seed the <a href="/handoff/">handoff</a> page.</p></div>
-  <div class="card"><h3>scholion-cold</h3><p>Four injected bugs in a 20,000-line Rust codebase. It needs about 1 GB of disk per session, so it is run by hand and not tracked weekly.</p></div>
+  <div class="card"><h3>scholion-relay</h3><p>The relay family as the harness of Scholion (called Margincode since 2026-11-12) ran it before the Harbor port, with arms cold, baseline, notes and av. These runs seed the <a href="/handoff/">handoff</a> page.</p></div>
+  <div class="card"><h3>scholion-cold</h3><p>Four injected bugs in a 20,000-line Rust codebase. It needs about 1 GB of disk per session, so it is run by hand and is not a tracker set.</p></div>
 </div>
 <h2>Run one yourself</h2>
 <pre>git clone https://github.com/vinhqbui/openevaluations && cd openevaluations
@@ -37,7 +37,7 @@ uv run oe import-harbor jobs/&lt;job&gt; --dataset tallyho-cold && uv run oe val
 <h2>What has been run</h2>
 <div id="ds" aria-live="polite"></div>
 </main>
-<footer><div class="wrap">Data: <a href="/data/datasets.json">datasets.json</a> · Code Apache-2.0, data CC BY 4.0 · <a href="/ledger/">Ledger</a> · <a href="https://scholion.openevaluations.si">Scholion</a></div></footer>
+<footer><div class="wrap">Data: <a href="/data/datasets.json">datasets.json</a> · Code Apache-2.0, data CC BY 4.0 · <a href="/ledger/">Ledger</a> · <a href="https://open.margincode.dev/">Margincode</a></div></footer>
 <script src="/js/oe.js"></script>
 <script>
 OE.nav("/datasets/");

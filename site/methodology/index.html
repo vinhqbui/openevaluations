@@ -15,7 +15,7 @@
 <body>
 <div class="nav"><div class="wrap">
   <a class="brand" href="/"><b>o</b> openevaluations</a>
-  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="/scholion/">Scholion</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
+  <nav><a href="/tracker/">Tracker</a><a href="/handoff/">Handoff</a><a href="/datasets/">Datasets</a><a href="/runs/">Runs</a><a href="/methodology/">Methodology</a><a href="https://open.margincode.dev/">Margincode</a><a href="https://github.com/vinhqbui/openevaluations">GitHub</a></nav>
 </div></div>
 <main class="wrap" style="max-width:860px">
 <header class="page">
@@ -25,7 +25,7 @@
 
 <h2>Running</h2>
 <p>Agents run through <a href="https://harborframework.com">Harbor</a>, the Terminal-Bench team's open harness. Each trial gets a fresh Docker container. The task's repository is collapsed to a single commit, so the fix cannot be read from history. The agent's own CLI runs headless with the goal as its prompt. When it stops, hidden tests are copied in and decide the reward. The tracker takes each CLI's newest release on the day it runs, because measuring version drift is the point; the run of 2026-11-20 read those versions once before its first leg and pinned them for every leg of that day. Each run records the CLI's version.</p>
-<p>Scholion is evaluated as an arm, through a Harbor agent that wraps Claude Code with Scholion's daemon and hooks. Plain Claude Code, OpenCode and goose run through Harbor's own adapters; Codex on DeepSeek ran through a small Harbor agent of this repository that writes its provider settings.</p>
+<p>Scholion (called Margincode since 2026-11-12) is evaluated as an arm, through a Harbor agent that wraps Claude Code with Scholion's daemon and hooks. Plain Claude Code, OpenCode and goose run through Harbor's own adapters; Codex on DeepSeek ran through a small Harbor agent of this repository that writes its provider settings.</p>
 
 <h2 id="tracker">The tracker</h2>
 <p><code>tallyho-cold</code>, 3 attempts at each of its 4 tasks per leg, so 12 sessions per leg. Runs are started by hand; the weekly schedule is off. A series includes the model, and the tracker has two (the 2026-11-10 runs on DeepSeek Flash and Pro, on <code>tallyho-cold</code>, <code>tallyho-more</code> and <code>tallyho-hard</code>, are the tiers pilot, a separate pre-registered test, not tracker legs):</p>
@@ -71,13 +71,13 @@
 
 <h2>Threats to validity</h2>
 <ul>
-  <li><b>Small task sets.</b> Weekly sets are small so they stay cheap. Treat them as a regression tracker, not a capability ranking.</li>
+  <li><b>Small task sets.</b> The task sets are small so they stay cheap. Treat them as a regression tracker, not a capability ranking.</li>
   <li><b>Author bias.</b> The task sets were written alongside Scholion, which is one of the evaluated arms. Public tasks, published prompts and pre-registration are the guard.</li>
   <li><b>Contamination.</b> The task repositories were written for benchmarking in 2026 and are unlikely to be in training data. Their patches are public now, though.</li>
   <li><b>Harness effects.</b> The same model scores differently under different harnesses. Every row names its harness, and results are never pooled across harnesses.</li>
 </ul>
 </main>
-<footer><div class="wrap">Code Apache-2.0, data CC BY 4.0 · <a href="https://github.com/vinhqbui/openevaluations">source</a> · <a href="/ledger/">Ledger</a> · <a href="https://scholion.openevaluations.si">Scholion</a></div></footer>
+<footer><div class="wrap">Code Apache-2.0, data CC BY 4.0 · <a href="https://github.com/vinhqbui/openevaluations">source</a> · <a href="/ledger/">Ledger</a> · <a href="https://open.margincode.dev/">Margincode</a></div></footer>
 <script src="/js/oe.js"></script>
 <script>OE.nav("/methodology/");</script>
 </body>
