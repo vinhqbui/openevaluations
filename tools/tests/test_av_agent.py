@@ -59,7 +59,7 @@ def test_evaluate_valid_session_reports_counts(tmp_path):
     m = evaluate(_logdir(tmp_path))
     assert "oe_invalid" not in m
     assert m["av_hook_counts"] == {"session-start": 1, "post-edit": 1, "stop": 1}
-    assert m["av_pack_chars"] == len("# Task\nstuff") and m["av_records"] == 2
+    assert m["av_pack_chars"] == m["av_hook_chars"] == len("# Task\nstuff") and m["av_records"] == 2
     assert m["av_checkpoint_ok"] is True and m["av_version"] == "margincode 0.0.4"
 
 
@@ -74,6 +74,33 @@ def test_evaluate_valid_session_reports_counts(tmp_path):
 ])
 def test_evaluate_marks_invalid_sessions(tmp_path, kw, reason):
     assert evaluate(_logdir(tmp_path, **kw))["oe_invalid"] == reason
+
+
+# What the release's SessionStart hook prints after the pack (margincode-cli hook.rs print_pack:
+# the pack's markdown, then record_first() on its own line; then announce_scratch).
+RECORD_FIRST = ("av: before your final message, record why you changed code in one call: `av record --json -` "
+                "with [...]. Otherwise your stop is blocked to ask for it.\n")
+SCRATCH = "Temporary files: $AV_SCRATCH (removed with the task).\n"
+
+
+def test_evaluate_judges_the_pack_on_the_output_before_the_first_av_line(tmp_path):
+    pack = "# Task\nstuff\n**av: recorded about `a.py`** (by other tasks)\n  av: indented\n"
+    m = evaluate(_logdir(tmp_path, pack=pack + RECORD_FIRST + SCRATCH))
+    assert "oe_invalid" not in m
+    assert m["av_pack_chars"] == len(pack)
+    assert m["av_hook_chars"] == len(pack + RECORD_FIRST + SCRATCH)
+
+
+def test_evaluate_an_empty_pack_followed_by_the_releases_lines_is_invalid(tmp_path):
+    m = evaluate(_logdir(tmp_path, pack="\n" + RECORD_FIRST + SCRATCH))
+    assert m["oe_invalid"] == "empty session-start pack"
+    assert m["av_pack_chars"] == 1 and m["av_hook_chars"] == len("\n" + RECORD_FIRST + SCRATCH)
+
+
+def test_evaluate_output_without_an_av_line_is_all_pack_as_before(tmp_path):
+    out = "# Task\nstuff\nTemporary files: /x (removed with the task).\n"
+    m = evaluate(_logdir(tmp_path, pack=out))
+    assert m["av_pack_chars"] == m["av_hook_chars"] == len(out) and "oe_invalid" not in m
 
 
 def test_evaluate_without_log_dir_is_invalid(tmp_path):

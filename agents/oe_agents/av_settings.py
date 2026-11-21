@@ -119,19 +119,30 @@ def _read(p):
         return None
 
 
+def _pack_part(output):
+    """The SessionStart output before its first line starting with "av: ". From 0.0.4 the hook prints
+    the pack's markdown and then its own lines, the first "av: before your final message, ..."
+    (margincode-cli hook.rs print_pack). Output with no such line, as 0.0.2's, is all pack."""
+    lines = output.splitlines(keepends=True)
+    cut = next((i for i, ln in enumerate(lines) if ln.startswith("av: ")), len(lines))
+    return "".join(lines[:cut])
+
+
 def evaluate(log_dir):
     """Per-session av metadata, plus `oe_invalid` when the arm did not really run.
 
     A session is invalid when no SessionStart hook fired (no pack reached the agent), the pack was
     empty, any hook wrote an error, or the final checkpoint failed. margincode-bench only checks the
     first; the count alone is written before `av` runs, so it cannot show that av answered.
+    av_pack_chars is the pack part of the SessionStart output; av_hook_chars is all of it.
     """
     d = Path(log_dir)
     counts = {}
     for line in (_read(d / "hook-count") or "").splitlines():
         if line.strip():
             counts[line.strip()] = counts.get(line.strip(), 0) + 1
-    pack = _read(d / "session-start.md") or ""
+    output = _read(d / "session-start.md") or ""
+    pack = _pack_part(output)
     errors = [ln for ln in (_read(d / "hooks.err") or "").splitlines() if ln.strip()]
     try:
         finish = json.loads(_read(d / "finish.json") or "{}")
@@ -141,6 +152,7 @@ def evaluate(log_dir):
     meta = {
         "av_hook_counts": counts,
         "av_pack_chars": len(pack),
+        "av_hook_chars": len(output),
         "av_hook_errors": len(errors),
         "av_records": finish.get("record_count"),
         "av_checkpoint_ok": finish.get("checkpoint_ok") is True,
