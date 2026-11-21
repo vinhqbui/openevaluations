@@ -26,8 +26,8 @@
     "goose",
     "opencode"
    ],
-   "runs": 24,
-   "sessions": 544,
+   "runs": 28,
+   "sessions": 592,
    "tasks": [
     "compound-discounts",
     "csv-escaping",

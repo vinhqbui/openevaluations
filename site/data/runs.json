@@ -9,6 +9,182 @@
     "cold": {
      "accepted": 12,
      "cost_estimated": false,
+     "cost_per_accepted": 0.00512,
+     "cost_per_accepted_ci": [
+      0.004431,
+      0.005748
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 10.0,
+     "median_tokens_billed": 18433.0,
+     "median_tool_calls": 9.5,
+     "median_turns": null,
+     "median_wall_secs": 30.774622,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-21T07:52:15Z",
+   "flags": [],
+   "id": "2026-11-21-tallyho-cold-goose-cold-db8e3b",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": "docs/PREREG-tracker-av.md",
+   "raw": "/data/runs/2026-11-21-tallyho-cold-goose-cold-db8e3b.jsonl",
+   "runner": "harbor",
+   "source": "local run (Windows 11 + Docker Desktop, by hand, not GitHub Actions), as tracker.yml's run step",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "opencode",
+    "version": "1.19.6"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 12,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.003746,
+     "cost_per_accepted_ci": [
+      0.003049,
+      0.004391
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 7.0,
+     "median_tokens_billed": 13675.5,
+     "median_tool_calls": 8.0,
+     "median_turns": null,
+     "median_wall_secs": 53.717709,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-21T07:32:02Z",
+   "flags": [],
+   "id": "2026-11-21-tallyho-cold-opencode-cold-3d2f84",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": "docs/PREREG-tracker-av.md",
+   "raw": "/data/runs/2026-11-21-tallyho-cold-opencode-cold-3d2f84.jsonl",
+   "runner": "harbor",
+   "source": "local run (Windows 11 + Docker Desktop, by hand, not GitHub Actions), as tracker.yml's run step",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.330"
+   },
+   "arms": {
+    "av": {
+     "accepted": 12,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.004832,
+     "cost_per_accepted_ci": [
+      0.004141,
+      0.005466
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 7.0,
+     "median_tokens_billed": 18782.5,
+     "median_tool_calls": 6.0,
+     "median_turns": 7.0,
+     "median_wall_secs": 30.526342,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-21T07:10:02Z",
+   "flags": [],
+   "id": "2026-11-21-tallyho-cold-claude-code-av-663941",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": "docs/PREREG-tracker-av.md",
+   "raw": "/data/runs/2026-11-21-tallyho-cold-claude-code-av-663941.jsonl",
+   "runner": "harbor",
+   "source": "local run (Windows 11 + Docker Desktop, by hand, not GitHub Actions), as tracker.yml's run step",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "claude-code",
+    "version": "2.1.330"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 12,
+     "cost_estimated": false,
+     "cost_per_accepted": 0.004541,
+     "cost_per_accepted_ci": [
+      0.003854,
+      0.005203
+     ],
+     "dead_ends": 0,
+     "invalid": 0,
+     "median_llm_calls": 7.0,
+     "median_tokens_billed": 15407.5,
+     "median_tool_calls": 7.0,
+     "median_turns": 8.0,
+     "median_wall_secs": 20.862806,
+     "n": 12,
+     "rate": 1.0,
+     "skipped": 0,
+     "wilson": [
+      0.757499,
+      1.0
+     ]
+    }
+   },
+   "dataset": "tallyho-cold",
+   "date": "2026-11-21T06:52:13Z",
+   "flags": [],
+   "id": "2026-11-21-tallyho-cold-claude-code-cold-3b7053",
+   "model": {
+    "name": "claude-haiku-5-5",
+    "provider": "anthropic"
+   },
+   "prereg": "docs/PREREG-tracker-av.md",
+   "raw": "/data/runs/2026-11-21-tallyho-cold-claude-code-cold-3b7053.jsonl",
+   "runner": "harbor",
+   "source": "local run (Windows 11 + Docker Desktop, by hand, not GitHub Actions), as tracker.yml's run step",
+   "visibility": "public"
+  },
+  {
+   "agent": {
+    "name": "goose",
+    "version": "v1.60.2"
+   },
+   "arms": {
+    "cold": {
+     "accepted": 12,
+     "cost_estimated": false,
      "cost_per_accepted": 0.005285,
      "cost_per_accepted_ci": [
       0.004524,

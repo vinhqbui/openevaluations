@@ -84,3 +84,6 @@ record before the final answer and no longer refuses a long summary
 ([margincode-dev/open-margincode#93](https://github.com/margincode-dev/open-margincode/pull/93)).
 No release has that change. The tracker pins a release, so this row changes only when the pin
 does, and nothing here says what a later release will measure.
+
+Added later on 2026-11-21: release 0.0.4 has that change. The run on it is reported in
+`docs/results/2026-11-21-tracker-haiku-margincode-0.0.4.md`.
