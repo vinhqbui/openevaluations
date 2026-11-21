@@ -53,12 +53,9 @@ Status: early. The data so far is 18 runs of Claude Code recorded by Scholion's 
 - Note, 2026-11-10 (pilot, 40 trials): a new hard tier did not separate Claude Code on DeepSeek Flash from DeepSeek Pro; both solved every hard task, at about six times the cost per solved task on Pro: https://openevaluations.si/notes/tiers-pilot/
 - Ledger (Scholion Cloud working its own backlog: cost per merged feature and human interventions per feature, by week; 2 to 10 features a week, reported, never claimed, not a tracker series): https://openevaluations.si/ledger/
 
-## Scholion
+## Margincode
 
-Scholion is open-source, context-first version control for coding agents. It is one of the evaluated arms here. Its project page and agent-readable description moved to:
+Margincode is open-source, context-first version control for coding agents. It was called Scholion until 2026-11-12 (the run data here keeps that name) and is one of the evaluated arms here. Its project page and agent-readable description:
 
-- https://openevaluations.si/scholion/
-- https://openevaluations.si/scholion/llms.txt
-- Guide, handing a task between agents: https://openevaluations.si/guides/handoff-between-ai-coding-agents
-- Guide, persistent memory for coding agents over MCP: https://openevaluations.si/guides/memory-for-coding-agents
-- Replay of a recorded run: https://openevaluations.si/demo
+- https://open.margincode.dev/
+- https://open.margincode.dev/llms.txt

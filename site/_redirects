@@ -1,0 +1,9 @@
+/scholion https://open.margincode.dev/ 301
+/scholion/ https://open.margincode.dev/ 301
+/scholion/llms.txt https://open.margincode.dev/llms.txt 301
+/demo https://open.margincode.dev/demo 301
+/demo.html https://open.margincode.dev/demo 301
+/demo-replay.json https://open.margincode.dev/demo-replay.json 301
+/og.png https://open.margincode.dev/og.png 301
+/guides/* https://open.margincode.dev/guides/:splat 301
+/img/* https://open.margincode.dev/img/:splat 301
