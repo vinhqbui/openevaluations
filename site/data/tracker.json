@@ -420,6 +420,7 @@
      {
       "accepted": 12,
       "agent_version": "2.1.329",
+      "av_release": "0.0.2",
       "cost_estimated": false,
       "cost_per_accepted": 0.005662,
       "cost_per_accepted_ci": [
@@ -1006,6 +1007,7 @@
      {
       "accepted": 12,
       "agent_version": "2.1.318",
+      "av_release": "0.0.2",
       "cost_estimated": true,
       "cost_per_accepted": 0.010783,
       "cost_per_accepted_ci": [

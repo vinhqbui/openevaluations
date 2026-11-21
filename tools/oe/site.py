@@ -150,9 +150,12 @@ def build(runs_dir, out_dir):
         sr = series.setdefault(key, {"key": key, "dataset": run["dataset"]["name"], "agent": run["agent"]["name"],
                                      "model": run["model"]["name"], "runner": run["harness"]["runner"], "arms": {}})
         arms_ss, points = _arms(ss), {}
+        release = stats.av_release(run)
         for arm, summ in per_arm.items():
             point = {"run_id": run["id"], "date": run["date"], "agent_version": run["agent"]["version"],
                      "flags": run["flags"], **summ}
+            if arm == "av" and release:
+                point["av_release"] = release
             sr["arms"].setdefault(arm, []).append(point)
             points[arm] = (point, arms_ss.get(arm, []))
         if not private:

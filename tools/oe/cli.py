@@ -125,14 +125,19 @@ def _stats(a):
 
 def _detect(a):
     runs = runfile.load_all(a.runs)
-    hist = {}
+    hist, releases = {}, {}
     changed = 0
     for r in runs:
         run = r["run"]
         if run["dataset"]["visibility"] == "private" or run["harness"]["runner"] == "scholion-cloud":
             continue  # private runs publish no sessions; ledger runs are no tracker series
-        key = (run["dataset"]["name"], run["agent"]["name"], run["model"]["name"], run["config"]["arm"])
+        key = stats.detect_key(run)
         prev = hist.setdefault(key, [])
+        if len(key) > 4 and key[4]:
+            named = releases.setdefault(key[:4], set())
+            if not prev and named - {key[4]}:
+                print(f"{run['id']}: first run of Margincode release {key[4]} in its series, no baseline")
+            named.add(key[4])
         flags = sorted(set(stats.detect_change(r, prev)) | (set(run["flags"]) & {"budget_stopped"}))
         if flags != run["flags"]:
             run["flags"] = flags

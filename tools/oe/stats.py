@@ -6,6 +6,7 @@ within each task, and no significance claim below 30 valid sessions per cell.
 
 import math
 import random
+import re
 import statistics as st
 from collections import OrderedDict
 
@@ -132,6 +133,23 @@ def paired_report(base_sessions, arm_sessions, metrics=METRICS, seed=1):
         boots = sorted(x for x in (_rel(base, arm, f, rng) for _ in range(2000)) if x is not None)
         out[name] = (point, boots[50], boots[1949]) if len(boots) == 2000 else (point, None, None)
     return out
+
+
+def av_release(run):
+    """The Margincode release an av run used ("0.0.2" for release/0.0.2), else None.
+
+    scholion-bench runs record a commit instead of a release; they name none.
+    """
+    rev = run.get("harness", {}).get("scholion_rev") or (run.get("config", {}).get("agent_kwargs") or {}).get("av_version")
+    m = re.fullmatch(r"release/v?(\d+(?:\.\d+)*)", rev or "")
+    return m.group(1) if m else None
+
+
+def detect_key(run):
+    """The pool a run is compared within: dataset, agent, model and arm, and an av run's release."""
+    arm = run["config"]["arm"]
+    key = (run["dataset"]["name"], run["agent"]["name"], run["model"]["name"], arm)
+    return key + (av_release(run),) if arm == "av" else key
 
 
 def detect_change(current, history, window=4, drop=0.15, tool_factor=1.5):

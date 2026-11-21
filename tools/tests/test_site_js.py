@@ -44,3 +44,13 @@ def test_by_model_keeps_models_apart_newest_first():
     ])
     groups = oe_js(f"OE.byModel({items}, x => x.m, x => x.d).map(g => [g.model, g.items.map(x => x.id)])")
     assert groups == [["claude-haiku-5-5", [2]], ["deepseek-v4-pro", [4]], ["deepseek-flash", [1, 3]]]
+
+
+def test_an_av_row_names_its_margincode_release_and_a_cold_row_names_none():
+    assert oe_js('[OE.armLabel("av", {av_release: "0.0.2"}), OE.armLabel("av", {}), OE.armLabel("cold", {})]') == \
+        ["av · Margincode 0.0.2", "av", "cold"]
+
+
+def test_a_chart_lists_the_releases_of_its_points_once_each_in_order():
+    pts = '[{av_release: "0.0.2"}, {av_release: "0.0.2"}, {av_release: "0.0.4"}, {}]'
+    assert oe_js(f"[OE.releases({pts}), OE.releases([{{}}])]") == ["Margincode 0.0.2, 0.0.4", ""]
