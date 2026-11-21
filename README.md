@@ -24,7 +24,7 @@ Claude Haiku 5.5 (`claude-haiku-5-5`, Anthropic's API) since 2026-11-20, each CL
 | Leg | CLI | Harbor agent |
 |---|---|---|
 | `claude-code-cold` | Claude Code | `claude-code` |
-| `claude-code-av` | Claude Code on Scholion `av` (the av hooks and daemon) | `oe_agents.claude_code_av:ClaudeCodeAv` |
+| `claude-code-av` | Claude Code on Margincode `av` (the av hooks and daemon) | `oe_agents.claude_code_av:ClaudeCodeAv` |
 | `opencode-cold` | OpenCode | `opencode` |
 | `goose-cold` | Block's goose | `goose` |
 

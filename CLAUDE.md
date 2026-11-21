@@ -42,7 +42,7 @@ DeepSeek (the tracker before 2026-11-20, and the tiers and xvendor runs):
 `ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic`, `ANTHROPIC_AUTH_TOKEN` = the DeepSeek key,
 `ANTHROPIC_API_KEY` unset, `-m anthropic/deepseek-flash`, and `--ae` the haiku, small-fast and
 subagent aliases to `deepseek-flash`.
-`agents/oe_agents/av_settings.py` pins the Scholion release by sha256; bump both together.
+`agents/oe_agents/av_settings.py` pins the Margincode release by sha256; bump both together.
 Codex on DeepSeek: `-a oe_agents.codex_deepseek:CodexDeepSeek -m deepseek/deepseek-flash` (also
 `PYTHONPATH=agents`); `codex_settings.py` writes the custom provider (`wire_api = "responses"`, the
 only one Codex still accepts; `env_key = "DEEPSEEK_API_KEY"`). Harbor's Codex reports no cost, so
