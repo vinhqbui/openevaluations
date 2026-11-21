@@ -48,6 +48,11 @@ Codex on DeepSeek: `-a oe_agents.codex_deepseek:CodexDeepSeek -m deepseek/deepse
 only one Codex still accepts; `env_key = "DEEPSEEK_API_KEY"`). Harbor's Codex reports no cost, so
 `oe` prices its tokens from `prices.toml` (`cost_source` "estimated").
 
+The site is served at `openevaluations.si` by the Cloudflare Worker `openevaluations`
+(`wrangler.jsonc`, static assets from `site/`). Deploy with `npx wrangler deploy` from a clean
+checkout of `main`. The `site` workflow does the same on a push to `main` when the repository has
+the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets, which it does not have today.
+
 ## Rules
 
 - TDD: failing test first (`tools/tests/`), then code.
